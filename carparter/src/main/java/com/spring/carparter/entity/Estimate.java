@@ -1,8 +1,11 @@
 package com.spring.carparter.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +15,8 @@ import java.util.List;
 @Entity
 @Table(name = "estimates")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Estimate extends BaseEntity {
+@EntityListeners(AuditingEntityListener.class) // 리스너 추가
+public class Estimate {
 
     /** 견적서 고유 ID (PK) */
     @Id
@@ -40,6 +44,16 @@ public class Estimate extends BaseEntity {
 
     /** 견적 상태 (e.g., SUBMITTED, ACCEPTED, REJECTED) */
     private String status;
+
+    /** 생성 시간 (최초 저장 시 자동 생성) */
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    /** 마지막 수정 시간 (변경 시 자동 갱신) */
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "estimate")
     private List<CompletedRepair> completedRepairs = new ArrayList<>();
