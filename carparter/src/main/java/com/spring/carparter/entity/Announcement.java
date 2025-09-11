@@ -1,9 +1,11 @@
 package com.spring.carparter.entity;
 
-// package com.example.model;
-
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import java.time.LocalDateTime;
 
 /**
  * 관리자가 작성하는 공지사항 정보를 나타내는 엔티티
@@ -11,7 +13,8 @@ import lombok.*;
 @Entity
 @Table(name = "announcements")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Announcement extends BaseEntity {
+@EntityListeners(AuditingEntityListener.class) // 리스너 추가
+public class Announcement {
 
     /** 공지사항 고유 ID (PK) */
     @Id
@@ -31,4 +34,14 @@ public class Announcement extends BaseEntity {
     /** 공지사항 내용 */
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
+
+    /** 생성 시간 (최초 저장 시 자동 생성) */
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    /** 마지막 수정 시간 (변경 시 자동 갱신) */
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
