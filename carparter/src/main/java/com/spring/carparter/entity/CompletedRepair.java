@@ -1,66 +1,53 @@
 package com.spring.carparter.entity;
 
+import com.spring.carparter.entity.CarCenter;
+import com.spring.carparter.entity.Estimate;
+import com.spring.carparter.entity.QuoteRequest;
+import com.spring.carparter.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
-/**
- * 수리가 완료된 내역 정보를 나타내는 엔티티
- */
+// CompletedRepair.java
 @Entity
 @Table(name = "completed_repairs")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-@EntityListeners(AuditingEntityListener.class) // 리스너 추가
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
 public class CompletedRepair {
 
-    /** 수리 내역 고유 ID (PK) */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "repair_id")
     private Integer repairId;
 
-    /** 기반이 된 견적 요청 (QuoteRequest) */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "request_id", nullable = false)
-    private QuoteRequest quoteRequest;
-
-    /** 채택된 견적서 (Estimate) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "estimate_id", nullable = false)
     private Estimate estimate;
 
-    /** 수리를 받은 사용자 (User) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /** 수리를 진행한 정비소 (CarCenter) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "center_id", nullable = false)
     private CarCenter carCenter;
 
-    /** 최종 수리 비용 */
+    // ✅ 추가: 어떤 견적요청에 대한 수리완료인지
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id", nullable = false)
+    private QuoteRequest quoteRequest;
+
     @Column(name = "final_cost")
     private Integer finalCost;
 
-    /** 사용자가 견적을 승인한 시간 */
-    @Column(name = "approved_at")
-    private LocalDateTime approvedAt;
-
-    /** 수리가 완료된 날짜 */
-    @Column(name = "completion_date")
-    private LocalDateTime completionDate;
-
-    /** 생성 시간 (최초 저장 시 자동 생성) */
     @CreatedDate
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    /** 마지막 수정 시간 (변경 시 자동 갱신) */
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "completion_date", updatable = false)
+    private LocalDateTime completionDate;
 }

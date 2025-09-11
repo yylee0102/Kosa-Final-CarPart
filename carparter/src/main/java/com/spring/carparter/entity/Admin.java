@@ -29,13 +29,6 @@ public class Admin {
     @Column(nullable = false)
     private String name;
 
-    /** 관리자 역할 (e.g., SUPER_ADMIN, CS_ADMIN) */
-    private String role;
-
-    /** 계정 생성일 */
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
     /** 이 관리자가 작성한 공지사항 목록 */
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Announcement> announcements = new ArrayList<>();

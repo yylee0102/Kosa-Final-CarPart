@@ -38,18 +38,22 @@ public class QuoteRequest {
     @Column(name = "request_details", columnDefinition = "TEXT")
     private String requestDetails;
 
-    /** 요청 상태 (e.g., REQUESTED, IN_PROGRESS, COMPLETED) */
-    private String status;
-
     /** 생성 시간 (최초 저장 시 자동 생성) */
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    /** 마지막 수정 시간 (변경 시 자동 갱신) */
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    /** 주소 */
+    @Column(nullable = false)
+    private String address;
+
+    /** 위치기반 서비스를 위한 위도 */
+    @Column(name = "latitude")
+    private Double latitude;
+
+    /** 위치기반 서비스를 위한 경도 */
+    @Column(name = "longitude")
+    private Double longitude;
 
     @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RequestImage> requestImages = new ArrayList<>();

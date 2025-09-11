@@ -42,18 +42,10 @@ public class Estimate {
     @Column(columnDefinition = "TEXT")
     private String details;
 
-    /** 견적 상태 (e.g., SUBMITTED, ACCEPTED, REJECTED) */
-    private String status;
-
     /** 생성 시간 (최초 저장 시 자동 생성) */
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    /** 마지막 수정 시간 (변경 시 자동 갱신) */
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "estimate")
     private List<CompletedRepair> completedRepairs = new ArrayList<>();

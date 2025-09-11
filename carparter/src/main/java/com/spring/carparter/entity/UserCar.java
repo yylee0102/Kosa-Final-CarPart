@@ -47,13 +47,4 @@ public class UserCar {
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    /** 마지막 수정 시간 (변경 시 자동 갱신) */
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    /** 이 차량으로 요청된 견적 목록 */
-    @OneToMany(mappedBy = "userCar")
-    private List<QuoteRequest> quoteRequests = new ArrayList<>();
 }

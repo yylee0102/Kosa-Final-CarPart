@@ -31,10 +31,10 @@ public class UsedPart {
     @Column(name = "part_id")
     private Integer partId;
 
-    /** 판매자 (User) */
+    /** 판매자 (카센터) */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User seller;
+    @JoinColumn(name = "center_id", nullable = false)
+    private CarCenter carCenter;
 
     /** 부품 이름 (e.g., "LF 쏘나타 순정 18인치 휠") */
     @Column(nullable = false)
@@ -55,36 +55,13 @@ public class UsedPart {
     @Column(name = "compatible_car_model")
     private String compatibleCarModel;
 
-    /** 거래 상태 (판매중, 예약중, 판매완료) */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private PartStatus status;
-
     /** 게시글 생성 시간 (최초 저장 시 자동 생성) */
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    /** 게시글 마지막 수정 시간 (변경 시 자동 갱신) */
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     /** 이 부품에 첨부된 이미지 목록 */
     @OneToMany(mappedBy = "usedPart", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PartImage> images = new ArrayList<>();
+    private List<UsedPartImage> images = new ArrayList<>();
 }
 
-/**
- * 중고부품 거래 상태(PartStatus) Enum
- */
-enum PartStatus {
-    /** <b>FOR_SALE</b>: 현재 판매 중인 상태 */
-    FOR_SALE,
-
-    /** <b>RESERVED</b>: 거래가 예약된 상태 */
-    RESERVED,
-
-    /** <b>SOLD</b>: 판매가 완료된 상태 */
-    SOLD
-}

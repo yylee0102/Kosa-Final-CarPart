@@ -15,7 +15,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PartImage {
+public class UsedPartImage {
 
     /** 이미지 고유 ID (PK, 자동생성) */
     @Id

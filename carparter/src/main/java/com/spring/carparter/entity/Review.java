@@ -55,11 +55,6 @@ public class Review {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    /** 마지막 수정 시간 (변경 시 자동 갱신) */
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewReply> reviewReplies = new ArrayList<>();
 }
