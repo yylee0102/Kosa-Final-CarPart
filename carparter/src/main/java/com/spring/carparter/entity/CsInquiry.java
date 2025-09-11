@@ -1,8 +1,10 @@
 package com.spring.carparter.entity;
-// package com.example.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 /**
@@ -11,7 +13,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "cs_inquiries")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class CsInquiry extends BaseEntity {
+@EntityListeners(AuditingEntityListener.class) // 리스너 추가
+public class CsInquiry {
 
     /** 문의 고유 ID (PK) */
     @Id
@@ -39,4 +42,14 @@ public class CsInquiry extends BaseEntity {
     /** 답변이 달린 시간 */
     @Column(name = "answered_at")
     private LocalDateTime answeredAt;
+
+    /** 생성 시간 (최초 저장 시 자동 생성) */
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    /** 마지막 수정 시간 (변경 시 자동 갱신) */
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
