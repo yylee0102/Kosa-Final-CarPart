@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Gradle: com.mysql:mysql-connector-j:9.4.0" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="com.mysql" artifactId="mysql-connector-j" version="9.4.0" baseVersion="9.4.0" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.mysql/mysql-connector-j/9.4.0/8f6c66269048fbd2316b7b45d75898ebee44986f/mysql-connector-j-9.4.0.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.mysql/mysql-connector-j/9.4.0/fc747435f51fa6b08b5681f9ce46c98bb8724853/mysql-connector-j-9.4.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.mysql/mysql-connector-j/9.4.0/f1fc28768e85e2b3d56f2ccf19966adf8dfdb324/mysql-connector-j-9.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
