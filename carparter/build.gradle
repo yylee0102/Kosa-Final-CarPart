@@ -25,6 +25,7 @@ repositories {
 }
 
 dependencies {
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'       // MVC(Tomcat)
@@ -42,8 +43,7 @@ dependencies {
     // AWS SDK for Java v2 - S3
     implementation 'software.amazon.awssdk:s3:2.25.43' // 버전은 최신 버전을 확인하고 사용하세요.
 
-//    // Spring Cloud AWS를 사용하면 자동 구성이 편리해집니다.
-//메모장에 있는거 나중에 쓸때 넣기
+
 }
 
 tasks.named('test') {

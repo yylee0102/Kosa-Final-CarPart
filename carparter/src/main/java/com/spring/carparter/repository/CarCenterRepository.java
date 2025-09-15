@@ -20,3 +20,4 @@ public interface CarCenterRepository extends JpaRepository<CarCenter,String> {
     boolean existsByBusinessRegistrationNumber(String businessRegistrationNumber);
 
 }
+

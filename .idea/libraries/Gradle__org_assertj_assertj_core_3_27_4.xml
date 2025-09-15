@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Gradle: org.assertj:assertj-core:3.27.4" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.assertj" artifactId="assertj-core" version="3.27.4" baseVersion="3.27.4" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.assertj/assertj-core/3.27.4/65e62575f7e422df6d290dc1cb15f3c97108b2b1/assertj-core-3.27.4.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.assertj/assertj-core/3.27.4/b243174d0d700443268d42c73ef5c337eddf3964/assertj-core-3.27.4-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.assertj/assertj-core/3.27.4/9d7aaef419ce67daa9bcee1827b8d7c7878fb6e/assertj-core-3.27.4-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
