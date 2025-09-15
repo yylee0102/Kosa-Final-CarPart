@@ -3,6 +3,7 @@ package com.spring.carparter.entity;
 
 // package com.example.model;
 
+import com.spring.carparter.dto.CarCenterReqDTO;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -72,4 +73,32 @@ public class CarCenter {
     @OneToMany(mappedBy = "carCenter")
     private List<Estimate> estimates = new ArrayList<>();
     // ... (다른 연관관계 매핑은 생략)
+
+    public void updateInfo(CarCenterReqDTO requestDto) { // ✅ 파라미터가 범용 DTO로 변경되었습니다.
+        if (requestDto.getCenterName() != null) {
+            this.centerName = requestDto.getCenterName();
+        }
+        if (requestDto.getPhoneNumber() != null) {
+            this.phoneNumber = requestDto.getPhoneNumber();
+        }
+        if (requestDto.getOpeningHours() != null) {
+            this.openingHours = requestDto.getOpeningHours();
+        }
+        if (requestDto.getDescription() != null) {
+            this.description = requestDto.getDescription();
+        }
+        if (requestDto.getAddress() != null) {
+            this.address = requestDto.getAddress();
+        }
+    }
+
+    /**
+     * 위도와 경도 좌표를 업데이트합니다.
+     * @param latitude 새로운 위도
+     * @param longitude 새로운 경도
+     */
+    public void updateCoordinates(Double latitude, Double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }

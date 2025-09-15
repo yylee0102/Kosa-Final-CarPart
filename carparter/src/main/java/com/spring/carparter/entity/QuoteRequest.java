@@ -2,6 +2,7 @@ package com.spring.carparter.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -57,10 +58,13 @@ public class QuoteRequest {
 
     @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RequestImage> requestImages = new ArrayList<>();
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "quoteRequest")
     private List<Estimate> estimates = new ArrayList<>();
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "quoteRequest")
     private List<ChatRoom> chatRooms = new ArrayList<>();
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "quoteRequest")
     private List<CompletedRepair> completedRepairs = new ArrayList<>();
 }
