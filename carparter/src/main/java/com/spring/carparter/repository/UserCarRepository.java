@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+
 /**
  * UserCar 엔티티에 대한 데이터베이스 접근을 처리하는 Repository 인터페이스입니다.
  */
@@ -20,4 +21,6 @@ public interface UserCarRepository extends JpaRepository<UserCar, Long> {
      * @return 해당 사용자의 차량(UserCar) 리스트
      */
     List<UserCar> findAllByUserId(String userId);
+     
 }
+

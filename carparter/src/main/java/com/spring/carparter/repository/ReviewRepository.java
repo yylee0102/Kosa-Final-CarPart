@@ -1,10 +1,15 @@
 package com.spring.carparter.repository;
 
 import com.spring.carparter.entity.Review;
+
+
+import org.springframework.data.jpa.repository.EntityGraph;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+
 
 /**
  * Review 엔티티에 대한 데이터베이스 접근을 처리하는 Repository 인터페이스입니다.
@@ -29,4 +34,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      * @return 해당 사용자가 작성한 리뷰(Review) 리스트
      */
     List<Review> findAllByUserId(String userId);
+
+    // 특정 카센터에 작성된  리뷰 목록을 조회
+    @EntityGraph(attributePaths = {"user"})
+    List<Review> findByCarCenter_CenterId(String centerId);
 }
