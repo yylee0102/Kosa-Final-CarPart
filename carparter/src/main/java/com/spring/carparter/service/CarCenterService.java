@@ -24,7 +24,7 @@ public class CarCenterService {
      */
     @Transactional
     public CarCenterResDTO register(CarCenterReqDTO requestDto) {
-        if (carCenterRepository.existsByEmail(requestDto.getEmail())) {
+        if (carCenterRepository.existsByCenterId(requestDto.getCenterId())) {
             throw new DuplicateException("이미 사용 중인 이메일입니다.");
         }
         if (carCenterRepository.existsByBusinessRegistrationNumber(requestDto.getBusinessRegistrationNumber())) {
@@ -53,7 +53,7 @@ public class CarCenterService {
     @Transactional(readOnly
             = true)
     public CarCenterResDTO login(CarCenterReqDTO req){
-        CarCenter carCenter = carCenterRepository.findByEmail(req.getEmail())
+        CarCenter carCenter = carCenterRepository.findByCenterId(req.getCenterId())
                 .orElseThrow(()-> new IllegalArgumentException("이메일이 일치하지 않습니다."));
 
         if(!req.getPassword().equals(carCenter.getPassword())){

@@ -28,9 +28,6 @@ public class CarCenter {
     @Column(name = "center_id")
     private String centerId;
 
-    /** 이메일 (로그인 ID로 사용, 고유값) */
-    @Column(nullable = false, unique = true)
-    private String email;
 
     /** 비밀번호 */
     @Column(nullable = false)
