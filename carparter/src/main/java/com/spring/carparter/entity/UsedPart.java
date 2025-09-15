@@ -2,6 +2,7 @@ package com.spring.carparter.entity;
 
 // package com.example.model;
 
+import com.spring.carparter.dto.UsedPartReqDTO;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -63,5 +64,24 @@ public class UsedPart {
     /** 이 부품에 첨부된 이미지 목록 */
     @OneToMany(mappedBy = "usedPart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UsedPartImage> images = new ArrayList<>();
+
+    // ✨ 요청 DTO를 받아 엔티티의 상태를 스스로 변경하는 비즈니스 메소드
+    public void updateInfo(UsedPartReqDTO requestDto) {
+        if (requestDto.getPartName() != null) {
+            this.partName = requestDto.getPartName();
+        }
+        if (requestDto.getDescription() != null) {
+            this.description = requestDto.getDescription();
+        }
+        if (requestDto.getPrice() != null) {
+            this.price = requestDto.getPrice();
+        }
+        if (requestDto.getCategory() != null) {
+            this.category = requestDto.getCategory();
+        }
+        if (requestDto.getCompatibleCarModel() != null) {
+            this.compatibleCarModel = requestDto.getCompatibleCarModel();
+        }
+    }
 }
 

@@ -9,7 +9,7 @@ import lombok.*;
  * 중고부품 게시글에 첨부된 이미지 정보를 나타내는 엔티티
  */
 @Entity
-@Table(name = "part_images")
+@Table(name = "used_part_images") // UsedPartImage랑 이름 겹쳐서 바꿈
 @Getter
 @Setter
 @NoArgsConstructor
