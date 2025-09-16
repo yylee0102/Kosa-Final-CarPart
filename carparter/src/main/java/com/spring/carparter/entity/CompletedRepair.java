@@ -28,10 +28,6 @@ public class CompletedRepair {
     private Integer repairId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "estimate_id", nullable = false)
-    private Estimate estimate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -39,13 +35,8 @@ public class CompletedRepair {
     @JoinColumn(name = "center_id", nullable = false)
     private CarCenter carCenter;
 
-    // ✅ 추가: 어떤 견적요청에 대한 수리완료인지
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "request_id", nullable = false)
-    private QuoteRequest quoteRequest;
-
-    @Column(name = "final_cost")
-    private Integer finalCost;
+    @Column
+    private String repairDetail;
 
     @CreatedDate
     @Column(name = "completion_date", updatable = false)

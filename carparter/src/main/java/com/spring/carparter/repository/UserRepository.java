@@ -25,6 +25,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return 아이디 존재 여부 (true/false)
      */
     boolean existsByUserId(String userId);
+    void deleteByUserId(String userId);
+    User findByUserId(String userId);
 
     /**
      * 남여 성별 숫자를 가져옵니다.
@@ -32,6 +34,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      *
      * @return 남여 성별 숫자를 return
      * */
+
 
     @Query(value = """
         SELECT
