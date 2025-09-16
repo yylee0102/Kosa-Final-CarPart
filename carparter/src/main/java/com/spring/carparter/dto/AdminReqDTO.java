@@ -8,14 +8,14 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AdminRes {
+public class AdminReqDTO {
     private String adminId;
-    private String name;
+    private String password;
 
-    public static  AdminRes From(Admin admin){
-        return AdminRes.builder()
+    public static AdminReqDTO From(Admin admin){
+        return AdminReqDTO.builder()
                 .adminId(admin.getAdminId())
-                .name(admin.getName())
+                .password(admin.getPassword())
                 .build();
     }
 

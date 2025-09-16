@@ -9,8 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CarCenterReqDTO {
-    //로그인
-    // 이메일 (로그인 ID)
+    private String centerId; // email -> loginId
     private String password; // 비밀번호
     private String centerName; // 업체명
     private String address; // 주소
@@ -25,6 +24,8 @@ public class CarCenterReqDTO {
      */
     public CarCenter toEntity() {
         return CarCenter.builder()
+
+                .centerId(this.centerId)
                 .password(this.password) // 나중에 시큐리티 들어갈때  비밀번호를 암호화
                 .centerName(this.centerName)
                 .address(this.address)

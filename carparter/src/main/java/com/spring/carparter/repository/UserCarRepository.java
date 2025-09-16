@@ -1,6 +1,8 @@
 package com.spring.carparter.repository;
 
+import com.spring.carparter.entity.User;
 import com.spring.carparter.entity.UserCar;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,7 +22,8 @@ public interface UserCarRepository extends JpaRepository<UserCar, Long> {
      * @param userId 사용자의 고유 ID
      * @return 해당 사용자의 차량(UserCar) 리스트
      */
-    List<UserCar> findAllByUserId(String userId);
+    @EntityGraph(attributePaths = {"user"})
+      List<UserCar> findAllByUser_UserId(String userId);
      
 }
 
