@@ -29,11 +29,12 @@ public class SecurityConfig {
 
                 // HTTP 요청에 대한 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ '/api/car-centers/register' 와 '/api/car-centers/login' 경로는 누구나 접근 허용
-                        .requestMatchers("/api/car-centers/register", "/api/car-centers/login").permitAll()
-
-                        // ✅ 그 외의 모든 요청은 인증된 사용자만 접근 가능
-                        .anyRequest().authenticated()
+//                        // ✅ '/api/car-centers/register' 와 '/api/car-centers/login' 경로는 누구나 접근 허용
+//                        .requestMatchers("/api/car-centers/register", "/api/car-centers/login").permitAll()
+//
+//                        // ✅ 그 외의 모든 요청은 인증된 사용자만 접근 가능
+//                        .anyRequest().authenticated()
+                                .anyRequest().permitAll()
                 );
 
         return http.build();
