@@ -1,4 +1,4 @@
-package com.spring.carparter.controller;
+package com.spring.carparter.Controller;
 
 import com.spring.carparter.dto.CarCenterReqDTO;
 import com.spring.carparter.dto.CarCenterResDTO;
