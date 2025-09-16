@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
 public class CompletedRepairService {
     private final CarCenterRepository carCenterRepository;
     private final EstimateRepository estimateRepository;
-    private final CompletedRepairRepository completedRepairRepository;\
+    private final CompletedRepairRepository completedRepairRepository;
     private final UserRepository userRepository;
 
 

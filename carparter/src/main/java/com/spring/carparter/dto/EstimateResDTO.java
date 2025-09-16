@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 @Builder
 public class EstimateResDTO {
     private Integer estimateId; // 견적서 고유 ID
-    private Integer requestId; // 원본 견적 요청 ID
+    private Long requestId; // 원본 견적 요청 ID
     private Integer estimatedCost; // 전체 예상 비용
     private String details; // 견적 상세 설명
     private LocalDateTime createdAt; // 견적 제출 시간

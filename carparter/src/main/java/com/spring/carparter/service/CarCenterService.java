@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CarCenterService {
 
+    private final CarCenterRepository carCenterRepository;
+    private final GeocodingService geocodingService;
+
     /**
      * 1. 카센터 회원가입 (Create)
      */
