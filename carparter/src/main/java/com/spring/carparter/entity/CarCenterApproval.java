@@ -39,9 +39,5 @@ public class CarCenterApproval {
     @CreatedDate
     @Column(name = "requested_at", updatable = false)
     private LocalDateTime requestedAt;
-
-    /** 관리자가 요청을 처리한 시간 */
-    @Column(name = "processed_at")
-    private LocalDateTime processedAt;
 }
 

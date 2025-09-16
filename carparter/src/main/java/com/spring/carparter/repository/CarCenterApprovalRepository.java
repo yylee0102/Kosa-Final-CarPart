@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 정비소 가입 승인(CarCenterApproval) 엔티티에 대한 데이터베이스 접근을 처리하는 Repository입니다.
@@ -18,5 +19,7 @@ public interface CarCenterApprovalRepository extends JpaRepository<CarCenterAppr
      *
      * @return 처리되지 않은 가입 신청(CarCenterApproval) 리스트
      */
-    List<CarCenterApproval> findByProcessedAtIsNullOrderByRequestedAtAsc();
+    Optional<List<CarCenterApproval>> findByProcessedAtIsNullOrderByRequestedAtAsc();
+
+    Optional<CarCenterApproval> findByApprovalId(Long approval_id);
 }
