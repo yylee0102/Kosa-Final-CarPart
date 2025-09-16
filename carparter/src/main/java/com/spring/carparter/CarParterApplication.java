@@ -2,9 +2,12 @@ package com.spring.carparter;
 
 import com.spring.carparter.entity.*; // 모든 엔티티 import
 import com.spring.carparter.repository.*; // 모든 레포지토리 import
+import com.spring.carparter.service.AdminService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -19,7 +22,8 @@ import java.util.Optional;
 @EnableJpaAuditing
 @SpringBootApplication
 @Component
-public class CarParterApplication implements ApplicationRunner {
+@RequiredArgsConstructor
+public class CarParterApplication implements ApplicationRunner, CommandLineRunner {
 
     //== 모든 Repository 의존성 주입 ==//
     @Autowired
@@ -307,5 +311,11 @@ public class CarParterApplication implements ApplicationRunner {
 //    private String safe(String s) {
 //        return (s == null ? "(null)" : s);
 //    }
+    }
+
+    private final AdminService adminService;
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println(adminService.ageBandCounts());
     }
 }

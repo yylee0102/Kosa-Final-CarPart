@@ -2,6 +2,7 @@ package com.spring.carparter.repository;
 
 import com.spring.carparter.entity.Admin;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -20,4 +21,5 @@ public interface AdminRepository extends JpaRepository<Admin, String> { // PK �
      * @return 관리자 계정 정보 (Optional)
      */
     Optional<Admin> findByAdminId(String adminId);
+
 }
