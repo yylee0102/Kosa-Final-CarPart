@@ -23,6 +23,8 @@ public class ChatRoomService {
         CarCenter carCenter = carCenterRepository.findById(request.getCarcenterId()).orElseThrow();
         ChatRoom chatRoom = request.toEntity(user, carCenter);
 
+        // Mango id
+
         chatRoomRepository.save(chatRoom);
     }
 }

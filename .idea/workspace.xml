@@ -5,36 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6fb3c9e1-773c-47a4-ba9c-7cb464582c6d" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/ChatRoomReqDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/ChatRoomResDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/QuoteRequestResDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/UserReqDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/UserResDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/AdminService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/AnnouncementService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/CarCenterApprovalService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ChatRoomService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/CompletedRepairService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/CsInquiryService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/EstimateItemService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/HelpService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/QuoteRequestService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/RequestImageService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ReviewReplyService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ReviewService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/UsedCarService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/UsedPartImageService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/UserService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/CarCenterReqDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/CarCenterReqDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/CarCenterResDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/CarCenterResDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/CarCenter.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/CarCenter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/ChatRoom.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/ChatRoom.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/PartImage.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/QuoteRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/QuoteRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/QuoteRequestRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/QuoteRequestRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/CarCenterService.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/CarCenterService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -166,6 +137,7 @@
       <workItem from="1757583387674" duration="1723000" />
       <workItem from="1757585134791" duration="973000" />
       <workItem from="1757635513731" duration="4400000" />
+      <workItem from="1757988123461" duration="52000" />
     </task>
     <servers />
   </component>
