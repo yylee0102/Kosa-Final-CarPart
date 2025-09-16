@@ -46,4 +46,7 @@ public interface QuoteRequestRepository extends JpaRepository<QuoteRequest, Inte
      //특정 시간 이후에 생성된 모든 견적 요청을 조회합니다.
 
     List<QuoteRequest> findByCreatedAtAfter(LocalDateTime dateTime);
+
+    // 한 유저에 대한 견적요청서는 한개여야한다.
+    Optional<QuoteRequest> findByUserId(String userId);
 }

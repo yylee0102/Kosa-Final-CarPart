@@ -8,7 +8,6 @@ import lombok.Getter;
 @Builder
 public class CarCenterResDTO {
     private String centerId; // 카센터 고유 ID
-
     private String centerName; // 업체명
     private String address; // 주소
     private String phoneNumber; // 연락처
@@ -18,7 +17,6 @@ public class CarCenterResDTO {
     public static CarCenterResDTO from(CarCenter carCenter) {
         return CarCenterResDTO.builder()
                 .centerId(carCenter.getCenterId())
-
                 .centerName(carCenter.getCenterName())
                 .address(carCenter.getAddress())
                 .phoneNumber(carCenter.getPhoneNumber())

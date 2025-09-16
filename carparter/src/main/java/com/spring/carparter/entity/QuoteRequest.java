@@ -23,7 +23,7 @@ public class QuoteRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "request_id")
-    private Integer requestId;
+    private Long requestId;
 
     /** 요청 생성자 (User) */
     @ManyToOne(fetch = FetchType.LAZY)

@@ -17,7 +17,6 @@ public class CarCenterService {
 
     private final CarCenterRepository carCenterRepository;
     private final GeocodingService geocodingService;
-//    private final PasswordEncoder passwordEncoder;
 
     /**
      * 1. 카센터 회원가입 (Create)

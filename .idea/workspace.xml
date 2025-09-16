@@ -5,17 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6fb3c9e1-773c-47a4-ba9c-7cb464582c6d" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/AdminRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/AnnouncementRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/CarCenterApprovalRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/CarCenterRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/CsInquiryRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ChatRoomRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ChatRoomRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ReviewReplyRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ReviewReplyRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ReviewRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ReviewRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/UserCarRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/UserCarRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/UserRepository.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,8 +32,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Class" />
         <option value="Interface" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -147,6 +137,7 @@
       <workItem from="1757583387674" duration="1723000" />
       <workItem from="1757585134791" duration="973000" />
       <workItem from="1757635513731" duration="4400000" />
+      <workItem from="1757988123461" duration="52000" />
     </task>
     <servers />
   </component>
