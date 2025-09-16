@@ -88,4 +88,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
       ORDER BY FIELD(label,'20s','30s','40s','50s','60s+','UNKNOWN')
       """, nativeQuery = true)
     List<Object[]> ageBandRows();
+
 }

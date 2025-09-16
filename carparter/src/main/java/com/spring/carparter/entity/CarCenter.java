@@ -65,6 +65,10 @@ public class CarCenter {
     @Column(name = "opening_hours")
     private String openingHours;
 
+    @Enumerated(EnumType.STRING) // Enum 타입을 DB에 문자열로 저장
+    @Column(nullable = false)
+    private CarCenterStatus status = CarCenterStatus.PENDING;
+
     // --- 연관관계 매핑 ---
     /** 이 정비소가 제출한 견적서 목록 */
     @OneToMany(mappedBy = "carCenter")
