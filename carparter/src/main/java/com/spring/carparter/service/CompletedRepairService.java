@@ -21,6 +21,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Service
@@ -49,5 +50,9 @@ public class CompletedRepairService {
         completedRepairRepository.save(completedRepair);
 
 
+    }
+
+    List<CompletedRepair> getAllCompletedRepairs() {
+        return completedRepairRepository.findAll();
     }
 }
