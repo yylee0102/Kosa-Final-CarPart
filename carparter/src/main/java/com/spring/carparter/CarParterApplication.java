@@ -27,7 +27,7 @@ public class CarParterApplication implements ApplicationRunner, CommandLineRunne
 
     //== 모든 Repository 의존성 주입 ==//
     @Autowired
-    private QuoteRequestRepository quoteRepo;
+    private final QuoteRequestRepository quoteRepo;
     @Autowired
     private RequestImageRepository imageRepo;
     @Autowired

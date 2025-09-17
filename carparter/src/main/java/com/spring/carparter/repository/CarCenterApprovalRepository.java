@@ -23,5 +23,7 @@ public interface CarCenterApprovalRepository extends JpaRepository<CarCenterAppr
     @Query("SELECT c FROM CarCenterApproval c WHERE c.admin IS NULL ORDER BY c.requestedAt ASC")
     Optional<List<CarCenterApproval>> findPendingApprovals();
 
+
     Optional<CarCenterApproval> findByApprovalId(Long approval_id);
+
 }
