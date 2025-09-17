@@ -19,7 +19,8 @@ public interface CarCenterApprovalRepository extends JpaRepository<CarCenterAppr
      *
      * @return 처리되지 않은 가입 신청(CarCenterApproval) 리스트
      */
-    Optional<List<CarCenterApproval>> findByProcessedAtIsNullOrderByRequestedAtAsc();
+    Optional<List<CarCenterApproval>> findByOrderByRequestedAtAsc();
 
     Optional<CarCenterApproval> findByApprovalId(Long approval_id);
+
 }
