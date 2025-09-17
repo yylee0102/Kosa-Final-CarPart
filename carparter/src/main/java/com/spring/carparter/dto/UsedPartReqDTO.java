@@ -2,7 +2,6 @@ package com.spring.carparter.dto;
 
 import com.spring.carparter.entity.UsedPart;
 import lombok.*;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 @Getter
 @Setter

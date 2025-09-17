@@ -10,7 +10,7 @@ import java.util.Optional;
  * ReviewReply 엔티티에 대한 데이터베이스 접근을 처리하는 Repository 인터페이스입니다.
  */
 @Repository
-public interface ReviewReplyRepository extends JpaRepository<ReviewReply, Long> {
+public interface ReviewReplyRepository extends JpaRepository<ReviewReply, Integer> {
 
     /**
      * 특정 리뷰에 달린 답글을 조회합니다.

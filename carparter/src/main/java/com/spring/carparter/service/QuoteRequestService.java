@@ -48,6 +48,6 @@ public class QuoteRequestService {
 
     // 한 user의 견적요청서를 가져오는 함수
     public QuoteRequest getQuoteRequestByRequestId(User user){
-        return quoteRequestRepository.findByUserId(user.getUserId()).orElseThrow();
+        return quoteRequestRepository.findByUser_UserId(user.getUserId()).orElseThrow();
     }
 }

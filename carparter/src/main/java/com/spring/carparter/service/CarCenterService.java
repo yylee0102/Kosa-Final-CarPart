@@ -4,10 +4,12 @@ import com.spring.carparter.dto.CarCenterReqDTO;
 import com.spring.carparter.dto.CarCenterResDTO;
 import com.spring.carparter.dto.Coordinates;
 import com.spring.carparter.entity.CarCenter;
+import com.spring.carparter.entity.CarCenterApproval;
 import com.spring.carparter.exception.DuplicateException;
+import com.spring.carparter.repository.CarCenterApprovalRepository;
 import com.spring.carparter.repository.CarCenterRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder; // ✅ 임포트 추가
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,7 @@ public class CarCenterService {
 
     private final CarCenterRepository carCenterRepository;
     private final GeocodingService geocodingService;
+    private final CarCenterApprovalRepository carCenterApprovalRepository;
 
     /**
      * 1. 카센터 회원가입 (Create)
@@ -32,6 +35,7 @@ public class CarCenterService {
 
         CarCenter carCenter = requestDto.toEntity();
 
+
         Coordinates coords = geocodingService.getCoordinates(requestDto.getAddress()).block();
         if (coords != null) {
             carCenter.updateCoordinates(coords.getLatitude(), coords.getLongitude());
@@ -42,7 +46,13 @@ public class CarCenterService {
          * carCenter.setPassword(passwordEncoder.encode(requestDto.getPassword()));
          */
 
+
         CarCenter savedCarCenter = carCenterRepository.save(carCenter);
+        //관리자에게 보낼 가입 승인 요청 엔티티 및 저장
+        CarCenterApproval approval = CarCenterApproval.builder()
+                .carCenter(savedCarCenter)
+                .build();
+            carCenterApprovalRepository.save(approval);
         return CarCenterResDTO.from(savedCarCenter);
     }
 

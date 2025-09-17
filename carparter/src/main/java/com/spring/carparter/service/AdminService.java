@@ -103,7 +103,7 @@ public class AdminService {
      * 8. 회원가입 승인 대기 중인 카센터
      * */
     public List<CarCenterApproval> getAllCenterApproval(){
-        return carCenterApprovalRepository.findByProcessedAtIsNullOrderByRequestedAtAsc()
+        return carCenterApprovalRepository.findPendingApprovals()
                                         .orElseThrow(() -> new RuntimeException("리스트 가져오는중 오류"));
     }
 

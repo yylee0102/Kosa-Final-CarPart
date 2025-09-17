@@ -61,6 +61,7 @@ public class CarCenter {
     private String businessRegistrationNumber;
 
 
+
     /** 운영 시간 정보 (e.g., "평일 09:00 - 18:00") */
     @Column(name = "opening_hours")
     private String openingHours;
@@ -73,7 +74,7 @@ public class CarCenter {
     /** 이 정비소가 제출한 견적서 목록 */
     @OneToMany(mappedBy = "carCenter")
     private List<Estimate> estimates = new ArrayList<>();
-    // ... (다른 연관관계 매핑은 생략)
+
 
     public void updateInfo(CarCenterReqDTO requestDto) { // ✅ 파라미터가 범용 DTO로 변경되었습니다.
         if (requestDto.getCenterName() != null) {
