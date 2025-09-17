@@ -1,4 +1,4 @@
-package com.spring.carparter.Controller;
+package com.spring.carparter.controller;
 
 import com.spring.carparter.dto.*;
 import com.spring.carparter.entity.Announcement;
