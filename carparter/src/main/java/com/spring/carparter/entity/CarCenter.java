@@ -28,7 +28,6 @@ public class CarCenter {
     @Column(name = "center_id")
     private String centerId;
 
-
     /** 비밀번호 */
     @Column(nullable = false)
     private String password;

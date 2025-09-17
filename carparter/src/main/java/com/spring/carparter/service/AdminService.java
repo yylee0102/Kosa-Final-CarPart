@@ -2,13 +2,13 @@ package com.spring.carparter.service;
 
 import com.spring.carparter.dto.AdminReqDTO;
 import com.spring.carparter.dto.AdminResDTO;
-import com.spring.carparter.entity.Admin;
-import com.spring.carparter.entity.CarCenterApproval;
+import com.spring.carparter.entity.*;
 import com.spring.carparter.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +22,8 @@ public class AdminService {
     private final CarCenterRepository carCenterRepository;
     private final ReviewReportRepository reviewReportRepository;
     private final CarCenterApprovalRepository carCenterApprovalRepository;
+    private final CsInquiryRepository csInquiryRepository;
+    private final AnnouncementRepository announcementRepository;
 
     /**
      * 1. 어드민 로그인
@@ -81,14 +83,14 @@ public class AdminService {
     /**
      * 5. 총 카센터
      * */
-    public Long CarCenterCount(){
+    public Long carCenterCount(){
         return carCenterRepository.count();
     }
 
     /**
      * 6. 카센터 등록 대기 수
      * */
-    public Long csInquiryCount(){
+    public Long pendingApprovalCount(){
         return carCenterApprovalRepository.count();
     }
 
@@ -102,9 +104,9 @@ public class AdminService {
     /**
      * 8. 회원가입 승인 대기 중인 카센터
      * */
-    public List<CarCenterApproval> getAllCenterApproval(){
-        return carCenterApprovalRepository.findByProcessedAtIsNullOrderByRequestedAtAsc()
-                                        .orElseThrow(() -> new RuntimeException("리스트 가져오는중 오류"));
+    public List<CarCenterApproval> getPendingApprovals(){
+        return carCenterApprovalRepository.findByOrderByRequestedAtAsc()
+                .orElseThrow(() ->  new RuntimeException("카센터 대기 리스트 가져오는 도중 오류")) ;
     }
 
     /**
@@ -112,7 +114,7 @@ public class AdminService {
      * */
     public CarCenterApproval getCenterApproval(Long approval_id){
         return carCenterApprovalRepository.findByApprovalId(approval_id)
-                                        .orElseThrow(() -> new RuntimeException("상세 보기중 오류"));
+                                        .orElseThrow(() -> new RuntimeException("카센터 대기 상세 보기중 오류"));
     }
     /**
      * 10. 카센터 회원가입 반려
@@ -131,7 +133,112 @@ public class AdminService {
      * */
     @Transactional
     public void addCarCenter(Long approvalId) {
+        CarCenterApproval centerApproval = carCenterApprovalRepository.findByApprovalId(approvalId).
+                                orElseThrow(() ->  new RuntimeException(approvalId + "찾지 못하였습니다."));
 
+        CarCenter fCenter = carCenterRepository.findByCenterId(centerApproval.getCarCenter().getCenterId())
+                .orElseThrow( () -> new RuntimeException(centerApproval.getCarCenter().getCenterId() + "찾지 못하였습니다."));
+
+        fCenter.setStatus(CarCenterStatus.ACTIVE);
+        carCenterApprovalRepository.deleteById(approvalId);
+    }
+
+    /**
+     * 12. 문의 리스트
+     * */
+    public List<CsInquiry> getAllCsInquiry(){
+        return csInquiryRepository.findAll();
+    }
+
+    /**
+     * 12. 문의 상세 보기
+     * */
+    public CsInquiry getCsInquiry(Integer inquiryId){
+        return csInquiryRepository.findById(inquiryId).orElseThrow(
+                () -> new RuntimeException(inquiryId + "찾지 못함")
+        );
+    }
+
+    /**
+     * 13. 문의에 대한 답변 / 수정
+     * */
+    @Transactional
+    public void answerInquiry(CsInquiry csInquiry){
+        CsInquiry fcsInquiry = csInquiryRepository.findById(csInquiry.getInquiryId()).orElseThrow(
+                () -> new RuntimeException(csInquiry + "찾지 못함")
+        );
+        fcsInquiry.setAnswerContent(csInquiry.getAnswerContent());
+        fcsInquiry.setAnsweredAt(LocalDateTime.now());
+    }
+
+    /**
+     * 14. 공지사항 등록
+     * */
+    @Transactional
+    public void addAnnouncement(Announcement announcement){
+        announcementRepository.save(announcement);
+    }
+
+    /**
+     * 15. 공지사항 삭제
+     * */
+    @Transactional
+    public void removeAnnouncement(Long announcementId){
+        announcementRepository.deleteById(announcementId);
+    }
+
+    /**
+     * 16. 공지사항 수정
+     * */
+    @Transactional
+    public void updateAnnouncement(Announcement announcement){
+        Announcement findObject = announcementRepository.findById(announcement.getAnnouncementId().longValue()).orElseThrow(
+                () -> new RuntimeException(announcement + "찾지 못함")
+        );
+
+        findObject.setTitle(announcement.getTitle());
+        findObject.setContent(announcement.getContent());
+    }
+
+    /**
+     * 17. 공지사항 리스트
+     * */
+    @Transactional
+    public List<Announcement> findAllAnnouncement(){
+        return announcementRepository.findAll();
+    }
+
+    /**
+     * 18. 공지사항 상세 보기
+     * */
+    @Transactional
+    public Announcement findAnnouncement(Integer announcementId){
+        return announcementRepository.findById(announcementId.longValue()).orElseThrow(
+                () -> new RuntimeException(announcementId + "찾는 중 오류")
+        );
+    }
+
+    /**
+     * 19. 신고된 후기 리스트
+     * */
+    public List<ReviewReport> findAllReviewReport(){
+        return reviewReportRepository.findAll();
+    }
+
+    /**
+     * 20. 신고된 후기 상세보기
+     * */
+    public ReviewReport findReviewReport(Integer reportId){
+        return reviewReportRepository.findById(reportId).orElseThrow(
+                () -> new RuntimeException("찾는중 오류")
+        );
+    }
+
+    /**
+     * 21. 신고된 리뷰 삭제
+     * */
+    public void deleteReport(Integer reportId){
+        reviewReportRepository.deleteById(reportId);
     }
 }
 
