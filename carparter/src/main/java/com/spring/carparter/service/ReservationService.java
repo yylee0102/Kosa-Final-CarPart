@@ -26,11 +26,11 @@ public class ReservationService {
 
     // 1. 신규 예약 등록
     @Transactional
-    public ReservationResDTO createReservation(String centerId, ReservationReqDTO requestDto) { // ✅ DTO 변경
+    public ReservationResDTO createReservation(String centerId, ReservationReqDTO req) {
         CarCenter carCenter = carCenterRepository.findById(centerId)
                 .orElseThrow(() -> new IllegalArgumentException("카센터 정보를 찾을 수 없습니다."));
 
-        Reservation reservation = requestDto.toEntity();
+        Reservation reservation = req.toEntity();
         reservation.setCarCenter(carCenter);
 
         Reservation savedReservation = reservationRepository.save(reservation);

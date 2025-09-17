@@ -15,7 +15,7 @@ import java.util.List;
  * Review 엔티티에 대한 데이터베이스 접근을 처리하는 Repository 인터페이스입니다.
  */
 @Repository
-public interface ReviewRepository extends JpaRepository<Review, Long> {
+public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     /**
      * 특정 정비소에 작성된 모든 리뷰 목록을 조회합니다.

@@ -71,4 +71,42 @@ public class EstimateService {
 
         estimateRepository.delete(estimate);
     }
+
+    //5. 견적서 수정
+    /**
+     * 5. 견적서 수정
+     * @param estimateId 수정할 견적서 ID
+     * @param centerId 수정을 요청한 정비소 ID (권한 확인용)
+     * @param requestDto 새로운 견적서 정보 DTO
+     * @return 수정된 견적서 정보 DTO
+     */
+    @Transactional
+    public EstimateResDTO updateEstimate(Integer estimateId, String centerId, EstimateReqDTO requestDto) {
+
+        Estimate estimate = estimateRepository.findByIdWithItems(estimateId)
+                .orElseThrow(() -> new IllegalArgumentException("수정할 견적서를 찾을 수 없습니다."));
+
+        // 2. 이 견적서를 수정할 권한이 있는지 확인합니다.
+        if (!estimate.getCarCenter().getCenterId().equals(centerId)) {
+            throw new SecurityException("견적서를 수정할 권한이 없습니다.");
+        }
+
+        // 3. 견적서의 기본 정보를 새로운 내용으로 업데이트합니다.
+        estimate.setEstimatedCost(requestDto.getEstimatedCost());
+        estimate.setDetails(requestDto.getDetails());
+
+
+        estimate.getEstimateItems().clear();
+
+
+        if (requestDto.getEstimateItems() != null) {
+            requestDto.getEstimateItems().forEach(itemDto -> {
+                estimate.addEstimateItem(itemDto.toEntity());
+            });
+        }
+
+        return EstimateResDTO.from(estimate);
+    }
+
+
 }

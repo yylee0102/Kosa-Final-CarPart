@@ -4,6 +4,7 @@ import com.spring.carparter.entity.ChatRoom;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,7 +14,7 @@ import java.util.Optional;
  * (주의: ChatRoom 엔티티는 제공되지 않아, 일반적인 구조를 가정하여 작성되었습니다.)
  */
 @Repository
-public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> { // ChatRoom의 PK 타입을 Long으로 가정
+public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> { // ChatRoom의 PK 타입을 Long으로 가정
 
     /**
      * 특정 사용자의 모든 채팅방 목록을 조회합니다.
@@ -38,11 +39,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> { // C
      * 채팅방을 생성하기 전, 중복 생성을 방지하기 위해 사용할 수 있습니다.
      * * @param userId 사용자의 고유 ID
      * @param centerId 정비소의 고유 ID
-     * @param requestId 견적 요청의 고유 ID
      * @return 조건에 맞는 채팅방 정보 (Optional)
      */
-    @EntityGraph(attributePaths = {"user", "carCenter", "quoteRequest"})
-    Optional<ChatRoom> findByUser_UserIdAndCarCenter_CenterIdAndQuoteRequest_RequestId(
-            String userId, String centerId, Integer requestId
+    @EntityGraph(attributePaths = {"user", "carCenter"})
+    Optional<ChatRoom> findByUser_UserIdAndCarCenter_CenterId(
+            String userId, String centerId
     );
 }

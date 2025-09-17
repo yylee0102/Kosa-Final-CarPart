@@ -62,9 +62,9 @@ public class QuoteRequest {
     @OneToMany(mappedBy = "quoteRequest")
     private List<Estimate> estimates = new ArrayList<>();
     @BatchSize(size = 100)
-    @OneToMany(mappedBy = "quoteRequest")
+    @OneToMany
     private List<ChatRoom> chatRooms = new ArrayList<>();
     @BatchSize(size = 100)
-    @OneToMany(mappedBy = "quoteRequest")
+    @OneToMany
     private List<CompletedRepair> completedRepairs = new ArrayList<>();
 }

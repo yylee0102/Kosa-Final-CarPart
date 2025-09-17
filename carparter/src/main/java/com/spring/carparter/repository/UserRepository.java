@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, String> {
     /**
      * 전화번호를 기준으로 사용자를 조회합니다.
      * 사용자가 아이디를 잊었을 때 등 본인인증 용도로 활용될 수 있습니다.

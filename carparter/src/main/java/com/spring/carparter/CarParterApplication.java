@@ -316,6 +316,6 @@ public class CarParterApplication implements ApplicationRunner, CommandLineRunne
     private final AdminService adminService;
     @Override
     public void run(String... args) throws Exception {
-        System.out.println(adminService.getCenterApproval(1L));
+//        System.out.println(adminService.getCenterApproval(1L));
     }
 }
