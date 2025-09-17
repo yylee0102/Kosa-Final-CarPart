@@ -1,6 +1,7 @@
 package com.spring.carparter.dto;
 
 import com.spring.carparter.entity.CsInquiry;
+import lombok.Builder;
 import lombok.Getter;
 import java.time.LocalDateTime;
 
@@ -22,7 +23,7 @@ public class CsInquiryResDTO {
      * CsInquiry 엔티티를 DTO로 변환하는 정적 팩토리 메서드
      * @param entity CsInquiry 엔티티
      */
-    public CsInquiryResDTO (CsInquiry entity) {
+    public CsInquiryResDTO(CsInquiry entity) {
         this.inquiryId = entity.getInquiryId();
         this.userName = entity.getUser().getName(); // 예시: User 엔티티에 getUserId()가 있다고 가정
         this.title = entity.getTitle();
@@ -31,4 +32,5 @@ public class CsInquiryResDTO {
         this.answeredAt = entity.getAnsweredAt();
         this.createdAt = entity.getCreatedAt();
     }
+
 }

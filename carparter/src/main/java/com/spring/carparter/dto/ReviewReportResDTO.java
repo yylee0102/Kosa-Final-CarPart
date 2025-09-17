@@ -34,4 +34,12 @@ public class ReviewReportResDTO {
                 .createdAt(reviewReport.getCreatedAt())
                 .build();
     }
+    public ReviewReportResDTO(com.spring.carparter.entity.ReviewReport r) {
+        // r의 필드만 사용해서 DTO 필드 세팅 (네 DTO 필드명에 맞춰 작성)
+        this.reportId   = r.getReportId();
+        this.createdAt  = r.getCreatedAt();
+        this.status     = r.getStatus();
+        this.reason     = r.getReason();
+        // 연관 객체(예: r.getReview(), r.getReporter())를 여기서 건드리면 LAZY 추가쿼리 납니다.
+    }
 }

@@ -1,5 +1,7 @@
 package com.spring.carparter.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.spring.carparter.entity.Admin;
 import lombok.*;
 
@@ -9,6 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class AdminReqDTO {
+
     private String adminId;
     private String password;
 

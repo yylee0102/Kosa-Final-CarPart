@@ -1,7 +1,6 @@
 package com.spring.carparter.service;
 
-import com.spring.carparter.dto.AdminReqDTO;
-import com.spring.carparter.dto.AdminResDTO;
+import com.spring.carparter.dto.*;
 import com.spring.carparter.entity.*;
 import com.spring.carparter.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -104,16 +103,15 @@ public class AdminService {
     /**
      * 8. 회원가입 승인 대기 중인 카센터
      * */
-    public List<CarCenterApproval> getPendingApprovals(){
-        return carCenterApprovalRepository.findByOrderByRequestedAtAsc()
-                .orElseThrow(() ->  new RuntimeException("카센터 대기 리스트 가져오는 도중 오류")) ;
+    public List<CarCenterApprovalResDTO> getPendingApprovals(){
+        return carCenterApprovalRepository.findPendingApprovalRes();
     }
 
     /**
      * 9. 회원가입 승인 대기 중인 카센터 상세보기
      * */
-    public CarCenterApproval getCenterApproval(Long approval_id){
-        return carCenterApprovalRepository.findByApprovalId(approval_id)
+    public CarCenterApprovalResDTO getCenterApproval(Long approvalId){
+        return carCenterApprovalRepository.findApprovalResById(approvalId)
                                         .orElseThrow(() -> new RuntimeException("카센터 대기 상세 보기중 오류"));
     }
     /**
@@ -121,10 +119,12 @@ public class AdminService {
      * */
     @Transactional
     public String removeCenterApproval(Long approvalId, String reason) {
-        if (!carCenterApprovalRepository.existsById(approvalId)) {
-            throw new RuntimeException(approvalId + "찾지 못하였습니다."); // 404 매핑용 커스텀 예외 권장
-        }
-        carCenterApprovalRepository.deleteById(approvalId); // ← 딱 이 한 줄
+        CarCenterApprovalResDTO centerApprovalResDTO = carCenterApprovalRepository.findApprovalResById(approvalId)
+                .orElseThrow(
+                        () -> new RuntimeException("찾지 못했습니다.")
+                );
+        carCenterRepository.deleteById(centerApprovalResDTO.getCenterId());
+
         return reason;
     }
 
@@ -133,11 +133,11 @@ public class AdminService {
      * */
     @Transactional
     public void addCarCenter(Long approvalId) {
-        CarCenterApproval centerApproval = carCenterApprovalRepository.findByApprovalId(approvalId).
+        CarCenterApprovalResDTO centerApproval = carCenterApprovalRepository.findApprovalResById(approvalId).
                                 orElseThrow(() ->  new RuntimeException(approvalId + "찾지 못하였습니다."));
 
-        CarCenter fCenter = carCenterRepository.findByCenterId(centerApproval.getCarCenter().getCenterId())
-                .orElseThrow( () -> new RuntimeException(centerApproval.getCarCenter().getCenterId() + "찾지 못하였습니다."));
+        CarCenter fCenter = carCenterRepository.findByCenterId(centerApproval.getCenterId())
+                .orElseThrow( () -> new RuntimeException(centerApproval.getCenterId() + "찾지 못하였습니다."));
 
         fCenter.setStatus(CarCenterStatus.ACTIVE);
         carCenterApprovalRepository.deleteById(approvalId);
@@ -147,7 +147,7 @@ public class AdminService {
      * 12. 문의 리스트
      * */
     public List<CsInquiry> getAllCsInquiry(){
-        return csInquiryRepository.findAll();
+        return csInquiryRepository.findByAnswerContentIsNotNullOrderByCreatedAtDesc();
     }
 
     /**
@@ -221,15 +221,15 @@ public class AdminService {
     /**
      * 19. 신고된 후기 리스트
      * */
-    public List<ReviewReport> findAllReviewReport(){
-        return reviewReportRepository.findAll();
+        public List<ReviewReportResDTO> findAllReviewReport(){
+        return reviewReportRepository.findAllAsResDTO();
     }
 
     /**
      * 20. 신고된 후기 상세보기
      * */
-    public ReviewReport findReviewReport(Integer reportId){
-        return reviewReportRepository.findById(reportId).orElseThrow(
+    public ReviewReportResDTO findReviewReport(Integer reportId){
+        return reviewReportRepository.findResDTOById(reportId).orElseThrow(
                 () -> new RuntimeException("찾는중 오류")
         );
     }
