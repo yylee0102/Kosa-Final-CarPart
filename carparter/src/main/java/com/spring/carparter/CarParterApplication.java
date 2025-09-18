@@ -1,9 +1,11 @@
 package com.spring.carparter;
 
+import com.spring.carparter.dto.*;
 import com.spring.carparter.entity.*; // 모든 엔티티 import
 import com.spring.carparter.repository.*; // 모든 레포지토리 import
-import com.spring.carparter.service.AdminService;
+import com.spring.carparter.service.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -23,6 +25,7 @@ import java.util.Optional;
 @SpringBootApplication
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class CarParterApplication implements ApplicationRunner, CommandLineRunner {
 
     //== 모든 Repository 의존성 주입 ==//
@@ -54,8 +57,127 @@ public class CarParterApplication implements ApplicationRunner, CommandLineRunne
         SpringApplication.run(CarParterApplication.class, args);
     }
 
+
+    private final UserService userService;
+    private final CsInquiryService csInquiryService;
+    private final QuoteRequestService quoteRequestService;
+    private final ReviewService reviewService;
+    private final CompletedRepairService completedRepairService;
+
+
+    @Override
+    public void run(String... args) throws Exception {
+
+    }
+
+    /**
+     * Callback used to run the bean.
+     *
+     * @param args incoming application arguments
+     * @throws Exception on error
+     */
     @Override
     public void run(ApplicationArguments args) throws Exception {
+//        log.info("============== ✅ 애플리케이션 실행 테스트 시작 ==============");
+//
+//        //=========================================================
+//        // ✅ UserService 테스트
+//        //=========================================================
+//        log.info("\n=============== 🧪 UserService 테스트 ================");
+//        try {
+//            // 회원가입 테스트
+//            /*
+//                private String userId;
+//                private String password;
+//                private String name;
+//                private String phoneNumber;
+//                private String ssn;
+//                private boolean marketingAgreed;
+//
+//             */
+//            UserReqDTO newUserReq = new UserReqDTO();
+//            newUserReq.setUserId("user104");
+//            newUserReq.setPassword("1234");
+//            newUserReq.setSsn("123-45-6789");
+//            newUserReq.setMarketingAgreed(true);
+//            newUserReq.setName("김유신");
+//            newUserReq.setPhoneNumber("010-1234-5678");
+//            UserResDTO newUserRes = userService.registerUser(newUserReq);
+//            log.info("UserService.registerUser 성공: {}", newUserRes.getName());
+//
+//            // 프로필 업데이트 테스트
+//            UserReqDTO updateUserReq = new UserReqDTO();
+//            updateUserReq.setPassword("5678");
+//            UserResDTO updatedUserRes = userService.updateUser("user101", updateUserReq);
+//            log.info("UserService.updateUser 성공: {}", updatedUserRes.getName());
+//        } catch (Exception e) {
+//            log.error("❌ UserService 테스트 실패: {}", e.getMessage(), e);
+//        }
+//
+//        //=========================================================
+//        // ✅ QuoteRequestService 테스트
+////        private String centerId; // 리뷰를 남길 정비소 ID
+////        private Integer rating;  // 평점
+////        private String title;    // 제목
+////        private String content;  // 내용
+//        //=========================================================
+//        try {
+//            ReviewReqDTO newReviewReq = new ReviewReqDTO("center102", 4, "두 번째 방문인데 역시 좋네요.");
+//            ReviewResDTO newReviewRes = reviewService.createReview(newReviewReq, "user102");
+//            log.info("ReviewService.createReview 성공: {}", newReviewRes.getContent());
+//
+//            // 특정 유저의 후기 목록 조회
+//            List<ReviewResDTO> userReviews = reviewService.getReviewListByUserId("user1 901");
+//            log.info("ReviewService.getReviewListByUserId('user01') 성공: 조회된 후기 {}개", userReviews.size());
+//        } catch (Exception e) {
+//            log.error("❌ ReviewService 테스트 실패: {}", e.getMessage(), e);
+//        }
+//
+//        //=========================================================
+//        // ✅ CompletedRepairService 테스트
+//        //=========================================================
+//        log.info("\n=============== 🧪 CompletedRepairService 테스트 ================");
+//        try {
+//            // 특정 유저의 수리 완료 내역 조회
+//            List<CompletedRepairResDTO> userRepairs = completedRepairService.getCompletedRepairListByUserId("user01");
+//            log.info("CompletedRepairService.getCompletedRepairListByUserId('user01') 성공: 조회된 내역 {}개", userRepairs.size());
+//        } catch (Exception e) {
+//            log.error("❌ CompletedRepairService 테스트 실패: {}", e.getMessage(), e);
+//        }
+//
+//        //=========================================================
+//        // ✅ CsInquiryService 테스트
+//        //=========================================================
+//        log.info("\n=============== 🧪 CsInquiryService 테스트 ================");
+//        try {
+//            // 테스트용 문의 생성
+//            CsInquiryReqDTO newInquiryReq = new CsInquiryReqDTO("테스트 문의", "이것은 테스트입니다.");
+//            CsInquiry savedInquiry = csInquiryService.makeCsInquiry(newInquiryReq, "user101");
+//            log.info("CsInquiryService.makeCsInquiry 성공: ID={}", savedInquiry.getInquiryId());
+//
+//            // 방금 생성된 문의의 ID를 사용하여 수정 테스트 진행
+//            Integer inquiryIdToUpdate = savedInquiry.getInquiryId();
+//            CsInquiryReqDTO updateInquiryReq = new CsInquiryReqDTO("수정된 문의", "내용이 수정되었습니다.");
+//            CsInquiryResDTO updatedInquiry = csInquiryService.updateCsInquiry(inquiryIdToUpdate, updateInquiryReq, "user101");
+//            log.info("CsInquiryService.updateCsInquiry 성공: {}", updatedInquiry.getQuestionContent());
+//        } catch (Exception e) {
+//            log.error("❌ CsInquiryService 테스트 실패: {}", e.getMessage(), e);
+//        }
+    }
+}
+
+    /**
+     * Callback used to run the bean.
+     *
+     * @param args incoming main method arguments
+     * @throws Exception on error
+     */
+
+
+
+
+//    @Override
+//    public void run(ApplicationArguments args) throws Exception {
 
 //        //=========================================================
 //        // ✅ QuoteRequest Repository 스모크 테스트
@@ -311,11 +433,13 @@ public class CarParterApplication implements ApplicationRunner, CommandLineRunne
 //    private String safe(String s) {
 //        return (s == null ? "(null)" : s);
 //    }
-    }
 
-    private final AdminService adminService;
-    @Override
-    public void run(String... args) throws Exception {
-//        System.out.println(adminService.getCenterApproval(1L));
-    }
-}
+// csInquiry service 테스트 시작
+//        CsInquiryReqDTO req = new CsInquiryReqDTO();
+//        req.setTitle("첫인상?");
+//        req.setQuestionContent("어디선가 두려움을 느끼는 떨림이 느껴졌다. 어디서 혼났나?");
+//        csInquiryService.makeCsInquiry(req,"user02");
+
+
+
+//    }

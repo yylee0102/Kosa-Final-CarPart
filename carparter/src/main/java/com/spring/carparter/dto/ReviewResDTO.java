@@ -17,7 +17,6 @@ public class ReviewResDTO {
     private String centerName; // 정비소 이름
     private String writerName; // 작성자 이름 (User 엔티티의 name 필드 가정)
     private Integer rating;
-    private String title;
     private String content;
     private LocalDateTime createdAt;
 
@@ -28,7 +27,6 @@ public class ReviewResDTO {
                 .centerName(review.getCarCenter().getCenterName())
                 .writerName(review.getUser().getName()) // User 엔티티에 getName()이 있다고 가정
                 .rating(review.getRating())
-                .title(review.getTitle())
                 .content(review.getContent())
                 .createdAt(review.getCreatedAt())
                 .build();

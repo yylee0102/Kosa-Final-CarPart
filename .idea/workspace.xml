@@ -5,27 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6fb3c9e1-773c-47a4-ba9c-7cb464582c6d" name="변경" comment="">
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/controller/EstimateController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/controller/ReservationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules/carparter_main.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/carparter_main.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/Controller/CarCenterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/controller/CarCenterController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/Controller/EstimateController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/Controller/UnitController.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/controller/UnitController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/UsedPartReqDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/dto/UsedPartReqDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/CarCenter.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/entity/CarCenter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ReviewReplyRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ReviewReplyRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ReviewRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/ReviewRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/CarCenterService.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/CarCenterService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/EstimateService.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/EstimateService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ReservationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ReservationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ReviewReplyService.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ReviewReplyService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ReviewService.java" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/ReviewService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/UsedCarService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/carparter/src/main/java/com/spring/carparter/service/UsedPartImageService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/carparter/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/carparter/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,33 +55,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Spring Boot.CarParterApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;sungw&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Administrator/Documents/GitHub/Kosa-Final-CarPart&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;advanced.settings&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;,
-    &quot;애플리케이션.CarParterApplication.executor&quot;: &quot;Run&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Spring Boot.CarParterApplication.executor": "Run",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/kosaStudy/final/Kosa-Final-CarPart",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "advanced.settings",
+    "vue.rearranger.settings.migration": "true",
+    "애플리케이션.CarParterApplication.executor": "Run"
   }
-}</component>
-  <component name="RunManager" selected="애플리케이션.CarParterApplication">
+}]]></component>
+  <component name="RunManager" selected="Spring Boot.CarParterApplication">
     <configuration name="CarParterApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.spring.carparter.CarParterApplication" />
       <module name="carparter_main" />
@@ -130,9 +111,18 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Spring Boot.CarParterApplication" />
         <item itemvalue="애플리케이션.CarParterApplication" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.25557.131" />
+        <option value="bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-IU-252.25557.131" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="StructureViewState">
     <option name="selectedTab" value="물리" />
@@ -149,6 +139,7 @@
       <workItem from="1757585134791" duration="973000" />
       <workItem from="1757635513731" duration="4400000" />
       <workItem from="1757988123461" duration="52000" />
+      <workItem from="1758088754274" duration="449000" />
     </task>
     <servers />
   </component>

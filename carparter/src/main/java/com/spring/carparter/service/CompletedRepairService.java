@@ -1,5 +1,6 @@
 package com.spring.carparter.service;
 
+import com.spring.carparter.dto.CompletedRepairResDTO;
 import com.spring.carparter.entity.CarCenter;
 import com.spring.carparter.entity.CompletedRepair;
 import com.spring.carparter.entity.Estimate;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -33,7 +35,7 @@ public class CompletedRepairService {
     private final UserRepository userRepository;
 
 
-    void makeCompletedRepair(Estimate estimate,String userId) {
+    public void makeCompletedRepair(Estimate estimate,String userId) {
         CarCenter carCenter = carCenterRepository.findById(estimate.getCarCenter().getCenterId()).orElseThrow();
         Estimate savedEstimate = estimateRepository.findById(estimate.getEstimateId()).orElseThrow();
         // CompletedRepair completedRepair = request.toEntity(user, carCenter);
@@ -50,6 +52,17 @@ public class CompletedRepairService {
         completedRepairRepository.save(completedRepair);
 
 
+    }
+
+    public void deleteCompletedRepair(Integer completedRepairId) {
+        completedRepairRepository.deleteById(completedRepairId);
+    }
+
+    // 유저 기준으로 완료된견적서 리스트 뽑기
+    public List<CompletedRepairResDTO> getCompletedRepairListByUserId(String userId) {
+        return completedRepairRepository.findAllByUser_UserId(userId).stream()
+                .map(CompletedRepairResDTO::from)
+                .collect(Collectors.toList());
     }
 
     List<CompletedRepair> getAllCompletedRepairs() {

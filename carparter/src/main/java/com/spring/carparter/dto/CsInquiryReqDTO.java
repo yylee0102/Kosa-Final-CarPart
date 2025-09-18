@@ -2,6 +2,7 @@ package com.spring.carparter.dto;
 
 import com.spring.carparter.entity.CsInquiry;
 import com.spring.carparter.entity.User;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class CsInquiryReqDTO {
 
     private String title;

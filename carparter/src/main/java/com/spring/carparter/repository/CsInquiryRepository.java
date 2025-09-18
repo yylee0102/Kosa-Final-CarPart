@@ -26,4 +26,8 @@ public interface CsInquiryRepository extends JpaRepository<CsInquiry, Integer> {
 
     /** [관리자용 - 답변 미완료 오래된 순] */
     List<CsInquiry> findByAnswerContentIsNullOrderByCreatedAtAsc();
+
+    List<CsInquiry> findByAnswerContentIsNotNull();
+
+
 }

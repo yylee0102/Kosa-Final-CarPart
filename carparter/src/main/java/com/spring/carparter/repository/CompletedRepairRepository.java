@@ -1,6 +1,7 @@
 package com.spring.carparter.repository;
 
 import com.spring.carparter.entity.CompletedRepair;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.stereotype.Repository;
@@ -21,4 +22,10 @@ public interface CompletedRepairRepository extends JpaRepository<CompletedRepair
      * @return 해당 정비소의 CompletedRepair 목록
      */
     List<CompletedRepair> findByCarCenter_CenterId(String centerId);
+
+    // user, carCenter 를 Fetch Join 하여 N+1 문제가 원래 발생하려던걸 방지 한다.
+    @EntityGraph(attributePaths = {"user", "carCenter"})
+    List<CompletedRepair> findAllByUser_UserId(String userId);
+
+
 }

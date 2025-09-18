@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Builder
 public class QuoteRequestResDTO {
 
-    private final Long requestId;
+    private final Integer requestId;
     private final String requestDetails;
     private final String address;
     private final Double latitude;
@@ -90,7 +90,6 @@ public class QuoteRequestResDTO {
                 .images(quoteRequest.getRequestImages().stream()
                         .map(ImageInfo::from)
                         .collect(Collectors.toList()))
-                .estimateCount(quoteRequest.getEstimates().size())
                 .build();
     }
 }

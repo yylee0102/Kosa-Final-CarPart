@@ -23,7 +23,7 @@ public class QuoteRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "request_id")
-    private Long requestId;
+    private Integer requestId;
 
     /** 요청 생성자 (User) */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -58,13 +58,5 @@ public class QuoteRequest {
 
     @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RequestImage> requestImages = new ArrayList<>();
-    @BatchSize(size = 100)
-    @OneToMany(mappedBy = "quoteRequest")
-    private List<Estimate> estimates = new ArrayList<>();
-    @BatchSize(size = 100)
-    @OneToMany
-    private List<ChatRoom> chatRooms = new ArrayList<>();
-    @BatchSize(size = 100)
-    @OneToMany
-    private List<CompletedRepair> completedRepairs = new ArrayList<>();
+
 }
