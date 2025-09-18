@@ -54,11 +54,6 @@ public class Review {
     private Integer rating;
 
     /**
-     * 리뷰 제목
-     */
-    private String title;
-
-    /**
      * 리뷰 상세 내용
      */
     @Column(columnDefinition = "TEXT")

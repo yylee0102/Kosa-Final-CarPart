@@ -23,10 +23,10 @@ public class ReviewService {
     private final UserRepository userRepository;
 
     @Transactional
-    public ReviewResDTO createReview(ReviewReqDTO reqDto) {
+    public ReviewResDTO createReview(ReviewReqDTO reqDto,String userId) {
         CarCenter carCenter = carCenterRepository.findById(reqDto.getCenterId())
                 .orElseThrow(() -> new IllegalArgumentException("정비소를 찾을 수 없습니다."));
-        User user = userRepository.findById(reqDto.getUserId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Review review = reqDto.toEntity(carCenter, user);
@@ -43,14 +43,14 @@ public class ReviewService {
     }
 
     @Transactional
-    public ReviewResDTO updateReview(Integer reviewId, ReviewReqDTO reqDto) { // ✅ Long -> Integer로 수정
+    public ReviewResDTO updateReview(Integer reviewId, ReviewReqDTO reqDto,String userId) { // ✅ Long -> Integer로 수정
         Review review = reviewRepository.findById(reviewId) // ✅ .longValue() 없이 바로 사용
                 .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
-
-        // TODO: 리뷰 작성자와 수정 요청자가 동일한지 확인하는 로직 추가
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        review.setUser(user);
+        // TODO: 리뷰 작성자와 수정 요청자가 동일한지 확인하는 로직 추가(로그인 후에 하는거라 상관없다)
         // if (!review.getUser().getUserId().equals(reqDto.getUserId())) { ... }
-
-        review.setTitle(reqDto.getTitle());
         review.setContent(reqDto.getContent());
         review.setRating(reqDto.getRating());
         return ReviewResDTO.from(review);
@@ -62,5 +62,12 @@ public class ReviewService {
             throw new IllegalArgumentException("삭제할 리뷰를 찾을 수 없습니다.");
         }
         reviewRepository.deleteById(reviewId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReviewResDTO> getReviewListByUserId(String userId) {
+        return reviewRepository.findAllByUser_UserId(userId).stream()
+                .map(ReviewResDTO::from)
+                .collect(Collectors.toList());
     }
 }

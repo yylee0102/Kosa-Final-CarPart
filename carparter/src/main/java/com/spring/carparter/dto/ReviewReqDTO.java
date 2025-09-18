@@ -15,9 +15,7 @@ import lombok.NoArgsConstructor;
 public class ReviewReqDTO {
 
     private String centerId; // 리뷰를 남길 정비소 ID
-    private String userId;   // 리뷰를 작성하는 사용자 ID
     private Integer rating;  // 평점
-    private String title;    // 제목
     private String content;  // 내용
 
     // DTO를 Review 엔티티로 변환하는 메서드 (Service에서 사용)
@@ -26,7 +24,6 @@ public class ReviewReqDTO {
                 .carCenter(carCenter)
                 .user(user)
                 .rating(this.rating)
-                .title(this.title)
                 .content(this.content)
                 .build();
     }
