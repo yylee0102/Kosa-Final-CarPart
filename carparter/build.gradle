@@ -44,7 +44,10 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.25.43' // 버전은 최신 버전을 확인하고 사용하세요.
     implementation 'org.springframework.boot:spring-boot-starter-webflux' // 카카오 쓸때 필요해
 
-
+    // JJWT (Java JWT) 라이브러리 추가
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-gson:0.12.5'
 }
 
 tasks.named('test') {
