@@ -59,6 +59,12 @@ public class Estimate {
     private LocalDateTime createdAt;
 
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstimateStatus status = EstimateStatus.PENDING;
+
+
     // 이전에 있던 List<CompletedRepair> 필드는 제거되었습니다.
 
     // ✅ 변경된 부분: mappedBy를 사용하여 양방향 관계로 변경

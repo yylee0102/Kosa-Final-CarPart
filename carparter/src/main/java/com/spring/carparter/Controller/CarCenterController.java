@@ -156,12 +156,12 @@ public class CarCenterController {
         return ResponseEntity.ok(myParts);
     }
 
-//    /** 4-3. 중고 부품 상세 조회 */
-//    @GetMapping("/used-parts/{partId}")
-//    public ResponseEntity<UsedPartResDTO> getUsedPartDetails(@PathVariable Integer partId) {
-//        UsedPartResDTO partDetails = usedPartService.getUsedPartDetails(partId);
-//        return ResponseEntity.ok(partDetails);
-//    } -> 이거 내일 레파지토리 부터 만들어야 함 서비스도
+    /** 4-3. 중고 부품 상세 조회 */
+    @GetMapping("/used-parts/{partId}")
+    public ResponseEntity<UsedPartResDTO> getUsedPartDetails(@PathVariable Integer partId) {
+        UsedPartResDTO partDetails = usedPartService.getUsedPartDetails(partId);
+        return ResponseEntity.ok(partDetails);
+    }
 
     /** 4-4. 중고 부품 수정 (로그인 필요) */
     @PutMapping(value = "/used-parts/{partId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -103,5 +103,20 @@ public class UsedPartService {
         // DB에서 부품 정보 삭제
         usedPartRepository.delete(usedPart);
     }
+    /**
+     * 중고 부품 상세 조회
+     * @param partId 조회할 부품의 ID
+     * @return 중고 부품 상세 정보 DTO
+     */
+    @Transactional(readOnly = true) // 데이터 변경이 없는 조회이므로 readOnly 옵션으로 성능 최적화
+    public UsedPartResDTO getUsedPartDetails(Integer partId) {
+        // Repository를 통해 부품 정보와 이미지 정보를 한 번에 가져옵니다.
+        UsedPart usedPart = usedPartRepository.findByIdWithImages(partId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 부품을 찾을 수 없습니다. id=" + partId));
+
+        // Entity를 DTO로 변환하여 반환합니다.
+        return UsedPartResDTO.from(usedPart);
+    }
+
 
 }
