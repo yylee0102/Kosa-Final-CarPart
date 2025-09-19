@@ -1,8 +1,9 @@
 package com.spring.carparter.config;
 
+import com.spring.carparter.JWT.JWTUtil;
+import com.spring.carparter.JWT.LoginFilter;
 import com.spring.carparter.jwt.JWTFilter;
-import com.spring.carparter.jwt.JWTUtil;
-import com.spring.carparter.jwt.LoginFilter;
+
 import com.spring.carparter.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
