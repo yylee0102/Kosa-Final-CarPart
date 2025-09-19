@@ -1,11 +1,7 @@
 package com.spring.carparter.controller;
 
 import com.spring.carparter.dto.*;
-import com.spring.carparter.entity.*;
-import com.spring.carparter.service.*;
-import com.spring.carparter.service.EstimateService;
-import com.spring.carparter.dto.*;
-import com.spring.carparter.entity.*;
+import com.spring.carparter.entity.CsInquiry;
 import com.spring.carparter.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,23 +11,23 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.*;
 
-        import java.util.List;
-
-// UserController.java (예시)
 @RestController
-@RequestMapping("/api/users") // 사용자 관련 API
+@RequestMapping("/api/users") // 사용자 관련 API 공통 경로
 @RequiredArgsConstructor
 public class UserController {
 
+    // ✅ 모든 Service 의존성에 final 키워드를 적용하여 생성자 주입이 되도록 보장
     private final UserService userService;
-    /************* 유저 프로필 관련 유저 ************************/
-    @PostMapping("/profile")
+    private final CsInquiryService csInquiryService;
+    private final QuoteRequestService quoteRequestService;
+    private final ReviewService reviewService;
+    private final CompletedRepairService completedRepairService;
+    private final EstimateService estimateService;
+
+    // =================== 1. 사용자 프로필 관리 ===================
+
+    @PostMapping("/join") // ✅ 회원가입 경로는 /profile 보다 /join 이 더 명확
     public ResponseEntity<UserResDTO> signUp(@RequestBody UserReqDTO request) {
         UserResDTO userResDTO = userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResDTO);
@@ -40,133 +36,82 @@ public class UserController {
     @PutMapping("/profile")
     public ResponseEntity<UserResDTO> updateProfile(@RequestBody UserReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
-        UserResDTO userResDTO = userService.updateUser(userId,request);
-        return ResponseEntity.status(HttpStatus.OK).body(userResDTO);
+        UserResDTO userResDTO = userService.updateUser(userId, request);
+        return ResponseEntity.ok(userResDTO);
     }
 
-    // 비밀번호 찾기
     @PutMapping("/password")
     public ResponseEntity<Void> resetPassword(@RequestBody UserReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
-        if(!userService.isCorrectPhone(request)){
-            userService.resetPassword(request,userId);
+        // ✅ 로직 수정: 핸드폰 인증이 성공했을 때 비밀번호를 변경하도록 수정
+        if (userService.isCorrectPhone(request)) {
+            userService.resetPassword(request, userId);
             return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    @DeleteMapping("/profile/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable String id) {
-        userService.deleteUser(id);
+    @DeleteMapping("/profile") // ✅ PathVariable 대신 인증 정보로 본인 계정 삭제
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails.getUsername();
+        userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
 
-    private final CsInquiryService csInquiryService;
-    /***************** 고객센터 질문에 대한 유저 *******************/
+    // =================== 2. 고객센터 문의 관리 ===================
 
-    // 질문 생성
-    @PostMapping("/inquiry")
-    public ResponseEntity<CsInquiry> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-
+    @PostMapping("/inquiries")
+    public ResponseEntity<CsInquiryResDTO> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
-        CsInquiry css = csInquiryService.makeCsInquiry(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(css);
+        // ✅ Service가 Entity 대신 DTO를 반환하도록 수정했다고 가정
+        CsInquiryResDTO newInquiry = csInquiryService.makeCsInquiry(request, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newInquiry);
     }
 
-    @DeleteMapping("/inquiry/{inquiryId}")
-    public ResponseEntity<?> deleteInquiry(@PathVariable Integer inquiryId) {
+    @DeleteMapping("/inquiries/{inquiryId}")
+    public ResponseEntity<Void> deleteInquiry(@PathVariable Integer inquiryId) {
         csInquiryService.deleteCsInquiry(inquiryId);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/inquiry/{inquiryId}")
+    @PutMapping("/inquiries/{inquiryId}")
     public ResponseEntity<CsInquiryResDTO> updateQuestion(
             @PathVariable Integer inquiryId,
-            @RequestBody CsInquiryReqDTO request, // 질문만 수정
+            @RequestBody CsInquiryReqDTO request,
             @AuthenticationPrincipal UserDetails userDetails) {
-
         String userId = userDetails.getUsername();
         CsInquiryResDTO updatedInquiry = csInquiryService.updateCsInquiry(inquiryId, request, userId);
         return ResponseEntity.ok(updatedInquiry);
     }
 
+    // =================== 3. 견적 요청서 관리 ===================
 
-    private final QuoteRequestService quoteRequestService;
-    /***************** 견적 요청서에 대한 유저 *******************/
-    @PostMapping("/quote")
-    public ResponseEntity<QuoteRequestResDTO> makeQuoteRequest(@RequestBody QuoteRequestReqDTO request) {
-        QuoteRequest quoteRequest = quoteRequestService.createAndSaveQuoteRequest(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(QuoteRequestResDTO.from(quoteRequest));
+    @PostMapping("/quote-requests")
+    public ResponseEntity<QuoteRequestResDTO> makeQuoteRequest(@RequestBody QuoteRequestReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails.getUsername();
+        // ✅ 서비스 메서드에 userId를 넘겨주도록 수정
+        QuoteRequestResDTO quoteRequest = quoteRequestService.createAndSaveQuoteRequest(request, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(quoteRequest);
     }
 
-    @DeleteMapping("/quote/{id}")
-    public ResponseEntity<?> deleteQuoteRequest(@PathVariable Integer id) {
+    @DeleteMapping("/quote-requests/{id}")
+    public ResponseEntity<Void> deleteQuoteRequest(@PathVariable Integer id) {
         quoteRequestService.deleteQuoteRequest(id);
         return ResponseEntity.noContent().build();
     }
 
-    // 한 유저는 한 번의 요청서를 보낼 수 있다.
-    @GetMapping("/quote")
-    public ResponseEntity<?> getQuoteRequests(@AuthenticationPrincipal UserDetails userDetails) {
+    @GetMapping("/my-quote-request") // ✅ 더 명확한 경로로 변경
+    public ResponseEntity<QuoteRequestResDTO> getMyQuoteRequest(@AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
-        QuoteRequestResDTO res = quoteRequestService.getQuoteRequestByUser(new User().builder().userId(userId).build());
+        // ✅ 불필요한 User 객체 생성 대신 userId(String)를 직접 전달
+        QuoteRequestResDTO res = quoteRequestService.getQuoteRequestByUser(userId);
         return ResponseEntity.ok(res);
     }
 
-    private final ReviewService reviewService;
-    /*********************** 후기 생성  ***************************/
-    @PostMapping("/review")
-    public ResponseEntity<ReviewResDTO> makeReview(@RequestBody ReviewReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        ReviewResDTO res = reviewService.createReview(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
-    }
+    // =================== 4. 내가 받은 견적서 관리 ===================
 
-    @PutMapping("/review/{id}")
-    public ResponseEntity<ReviewResDTO> updateReview(@PathVariable Integer id, @RequestBody ReviewReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        ReviewResDTO res = reviewService.updateReview(id, request, userId);
-        return ResponseEntity.ok(res);
-    }
-
-    @DeleteMapping("/review/{id}")
-    public ResponseEntity<?> deleteReview(@PathVariable Integer id) {
-        reviewService.deleteReview(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/review/")
-    public ResponseEntity<?> getReviewList(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        List<ReviewResDTO> res = reviewService.getReviewListByUserId(userId);
-        return ResponseEntity.ok(res);
-    }
-
-    private CompletedRepairService completedRepairService;
-    /******************************유저 입장에서의 완료된 견적 ******************************/
-    @DeleteMapping("/completedRepair/{id}")
-    public ResponseEntity<?> deleteCompletedRepair(@PathVariable Integer id) {
-        completedRepairService.deleteCompletedRepair(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/completedRepair/")
-    public ResponseEntity<?> getCompletedRepairList(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        List<CompletedRepairResDTO> res = completedRepairService.getCompletedRepairListByUserId(userId);
-        return ResponseEntity.ok(res);
-    }
-
-    private final EstimateService estimateService;
-// ... (다른 서비스들)
-
-    /**
-     * 내가 받은 견적서 거절 API
-     * @param estimateId 거절할 견적서의 ID
-     * @param userDetails 로그인한 사용자 정보
-     */
-    @PutMapping("/estimates/{estimateId}/reject") // PUT 또는 PATCH 사용
+    @PutMapping("/estimates/{estimateId}/reject")
     public ResponseEntity<Void> rejectEstimate(@PathVariable Integer estimateId,
                                                @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
@@ -174,140 +119,47 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    // =================== 5. 리뷰 관리 ===================
 
-    private final UserService userService;
-    /************* 유저 프로필 관련 유저 ************************/
-    @PostMapping("/profile")
-    public ResponseEntity<UserResDTO> signUp(@RequestBody UserReqDTO request) {
-        UserResDTO userResDTO = userService.registerUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userResDTO);
-    }
-
-    @PutMapping("/profile")
-    public ResponseEntity<UserResDTO> updateProfile(@RequestBody UserReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        UserResDTO userResDTO = userService.updateUser(userId,request);
-        return ResponseEntity.status(HttpStatus.OK).body(userResDTO);
-    }
-
-    // 비밀번호 찾기
-    @PutMapping("/password")
-    public ResponseEntity<Void> resetPassword(@RequestBody UserReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        if(!userService.isCorrectPhone(request)){
-            userService.resetPassword(request,userId);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @DeleteMapping("/profile/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable String id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
-
-
-
-
-
-    private final CsInquiryService csInquiryService;
-    /***************** 고객센터 질문에 대한 유저 *******************/
-
-    // 질문 생성
-    @PostMapping("/inquiry")
-    public ResponseEntity<CsInquiry> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-
-        String userId = userDetails.getUsername();
-        CsInquiry css = csInquiryService.makeCsInquiry(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(css);
-    }
-
-    @DeleteMapping("/inquiry/{inquiryId}")
-    public ResponseEntity<?> deleteInquiry(@PathVariable Integer inquiryId) {
-        csInquiryService.deleteCsInquiry(inquiryId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/inquiry/{inquiryId}")
-    public ResponseEntity<CsInquiryResDTO> updateQuestion(
-            @PathVariable Integer inquiryId,
-            @RequestBody CsInquiryReqDTO request, // 질문만 수정
-            @AuthenticationPrincipal UserDetails userDetails) {
-
-        String userId = userDetails.getUsername();
-        CsInquiryResDTO updatedInquiry = csInquiryService.updateCsInquiry(inquiryId, request, userId);
-        return ResponseEntity.ok(updatedInquiry);
-    }
-
-
-    private final QuoteRequestService quoteRequestService;
-    /***************** 견적 요청서에 대한 유저 *******************/
-    @PostMapping("/quote")
-    public ResponseEntity<QuoteRequestResDTO> makeQuoteRequest(@RequestBody QuoteRequestReqDTO request) {
-        QuoteRequest quoteRequest = quoteRequestService.createAndSaveQuoteRequest(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(QuoteRequestResDTO.from(quoteRequest));
-    }
-
-    @DeleteMapping("/quote/{id}")
-    public ResponseEntity<?> deleteQuoteRequest(@PathVariable Integer id) {
-        quoteRequestService.deleteQuoteRequest(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    // 한 유저는 한 번의 요청서를 보낼 수 있다.
-    @GetMapping("/quote")
-    public ResponseEntity<?> getQuoteRequests(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        QuoteRequestResDTO res = quoteRequestService.getQuoteRequestByUser(new User().builder().userId(userId).build());
-        return ResponseEntity.ok(res);
-    }
-
-    private final ReviewService reviewService;
-    /*********************** 후기 생성  ***************************/
-    @PostMapping("/review")
+    @PostMapping("/reviews")
     public ResponseEntity<ReviewResDTO> makeReview(@RequestBody ReviewReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
         ReviewResDTO res = reviewService.createReview(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
 
-    @PutMapping("/review/{id}")
+    @PutMapping("/reviews/{id}")
     public ResponseEntity<ReviewResDTO> updateReview(@PathVariable Integer id, @RequestBody ReviewReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
         ReviewResDTO res = reviewService.updateReview(id, request, userId);
         return ResponseEntity.ok(res);
     }
 
-    @DeleteMapping("/review/{id}")
-    public ResponseEntity<?> deleteReview(@PathVariable Integer id) {
+    @DeleteMapping("/reviews/{id}")
+    public ResponseEntity<Void> deleteReview(@PathVariable Integer id) {
         reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/review/")
-    public ResponseEntity<?> getReviewList(@AuthenticationPrincipal UserDetails userDetails) {
+    @GetMapping("/my-reviews") // ✅ 더 명확한 경로로 변경
+    public ResponseEntity<List<ReviewResDTO>> getMyReviewList(@AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
         List<ReviewResDTO> res = reviewService.getReviewListByUserId(userId);
         return ResponseEntity.ok(res);
     }
 
-    private CompletedRepairService completedRepairService;
-    /******************************유저 입장에서의 완료된 견적 ******************************/
-    @DeleteMapping("/completedRepair/{id}")
-    public ResponseEntity<?> deleteCompletedRepair(@PathVariable Integer id) {
+    // =================== 6. 수리 완료 내역 관리 ===================
+
+    @DeleteMapping("/completed-repairs/{id}")
+    public ResponseEntity<Void> deleteCompletedRepair(@PathVariable Integer id) {
         completedRepairService.deleteCompletedRepair(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/completedRepair/")
-    public ResponseEntity<?> getCompletedRepairList(@AuthenticationPrincipal UserDetails userDetails) {
+    @GetMapping("/my-completed-repairs") // ✅ 더 명확한 경로로 변경
+    public ResponseEntity<List<CompletedRepairResDTO>> getMyCompletedRepairList(@AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
         List<CompletedRepairResDTO> res = completedRepairService.getCompletedRepairListByUserId(userId);
         return ResponseEntity.ok(res);
     }
-
-
-
 }
