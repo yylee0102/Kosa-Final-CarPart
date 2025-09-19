@@ -20,14 +20,15 @@ public class CarCenterService {
     private final CarCenterRepository carCenterRepository;
     private final GeocodingService geocodingService;
     private final CarCenterApprovalRepository carCenterApprovalRepository;
+    private final PasswordEncoder passwordEncoder; // ✅ 1. PasswordEncoder 의존성 주입
 
     /**
-     * 1. 카센터 회원가입 (Create)
+     * 1. 카센터 회원가입
      */
     @Transactional
     public CarCenterResDTO register(CarCenterReqDTO requestDto) {
         if (carCenterRepository.existsByCenterId(requestDto.getCenterId())) {
-            throw new DuplicateException("이미 사용 중인 이메일입니다.");
+            throw new DuplicateException("이미 사용 중인 아이디입니다.");
         }
         if (carCenterRepository.existsByBusinessRegistrationNumber(requestDto.getBusinessRegistrationNumber())) {
             throw new DuplicateException("이미 등록된 사업자등록번호입니다.");
@@ -35,48 +36,52 @@ public class CarCenterService {
 
         CarCenter carCenter = requestDto.toEntity();
 
-
         Coordinates coords = geocodingService.getCoordinates(requestDto.getAddress()).block();
         if (coords != null) {
             carCenter.updateCoordinates(coords.getLatitude(), coords.getLongitude());
         }
 
-        /*
-         * 비밀번호 암호화 로직
-         * carCenter.setPassword(passwordEncoder.encode(requestDto.getPassword()));
-         */
-
+        // ✅ 2. 비밀번호를 암호화하여 저장
+        carCenter.setPassword(passwordEncoder.encode(requestDto.getPassword()));
 
         CarCenter savedCarCenter = carCenterRepository.save(carCenter);
-        //관리자에게 보낼 가입 승인 요청 엔티티 및 저장
+
         CarCenterApproval approval = CarCenterApproval.builder()
                 .carCenter(savedCarCenter)
                 .build();
-            carCenterApprovalRepository.save(approval);
+        carCenterApprovalRepository.save(approval);
+
         return CarCenterResDTO.from(savedCarCenter);
     }
 
     /**
-     * 2. 카센터 로그인
+     * 2. 로그인 메서드 삭제
+     * ✅ Spring Security의 LoginFilter와 CustomUserDetailsService가
+     * 모든 로그인 처리를 담당하므로 서비스의 login 메서드는 더 이상 필요 없습니다.
      */
-    @Transactional(readOnly
-            = true)
-    public CarCenterResDTO login(CarCenterReqDTO req){
-        CarCenter carCenter = carCenterRepository.findByCenterId(req.getCenterId())
-                .orElseThrow(()-> new IllegalArgumentException("이메일이 일치하지 않습니다."));
+    // public CarCenterResDTO login(CarCenterReqDTO req) { ... }
 
-        if(!req.getPassword().equals(carCenter.getPassword())){
-            /*
-              위에랑 바꾸고
-             * if(!passwordEncoder.matches(req.getPassword(), carCenter.getPassword())) { ... }
-             */
-            throw  new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+    /**
+     * 3. 아이디/사업자번호 중복 확인 (Controller에서 사용하기 위해 추가)
+     */
+    @Transactional(readOnly = true)
+    public boolean checkDuplicate(String type, String value) {
+        boolean isDuplicate;
+        switch (type) {
+            case "id":
+                isDuplicate = carCenterRepository.existsByCenterId(value);
+                break;
+            case "brn": // "bizNum" 등 DB 필드명과 일치하는지 확인 필요
+                isDuplicate = carCenterRepository.existsByBusinessRegistrationNumber(value);
+                break;
+            default:
+                throw new IllegalArgumentException("유효하지 않은 중복 확인 타입입니다: " + type);
         }
-        return CarCenterResDTO.from(carCenter);
+        return isDuplicate;
     }
 
     /**
-     * 3. 특정 카센터 정보 조회
+     * 4. 특정 카센터 정보 조회
      */
     @Transactional(readOnly = true)
     public CarCenterResDTO findCarCenterById(String centerId) {
@@ -86,7 +91,7 @@ public class CarCenterService {
     }
 
     /**
-     * 4. 카센터 정보 수정
+     * 5. 카센터 정보 수정
      */
     @Transactional
     public CarCenterResDTO update(String centerId, CarCenterReqDTO requestDto) {
@@ -99,14 +104,12 @@ public class CarCenterService {
                 carCenter.updateCoordinates(coords.getLatitude(), coords.getLongitude());
             }
         }
-
         carCenter.updateInfo(requestDto);
-
         return CarCenterResDTO.from(carCenter);
     }
 
     /**
-     * 5. 카센터 회원 탈퇴
+     * 6. 카센터 회원 탈퇴
      */
     @Transactional
     public void delete(String centerId) {

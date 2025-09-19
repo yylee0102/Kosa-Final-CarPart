@@ -24,7 +24,6 @@ public class CarCenter {
 
     /** 정비소 고유 ID (PK, 자동생성) */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "center_id")
     private String centerId;
 
