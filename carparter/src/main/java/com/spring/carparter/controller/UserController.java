@@ -17,10 +17,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// UserController.java (예시)
 @RestController
-@RequestMapping("/api/users") // 사용자 관련 API
 @RequiredArgsConstructor
+@RequestMapping("/api/users/")
 public class UserController {
 
     private final UserService userService;
@@ -151,6 +150,11 @@ public class UserController {
         List<CompletedRepairResDTO> res = completedRepairService.getCompletedRepairListByUserId(userId);
         return ResponseEntity.ok(res);
     }
+
+
+
+
+}
 
     private final EstimateService estimateService;
 // ... (다른 서비스들)
