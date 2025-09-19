@@ -3,6 +3,7 @@ package com.spring.carparter.controller;
 import com.spring.carparter.dto.*;
 import com.spring.carparter.entity.*;
 import com.spring.carparter.service.*;
+import com.spring.carparter.service.EstimateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,10 +12,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+// UserController.java (예시)
 @RestController
+@RequestMapping("/api/users") // 사용자 관련 API
 @RequiredArgsConstructor
-@RequestMapping("/api/users/")
 public class UserController {
 
     private final UserService userService;
@@ -50,12 +56,8 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-
-
-
-
     private final CsInquiryService csInquiryService;
-/***************** 고객센터 질문에 대한 유저 *******************/
+    /***************** 고객센터 질문에 대한 유저 *******************/
 
     // 질문 생성
     @PostMapping("/inquiry")
@@ -84,8 +86,8 @@ public class UserController {
     }
 
 
-private final QuoteRequestService quoteRequestService;
-/***************** 견적 요청서에 대한 유저 *******************/
+    private final QuoteRequestService quoteRequestService;
+    /***************** 견적 요청서에 대한 유저 *******************/
     @PostMapping("/quote")
     public ResponseEntity<QuoteRequestResDTO> makeQuoteRequest(@RequestBody QuoteRequestReqDTO request) {
         QuoteRequest quoteRequest = quoteRequestService.createAndSaveQuoteRequest(request);
@@ -150,6 +152,21 @@ private final QuoteRequestService quoteRequestService;
         return ResponseEntity.ok(res);
     }
 
+    private final EstimateService estimateService;
+// ... (다른 서비스들)
 
+    /**
+     * 내가 받은 견적서 거절 API
+     * @param estimateId 거절할 견적서의 ID
+     * @param userDetails 로그인한 사용자 정보
+     */
+    @PutMapping("/estimates/{estimateId}/reject") // PUT 또는 PATCH 사용
+    public ResponseEntity<Void> rejectEstimate(@PathVariable Integer estimateId,
+                                               @AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails.getUsername();
+        estimateService.rejectEstimateByUser(userId, estimateId);
+        return ResponseEntity.ok().build();
+    }
 
 }
+
