@@ -50,8 +50,8 @@ public class QuoteRequestService {
     }
 
     // 한 user의 견적요청서를 가져오는 함수
-    public QuoteRequestResDTO getQuoteRequestByUser(User user){
-        QuoteRequest quoteRequest =  quoteRequestRepository.findByUser_UserId(user.getUserId()).orElseThrow();
+    public QuoteRequestResDTO getQuoteRequestByUser(String userId){
+        QuoteRequest quoteRequest =  quoteRequestRepository.findByUser_UserId(userId).orElseThrow();
         return QuoteRequestResDTO.from(quoteRequest);
     }
 

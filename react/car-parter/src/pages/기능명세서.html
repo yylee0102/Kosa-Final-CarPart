@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서비스 기능 명세서</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            color: #343a40;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 1rem;
+        }
+
+        p {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        th, td {
+            padding: 1rem 1.25rem;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        thead th {
+            background-color: #495057;
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 1rem;
+            text-align: center;
+            border-top: 2px solid #343a40;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tbody tr:hover {
+            background-color: #e9ecef;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        td:first-child {
+            font-weight: 500;
+            color: #0056b3;
+            min-width: 180px;
+        }
+        
+        td:nth-child(2) {
+             font-family: Consolas, 'Courier New', monospace;
+        }
+
+        .db-op span {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 0.85em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .op-select { background-color: #e7f5ff; color: #1c7ed6; }
+        .op-insert { background-color: #d3f9d8; color: #2f9e44; }
+        .op-update { background-color: #fff3bf; color: #f08c00; }
+        .op-delete { background-color: #ffe3e3; color: #c92a2a; }
+        .op-none { background-color: #e9ecef; color: #495057; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>서비스 기능 명세서</h1>
+        <p>각 서비스 클래스의 메서드별 주요 기능과 데이터베이스 작업을 정리한 표입니다.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>서비스 클래스</th>
+                    <th>메서드</th>
+                    <th>주요 기능</th>
+                    <th>DB 작업</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- AdminService -->
+                <tr>
+                    <td rowspan="11">AdminService</td>
+                    <td>login</td>
+                    <td>관리자 로그인</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>genderCountsMap, ageBandCounts, userCount</td>
+                    <td>사용자 통계 조회 (성별, 연령, 총원)</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>carCenterCount, pendingApprovalCount, reviewReportCount</td>
+                    <td>카센터, 승인 대기, 신고 후기 수 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>getPendingApprovals, getCenterApproval</td>
+                    <td>카센터 승인 대기 목록/상세 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>removeCenterApproval</td>
+                    <td>카센터 등록 반려</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-delete">DELETE</span></td>
+                </tr>
+                <tr>
+                    <td>addCarCenter</td>
+                    <td>카센터 등록 승인</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span><span class="op-delete">DELETE</span></td>
+                </tr>
+                <tr>
+                    <td>getAllCsInquiry, getCsInquiry</td>
+                    <td>고객 문의 목록/상세 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>answerInquiry</td>
+                    <td>고객 문의 답변 등록/수정</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span></td>
+                </tr>
+                <tr>
+                    <td>addAnnouncement, removeAnnouncement, updateAnnouncement</td>
+                    <td>공지사항 등록, 삭제, 수정</td>
+                    <td class="db-op"><span class="op-insert">INSERT</span><span class="op-delete">DELETE</span><span class="op-update">UPDATE</span></td>
+                </tr>
+                 <tr>
+                    <td>findAllAnnouncement, findAnnouncement</td>
+                    <td>공지사항 목록/상세 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>findAllReviewReport, findReviewReport, deleteReport</td>
+                    <td>신고된 후기 조회 및 삭제</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-delete">DELETE</span></td>
+                </tr>
+                
+                <!-- CarCenterService -->
+                <tr>
+                    <td rowspan="5">CarCenterService</td>
+                    <td>register</td>
+                    <td>카센터 회원가입</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>checkDuplicate</td>
+                    <td>아이디/사업자번호 중복 확인</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>findCarCenterById</td>
+                    <td>특정 카센터 정보 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>update</td>
+                    <td>카센터 정보 수정</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span></td>
+                </tr>
+                <tr>
+                    <td>delete</td>
+                    <td>카센터 회원 탈퇴</td>
+                    <td class="db-op"><span class="op-delete">DELETE</span></td>
+                </tr>
+
+                <!-- ChatRoomService -->
+                <tr>
+                    <td>ChatRoomService</td>
+                    <td>makeChatRoom</td>
+                    <td>채팅방 생성</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+
+                <!-- CompletedRepairService -->
+                 <tr>
+                    <td rowspan="2">CompletedRepairService</td>
+                    <td>makeCompletedRepair</td>
+                    <td>정비 완료 내역 생성</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>getAllCompletedRepairs</td>
+                    <td>모든 정비 완료 내역 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+
+                <!-- CsInquiryService -->
+                <tr>
+                    <td rowspan="2">CsInquiryService</td>
+                    <td>makeCsInquiry</td>
+                    <td>고객 문의 등록</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>getCsInquiry, getAllInquiries</td>
+                    <td>고객 문의 조회 (특정/전체)</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+
+                <!-- EstimateService -->
+                <tr>
+                    <td rowspan="5">EstimateService</td>
+                    <td>submitEstimate</td>
+                    <td>견적서 제출</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>getMyEstimates, getEstimateDetails</td>
+                    <td>제출한 견적서 조회 (목록/상세)</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>deleteEstimate</td>
+                    <td>제출한 견적서 삭제/취소</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-delete">DELETE</span></td>
+                </tr>
+                <tr>
+                    <td>updateEstimate</td>
+                    <td>견적서 수정</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span></td>
+                </tr>
+                <tr>
+                    <td>rejectEstimateByUser</td>
+                    <td>사용자의 견적서 거절 처리</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span></td>
+                </tr>
+
+                <!-- QuoteRequestService -->
+                 <tr>
+                    <td rowspan="3">QuoteRequestService</td>
+                    <td>createAndSaveQuoteRequest</td>
+                    <td>견적 요청서 작성</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>deleteQuoteRequest</td>
+                    <td>견적 요청서 삭제</td>
+                    <td class="db-op"><span class="op-delete">DELETE</span></td>
+                </tr>
+                <tr>
+                    <td>getQuoteRequest, getQuoteRequestByRequestId</td>
+                    <td>견적 요청서 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+
+                <!-- ReservationService -->
+                <tr>
+                    <td rowspan="5">ReservationService</td>
+                    <td>createReservation</td>
+                    <td>신규 예약 등록</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>getMyReservations</td>
+                    <td>카센터의 모든 예약 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>updateReservation</td>
+                    <td>예약 정보 수정</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span></td>
+                </tr>
+                <tr>
+                    <td>deleteReservation</td>
+                    <td>예약 삭제/취소</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-delete">DELETE</span></td>
+                </tr>
+                <tr>
+                    <td>deleteOldReservations</td>
+                    <td>(스케줄러) 오래된 예약 자동 삭제</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-delete">DELETE</span></td>
+                </tr>
+
+                <!-- Review Services -->
+                 <tr>
+                    <td rowspan="4">ReviewService</td>
+                    <td>createReview</td>
+                    <td>후기 작성</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>getReviewsForCarCenter</td>
+                    <td>특정 카센터의 모든 후기 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>updateReview</td>
+                    <td>후기 수정</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span></td>
+                </tr>
+                <tr>
+                    <td>deleteReview</td>
+                    <td>후기 삭제</td>
+                    <td class="db-op"><span class="op-delete">DELETE</span></td>
+                </tr>
+                <tr>
+                    <td rowspan="2">ReviewReplyService</td>
+                    <td>createReply</td>
+                    <td>후기 답변 작성</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>updateReply, deleteReply</td>
+                    <td>후기 답변 수정 및 삭제</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span><span class="op-delete">DELETE</span></td>
+                </tr>
+                <tr>
+                    <td>ReviewReportService</td>
+                    <td>createReport</td>
+                    <td>후기 신고</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+
+                <!-- UsedPartService -->
+                 <tr>
+                    <td rowspan="4">UsedPartService</td>
+                    <td>registerUsedPart</td>
+                    <td>중고 부품 등록</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>getMyUsedParts, getUsedPartDetails</td>
+                    <td>등록한 중고 부품 조회 (목록/상세)</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+                <tr>
+                    <td>updateUsedPart</td>
+                    <td>중고 부품 정보 수정</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-update">UPDATE</span></td>
+                </tr>
+                 <tr>
+                    <td>deleteUsedPart</td>
+                    <td>중고 부품 삭제</td>
+                    <td class="db-op"><span class="op-select">SELECT</span><span class="op-delete">DELETE</span></td>
+                </tr>
+
+                <!-- UserService -->
+                <tr>
+                    <td rowspan="4">UserService</td>
+                    <td>registerUser</td>
+                    <td>신규 사용자 등록</td>
+                    <td class="db-op"><span class="op-insert">INSERT</span></td>
+                </tr>
+                <tr>
+                    <td>deleteUser</td>
+                    <td>사용자 회원 탈퇴</td>
+                    <td class="db-op"><span class="op-delete">DELETE</span></td>
+                </tr>
+                <tr>
+                    <td>updateUser</td>
+                    <td>사용자 정보 수정</td>
+                    <td class="db-op"><span class="op-update">UPDATE</span></td>
+                </tr>
+                <tr>
+                    <td>getUser</td>
+                    <td>특정 사용자 정보 조회</td>
+                    <td class="db-op"><span class="op-select">SELECT</span></td>
+                </tr>
+
+                <!-- External/Non-DB Services -->
+                <tr>
+                    <td>GeocodingService</td>
+                    <td>getCoordinates</td>
+                    <td>주소를 좌표로 변환</td>
+                    <td class="db-op"><span class="op-none">없음 (외부 API)</span></td>
+                </tr>
+                <tr>
+                    <td>NotificationService</td>
+                    <td>subscribe, sendNotificationToUser</td>
+                    <td>실시간 알림 구독 및 전송</td>
+                    <td class="db-op"><span class="op-none">없음 (메모리)</span></td>
+                </tr>
+
+                <!-- Empty Services -->
+                <tr>
+                    <td>(Empty Services)</td>
+                    <td>-</td>
+                    <td>(EstimateItem, CarCenterApproval, CarVerification, RequestImage, Help)</td>
+                    <td class="db-op"><span class="op-none">-</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
