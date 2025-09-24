@@ -14,7 +14,9 @@
     "bootstrap": "^5.3.8",
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",
+    "react-datepicker": "^8.7.0",
     "react-dom": "^19.1.1",
+    "react-kakao-maps-sdk": "^1.2.0",
     "react-router-dom": "^7.9.1",
     "styled-components": "^6.1.19"
   },

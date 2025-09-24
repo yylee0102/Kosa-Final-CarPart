@@ -61,13 +61,13 @@ public class UserController {
 
     // =================== 2. 고객센터 문의 관리 ===================
 
-    @PostMapping("/inquiries")
-    public ResponseEntity<CsInquiryResDTO> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        // ✅ Service가 Entity 대신 DTO를 반환하도록 수정했다고 가정
-        CsInquiryResDTO newInquiry = csInquiryService.makeCsInquiry(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newInquiry);
-    }
+//    @PostMapping("/inquiries")
+//    public ResponseEntity<CsInquiryResDTO> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
+//        String userId = userDetails.getUsername();
+//        // ✅ Service가 Entity 대신 DTO를 반환하도록 수정했다고 가정
+//        CsInquiryResDTO newInquiry = csInquiryService.makeCsInquiry(request, userId);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(newInquiry);
+//    }
 
     @DeleteMapping("/inquiries/{inquiryId}")
     public ResponseEntity<Void> deleteInquiry(@PathVariable Integer inquiryId) {
@@ -87,13 +87,13 @@ public class UserController {
 
     // =================== 3. 견적 요청서 관리 ===================
 
-    @PostMapping("/quote-requests")
-    public ResponseEntity<QuoteRequestResDTO> makeQuoteRequest(@RequestBody QuoteRequestReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        // ✅ 서비스 메서드에 userId를 넘겨주도록 수정
-        QuoteRequestResDTO quoteRequest = quoteRequestService.createAndSaveQuoteRequest(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(quoteRequest);
-    }
+//    @PostMapping("/quote-requests")
+//    public ResponseEntity<QuoteRequestResDTO> makeQuoteRequest(@RequestBody QuoteRequestReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
+//        String userId = userDetails.getUsername();
+//        // ✅ 서비스 메서드에 userId를 넘겨주도록 수정
+//        QuoteRequestResDTO quoteRequest = quoteRequestService.createAndSaveQuoteRequest(request, userId);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(quoteRequest);
+//    }
 
     @DeleteMapping("/quote-requests/{id}")
     public ResponseEntity<Void> deleteQuoteRequest(@PathVariable Integer id) {

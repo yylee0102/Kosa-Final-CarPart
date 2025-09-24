@@ -66,11 +66,13 @@ public class CarCenter {
 
     @Enumerated(EnumType.STRING) // Enum 타입을 DB에 문자열로 저장
     @Column(nullable = false)
+    @Builder.Default
     private CarCenterStatus status = CarCenterStatus.PENDING;
 
     // --- 연관관계 매핑 ---
     /** 이 정비소가 제출한 견적서 목록 */
     @OneToMany(mappedBy = "carCenter")
+
     private List<Estimate> estimates = new ArrayList<>();
 
 

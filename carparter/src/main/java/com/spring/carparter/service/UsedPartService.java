@@ -46,7 +46,7 @@ public class UsedPartService {
     }
 
     //2. 내가 등록한 모든 중고 부품 조회
-    public List<?> getMyUsedParts(String centerId){
+    public List<UsedPartResDTO> getMyUsedParts(String centerId){
         List<UsedPart> usedParts = usedPartRepository.findByCarCenter_CenterIdWithImages(centerId);
 
     return usedParts.stream()

@@ -1,11 +1,14 @@
 import React from 'react';
 import Admin from '../components/Admin.jsx';
+import { Container, MainContent } from '../css/AdminStyle.jsx';
 
 const AdminPage = () => {
   return (
-    <div>
-      <Admin />
-    </div>
+    <Container>
+      <MainContent>
+        <Admin />
+      </MainContent>
+    </Container>
   );
 };
 
