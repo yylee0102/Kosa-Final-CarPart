@@ -71,7 +71,7 @@ public class CarCenterService {
             case "id":
                 isDuplicate = carCenterRepository.existsByCenterId(value);
                 break;
-            case "brn": // "bizNum" 등 DB 필드명과 일치하는지 확인 필요
+            case "businessNumber": // "bizNum" 등 DB 필드명과 일치하는지 확인 필요
                 isDuplicate = carCenterRepository.existsByBusinessRegistrationNumber(value);
                 break;
             default:

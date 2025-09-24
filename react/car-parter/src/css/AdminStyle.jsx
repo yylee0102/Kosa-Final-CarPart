@@ -345,3 +345,4 @@ export const PaginationButton = styled.button`
   &:hover { background: ${({theme}) => theme.sys.secondary}; color: ${({theme}) => theme.sys.onSecondary}; }
   &.active { background: ${({theme}) => theme.sys.inversePrimary}; color: ${({theme}) => theme.sys.onSecondary}; }
 `;
+

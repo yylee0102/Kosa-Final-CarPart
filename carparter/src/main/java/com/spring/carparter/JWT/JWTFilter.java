@@ -1,4 +1,4 @@
-package com.spring.carparter.jwt;
+package com.spring.carparter.JWT;
 
 import com.spring.carparter.JWT.JWTUtil;
 import com.spring.carparter.security.CustomUserDetails;

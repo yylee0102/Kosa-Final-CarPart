@@ -12,7 +12,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,6 +87,14 @@ public class ReservationService {
             log.info("[스케줄러] 오래된 예약 삭제 완료.");
         }
     }
+
+    public long countTodayReservations(String centerId){
+        LocalDateTime startOfToday = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
+        LocalDateTime endOfToday = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
+
+        return  reservationRepository.countByCarCenterCenterIdAndReservationDateBetween(centerId, startOfToday, endOfToday);
+    }
+
 
 
 

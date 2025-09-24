@@ -24,18 +24,7 @@ public class AdminService {
     private final CsInquiryRepository csInquiryRepository;
     private final AnnouncementRepository announcementRepository;
 
-    /**
-     * 1. 어드민 로그인
-     * */
-    public AdminResDTO login(AdminReqDTO req){
-        Admin admin = adminRepository.findByAdminId(req.getAdminId()).
-                orElseThrow(() -> new IllegalArgumentException("일치하는 아이디가 없습니다."));
 
-        if(!req.getPassword().equals(admin.getPassword())){
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        }
-        return AdminResDTO.From(admin);
-    }
 
     /**
      * 2. 사용자 남여 분포도

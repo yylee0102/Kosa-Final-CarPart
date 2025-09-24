@@ -26,12 +26,6 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    // 1) 관리자 로그인
-    @PostMapping("/login")
-    public ResponseEntity<AdminResDTO> login(@RequestBody AdminReqDTO req) {
-        AdminResDTO res = adminService.login(req);
-        return ResponseEntity.ok(res);
-    }
 
     // 2) 대시보드 - 성별 분포
     @GetMapping("/stats/gender")

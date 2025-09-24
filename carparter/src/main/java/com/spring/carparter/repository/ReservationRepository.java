@@ -18,5 +18,6 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     List<Reservation> findAllByCenterId(@Param("centerId") String centerId);
 
     List<Reservation> findAllByReservationDateBefore(LocalDateTime dateTime);
-
+    //특정 카센터의 오늘 예약 건수 조회(추가/2025.09.22)
+    Long countByCarCenterCenterIdAndReservationDateBetween(String centerId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }
