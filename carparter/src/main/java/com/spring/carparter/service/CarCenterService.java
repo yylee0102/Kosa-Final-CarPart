@@ -51,6 +51,7 @@ public class CarCenterService {
                 .build();
         carCenterApprovalRepository.save(approval);
 
+
         return CarCenterResDTO.from(savedCarCenter);
     }
 
