@@ -26,8 +26,7 @@ public class UserReqDTO {
      */
     public User toEntity(UserReqDTO dto) {
         return User.builder()
-                .userId(dto.userId)
-                .password(dto.password) // 주의: 실제 사용 시에는 암호화 필요
+                .userId(dto.userId)// 주의: 실제 사용 시에는 암호화 필요
                 .name(dto.name)
                 .phoneNumber(dto.phoneNumber)
                 .ssn(dto.ssn)
