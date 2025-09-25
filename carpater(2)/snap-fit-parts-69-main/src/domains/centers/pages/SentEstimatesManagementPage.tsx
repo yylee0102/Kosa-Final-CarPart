@@ -197,7 +197,7 @@ export const SentEstimatesManagementPage = () => {
   const acceptanceRate = totalEstimates > 0 ? Math.round((acceptedCount / totalEstimates) * 100) : 0;
 
   return (
-    <ProtectedRoute allowedUserTypes={["카센터"]}>
+    <ProtectedRoute allowedUserTypes={["CAR_CENTER"]}>
       <PageContainer>
         <div className="space-y-6">
           {/* 헤더 */}

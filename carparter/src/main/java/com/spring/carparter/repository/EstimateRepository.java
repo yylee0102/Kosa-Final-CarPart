@@ -14,8 +14,19 @@ import java.util.Optional;
 public interface EstimateRepository extends JpaRepository<Estimate, Integer> {
 
     // 특정 카센터가 제출한 모든 견적서를 상세 항목과 함께 조회 (N+1 해결)
-    @Query("SELECT DISTINCT e FROM Estimate e LEFT JOIN FETCH e.estimateItems WHERE e.carCenter.centerId = :centerId")
-    List<Estimate> findByCarCenter_CenterIdWithItems(@Param("centerId") String centerId);
+    /**
+     * ✅ [수정된 쿼리]
+     * 특정 카센터가 제출한 모든 견적서를 관련 모든 상세 정보와 함께 조회합니다.
+     * JOIN FETCH를 사용하여 N+1 문제를 방지합니다.
+     */
+    @Query("SELECT e FROM Estimate e " +
+            "JOIN FETCH e.estimateItems " +
+            "JOIN FETCH e.quoteRequest qr " +
+            "JOIN FETCH qr.user u " +
+            "JOIN FETCH qr.userCar uc " +
+            "WHERE e.carCenter.centerId = :centerId " +
+            "ORDER BY e.createdAt DESC")
+    List<Estimate> findByCarCenter_CenterIdWithDetails(@Param("centerId") String centerId);
 
     // 특정 견적 요청에 대한 모든 견적서를 상세 항목과 함께 조회 (N+1 해결)
     @Query("SELECT DISTINCT e FROM Estimate e LEFT JOIN FETCH e.estimateItems WHERE e.quoteRequest.requestId = :requestId")

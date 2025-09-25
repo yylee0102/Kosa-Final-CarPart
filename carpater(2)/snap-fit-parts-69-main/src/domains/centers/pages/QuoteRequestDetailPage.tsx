@@ -147,7 +147,7 @@ export const QuoteRequestDetailPage = () => {
 
   if (isLoading) {
     return (
-      <ProtectedRoute allowedUserTypes={["카센터"]}>
+      <ProtectedRoute allowedUserTypes={["CAR_CENTER"]}>
         <PageContainer>
           <div className="flex justify-center items-center h-64">
             <div className="text-lg">데이터를 불러오는 중...</div>
@@ -159,7 +159,7 @@ export const QuoteRequestDetailPage = () => {
 
   if (!quoteDetail) {
     return (
-      <ProtectedRoute allowedUserTypes={["카센터"]}>
+      <ProtectedRoute allowedUserTypes={["CAR_CENTER"]}>
         <PageContainer>
           <div className="flex flex-col items-center justify-center h-64 space-y-4">
             <div className="text-lg">견적 요청을 찾을 수 없습니다.</div>
@@ -174,7 +174,7 @@ export const QuoteRequestDetailPage = () => {
   }
 
   return (
-    <ProtectedRoute allowedUserTypes={["카센터"]}>
+    <ProtectedRoute allowedUserTypes={["CAR_CENTER"]}>
       <PageContainer>
         <div className="space-y-6">
           {/* 헤더 */}

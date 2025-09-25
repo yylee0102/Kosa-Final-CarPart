@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
-interface CenterInfo {
+export  interface CenterInfo {
   centerId: string;
   centerName: string;
   businessRegistrationNumber: string;
