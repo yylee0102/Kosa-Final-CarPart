@@ -85,9 +85,11 @@ public class AdminController {
 
     // 11) 정비소 승인 - 승인 처리(정비소 등록)
     @PostMapping("/approvals/{approvalId}/approve")
-    public ResponseEntity<Void> approveCenter(@PathVariable Long approvalId) {
+    public ResponseEntity<Object> approveCenter(@PathVariable Long approvalId) { // 👈 <Void>를 <Object>로 변경
         adminService.addCarCenter(approvalId);
-        return ResponseEntity.noContent().build();
+
+        // 👇 ResponseEntity.noContent().build() 대신 아래 코드로 변경
+        return ResponseEntity.ok(Map.of("message", "Approval successful"));
     }
 
     // 12) 1:1 문의 - 전체 목록
