@@ -24,7 +24,7 @@ import java.util.Map;
 @RequestMapping("/api/car-centers")
 @CrossOrigin(origins = "http://localhost:8080")
 public class CarCenterController {
-
+    private  final  ReviewService reviewService;
     private final CarCenterService carCenterService;
     private final ReservationService reservationService;
     private final ReviewReplyService reviewReplyService;
@@ -153,6 +153,23 @@ public class CarCenterController {
     }
 
     // =================== 3. 리뷰 답변 및 신고 API ===================
+
+    /**
+     * ✅ [추가된 기능] 내 카센터에 달린 모든 리뷰 목록을 조회합니다.
+     */
+    @GetMapping("/me/reviews")
+    public ResponseEntity<?> getMyReviews(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            // 1. 현재 로그인한 카센터의 ID를 가져옵니다.
+            String centerId = userDetails.getUsername();
+            // 2. ReviewService를 호출하여 해당 카센터의 리뷰 목록을 가져옵니다.
+            List<ReviewResDTO> reviews = reviewService.getReviewsForCarCenter(centerId);
+            // 3. 성공 응답을 반환합니다.
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            return createErrorResponse("내 리뷰 목록 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "내 리뷰 목록 조회 중 오류 발생. CenterId: " + userDetails.getUsername());
+        }
+    }
 
     @PostMapping("/replies")
     public ResponseEntity<?> createReply(@RequestBody ReviewReplyReqDTO reqDto) {

@@ -44,7 +44,7 @@ export default function UserMyPage() {
   ];
 
   return (
-    <ProtectedRoute allowedUserTypes={["개인"]} fallbackMessage="일반 사용자만 접근할 수 있는 페이지입니다.">
+    <ProtectedRoute allowedUserTypes={["USER"]} fallbackMessage="일반 사용자만 접근할 수 있는 페이지입니다.">
       <PageContainer>
       <div className="container mx-auto px-4 py-6">
         {/* 통계 요약 카드 */}

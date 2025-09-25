@@ -46,15 +46,16 @@ public class EstimateService {
         return EstimateResDTO.from(savedEstimate);
     }
 
-    // 2. 내가 제출한 견적서 목록 조회
     @Transactional(readOnly = true)
     public List<EstimateResDTO> getMyEstimates(String centerId) {
-        List<Estimate> estimates = estimateRepository.findByCarCenter_CenterIdWithItems(centerId);
+        // ✅ 1. 수정된 리포지토리 메소드를 호출합니다.
+        List<Estimate> estimates = estimateRepository.findByCarCenter_CenterIdWithDetails(centerId);
+
+        // ✅ 2. 수정된 DTO의 from 메소드를 사용하여 변환합니다.
         return estimates.stream()
                 .map(EstimateResDTO::from)
                 .collect(Collectors.toList());
     }
-
     // 3. 특정 견적서 상세 조회
     @Transactional(readOnly = true)
     public EstimateResDTO getEstimateDetails(Integer estimateId) {

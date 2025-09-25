@@ -95,6 +95,7 @@ public class SecurityConfig {
                 // 1. 로그인 필터(LoginFilter)를 등록합니다.
                 //    기존의 UsernamePasswordAuthenticationFilter 위치에 우리의 커스텀 필터를 끼워넣습니다.
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
+
                 // 2. JWT 검증 필터(JWTFilter)를 등록합니다.
                 //    LoginFilter 이전에 이 필터를 위치시켜서, 로그인 외의 모든 요청에 대해 JWT 토큰을 검사하도록 합니다.
                 .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);

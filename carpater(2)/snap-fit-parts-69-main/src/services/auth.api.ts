@@ -88,7 +88,7 @@ class AuthApiService {
     return result.verified;
   }
 
-  /**
+ /**
    * 통합 로그인 (모든 사용자 타입)
    * POST /api/login
    */
@@ -105,13 +105,21 @@ class AuthApiService {
       throw new Error('로그인에 실패했습니다.');
     }
     
-    // Authorization 헤더에서 토큰 추출
+    // 1. 헤더에서 토큰을 먼저 추출합니다.
     const token = response.headers.get('Authorization');
+
+    // 2. 응답 본문(JSON)을 먼저 파싱해서 변수에 저장합니다.
+    const loginData: LoginResponse = await response.json();
+    
+    // 3. 토큰이 있다면 localStorage에 확실하게 저장합니다.
     if (token) {
-      localStorage.setItem('authToken', token);
+      // "Bearer " 접두사가 있다면 제거하고 순수 토큰만 저장하는 것이 안전합니다.
+      const pureToken = token.startsWith('Bearer ') ? token.slice(7) : token;
+      localStorage.setItem('authToken', pureToken);
     }
     
-    return response.json();
+    // 4. 모든 작업이 끝난 후, 파싱된 데이터를 반환합니다.
+    return loginData;
   }
 
   /**

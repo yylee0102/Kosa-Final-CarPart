@@ -16,7 +16,7 @@ export const EstimateManagementPage = () => {
   const [activeTab, setActiveTab] = useState("requests");
 
   return (
-    <ProtectedRoute allowedUserTypes={["카센터"]} fallbackMessage="카센터 운영자만 접근할 수 있는 페이지입니다.">
+    <ProtectedRoute allowedUserTypes={["CAR_CENTER"]} fallbackMessage="카센터 운영자만 접근할 수 있는 페이지입니다.">
       <PageContainer>
         <div className="space-y-6">
           {/* 헤더 */}
