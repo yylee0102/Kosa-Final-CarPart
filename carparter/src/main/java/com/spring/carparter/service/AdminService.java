@@ -93,7 +93,7 @@ public class AdminService {
      * 8. 회원가입 승인 대기 중인 카센터
      * */
     public List<CarCenterApprovalResDTO> getPendingApprovals(){
-        return carCenterApprovalRepository.findPendingApprovalRes();
+        return carCenterApprovalRepository.findPendingApprovals();
     }
 
     /**
@@ -120,6 +120,7 @@ public class AdminService {
     /**
      * 11. 카센터 회원가입 승인
      * */
+
     @Transactional
     public void addCarCenter(Long approvalId) {
         CarCenterApprovalResDTO centerApproval = carCenterApprovalRepository.findApprovalResById(approvalId).

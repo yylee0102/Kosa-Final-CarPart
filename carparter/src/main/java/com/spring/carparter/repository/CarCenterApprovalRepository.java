@@ -11,21 +11,41 @@ import java.util.Optional;
 @Repository
 public interface CarCenterApprovalRepository extends JpaRepository<CarCenterApproval, Long> {
 
-    /** 승인 대기 목록(관리자 미지정) → ResDTO로 바로 조회, 요청시각 오름차순 */
+    /**
+     * 🔄 [수정] 승인 대기 목록 조회 쿼리
+     * JPQL에서 Enum을 비교할 때는 '패키지.클래스.값' 형태가 아닌,
+     * Enum 타입 자체와 비교해야 합니다. CarCenter의 status 필드는 CarCenterStatus Enum 타입이므로
+     * 'PENDING' 이라는 문자열 값과 직접 비교하도록 수정합니다.
+     */
     @Query("""
       select new com.spring.carparter.dto.CarCenterApprovalResDTO(
-        c.approvalId, c.requestedAt, cc.centerId, cc.centerName
+        c.approvalId,
+        c.requestedAt,
+        cc.centerId,
+        cc.centerName,
+        cc.businessRegistrationNumber,
+        cc.phoneNumber,
+        cc.address,
+        cc.status
       )
       from CarCenterApproval c
       join c.carCenter cc
+      where cc.status = 'PENDING'
       order by c.requestedAt asc
     """)
-    List<CarCenterApprovalResDTO> findPendingApprovalRes();
+    List<CarCenterApprovalResDTO> findPendingApprovals();
 
     /** 단건 조회 → ResDTO */
     @Query("""
       select new com.spring.carparter.dto.CarCenterApprovalResDTO(
-        c.approvalId, c.requestedAt, cc.centerId, cc.centerName
+        c.approvalId,
+        c.requestedAt,
+        cc.centerId,
+        cc.centerName,
+        cc.businessRegistrationNumber,
+        cc.phoneNumber,
+        cc.address,
+        cc.status
       )
       from CarCenterApproval c
       join c.carCenter cc

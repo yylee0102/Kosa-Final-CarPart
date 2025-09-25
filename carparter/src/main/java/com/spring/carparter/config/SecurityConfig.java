@@ -3,8 +3,11 @@ package com.spring.carparter.config;
 import com.spring.carparter.JWT.JWTFilter;
 import com.spring.carparter.JWT.JWTUtil;
 import com.spring.carparter.JWT.LoginFilter;
+import com.spring.carparter.entity.Admin;
+import com.spring.carparter.repository.AdminRepository;
 import com.spring.carparter.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,6 +16,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -110,22 +114,22 @@ public class SecurityConfig {
     }
 
 
-//    /**
-//     * 애플리케이션 시작 시 관리자 계정을 생성하는 CommandLineRunner Bean
-//     */
-//    @Bean
-//    public CommandLineRunner initAdminData(AdminRepository adminRepository, PasswordEncoder passwordEncoder) {
-//        return args -> {
-//            // "admin01" 이라는 아이디의 관리자가 없는 경우에만 생성
-//            if (!adminRepository.existsById("admin01")) {
-//                Admin admin = Admin.builder()
-//                        .adminId("admin01")
-//                        .name("총관리자")
-//                        .password(passwordEncoder.encode("adminpass")) // 비밀번호 암호화
-//                        .build();
-//                adminRepository.save(admin);
-//                System.out.println("====== SecurityConfig: 총관리자(admin01) 계정이 생성되었습니다. ======");
-//            }
-//        };
-//    }
+    /**
+     * 애플리케이션 시작 시 관리자 계정을 생성하는 CommandLineRunner Bean
+     */
+    @Bean
+    public CommandLineRunner initAdminData(AdminRepository adminRepository, PasswordEncoder passwordEncoder) {
+        return args -> {
+            // "admin01" 이라는 아이디의 관리자가 없는 경우에만 생성
+            if (!adminRepository.existsById("admin01")) {
+                Admin admin = Admin.builder()
+                        .adminId("admin01")
+                        .name("총관리자")
+                        .password(passwordEncoder.encode("adminpass")) // 비밀번호 암호화
+                        .build();
+                adminRepository.save(admin);
+                System.out.println("====== SecurityConfig: 총관리자(admin01) 계정이 생성되었습니다. ======");
+            }
+        };
+    }
 }
