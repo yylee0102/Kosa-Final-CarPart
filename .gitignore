@@ -22,3 +22,9 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+
+# .gitignore 파일 맨 아래에 추가
+
+# 모든 .env 파일을 재귀적으로 무시 (가장 일반적인 방법)
+**/.env

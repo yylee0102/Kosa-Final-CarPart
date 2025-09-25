@@ -1,0 +1,11 @@
+# requirements.txt
+
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# LangChain 관련 패키지 추가
+langchain
+langchain-openai
+python-dotenv  # API 키 관리를 위해 추가

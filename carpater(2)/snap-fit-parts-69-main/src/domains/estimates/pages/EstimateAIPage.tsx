@@ -21,6 +21,10 @@ import PageContainer from "@/shared/components/layout/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+// 상단에 새로 만든 챗봇 서비스를 import 합니다.
+import chatbotApiService from "@/services/chatbot.api.ts";
+
+
 
 interface ChatMessage {
   id: string;
@@ -51,52 +55,51 @@ export default function EstimateAIPage() {
     scrollToBottom();
   }, [messages]);
 
-  const simulateBotResponse = (userMessage: string) => {
-    setIsTyping(true);
-    
-    setTimeout(() => {
-      let botResponse = "";
-      
-      const lowerMessage = userMessage.toLowerCase();
-      
-      if (lowerMessage.includes("브레이크") || lowerMessage.includes("제동")) {
-        botResponse = "브레이크 소음 패드 마모나 디스크 이상일 수 있습니다. 🚫 이 경우 브레이크 패드 교체나 디스크에 직접 마찰되는 정도일 수 있습니다. 가까운 정비소에서 점검을 받으시나, 저희 차량 진단 서비스를 이용해 원인을 정확히 확인해보시는 것도 좋습니다.";
-      } else if (lowerMessage.includes("엔진") || lowerMessage.includes("시동")) {
-        botResponse = "엔진 관련 문제시군요. 시동이 잘 안 걸리거나 소음이 나나요? 더 자세한 증상을 알려주시면 정확한 진단을 도와드릴 수 있습니다.";
-      } else if (lowerMessage.includes("타이어") || lowerMessage.includes("바퀴")) {
-        botResponse = "타이어 관련 문제이군요. 펑크나 마모, 또는 공기압 문제일 수 있습니다. 타이어 상태와 주행 중 느끼는 증상을 자세히 알려주세요.";
-      } else if (lowerMessage.includes("범퍼") || lowerMessage.includes("외관")) {
-        botResponse = "외관 손상이군요. 범퍼 손상 정도에 따라 수리나 교체가 필요할 수 있습니다. 사진을 첨부해주시면 더 정확한 견적을 드릴 수 있어요.";
-      } else {
-        botResponse = "더 구체적인 증상을 알려주시면 정확한 진단을 도와드릴 수 있습니다. 예를 들어, 언제부터 문제가 시작되었는지, 어떤 소리가 나는지 등을 말씀해 주세요.";
-      }
+  
 
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        type: "bot",
-        message: botResponse,
-        timestamp: new Date()
-      }]);
-      
-      setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
-  };
-
-  const handleSendMessage = () => {
+ const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
+
+    const userMessageContent = inputMessage.trim();
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      type: "user", 
-      message: inputMessage,
+      type: "user",
+      message: userMessageContent,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
-    
-    // 봇 응답 시뮬레이션
-    simulateBotResponse(inputMessage);
+    setIsTyping(true); // 봇이 응답을 준비 중임을 표시합니다.
+    try {
+      // 새로 만든 챗봇 API 서비스를 호출합니다.
+      const response = await chatbotApiService.sendMessageToBot({
+        message: userMessageContent,
+      });
+
+      // FastAPI 서버로부터 받은 답변을 화면에 추가합니다.
+      const botMessage: ChatMessage = {
+        id: Date.now().toString() + "-bot",
+        type: "bot",
+        message: response.reply,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, botMessage]);
+
+    } catch (error) {
+      console.error("챗봇 API 호출 실패:", error);
+      // 에러 발생 시 사용자에게 안내 메시지를 보냅니다.
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString() + "-error",
+        type: "bot",
+        message: "죄송합니다. 현재 챗봇 서비스에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false); // 봇 응답 준비가 끝났음을 표시합니다.
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
