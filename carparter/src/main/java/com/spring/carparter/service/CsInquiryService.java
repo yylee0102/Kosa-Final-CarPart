@@ -23,11 +23,12 @@ public class CsInquiryService {
 
 
     @Transactional
-    public CsInquiry makeCsInquiry(CsInquiryReqDTO request,String userId) {
+    public CsInquiryResDTO makeCsInquiry(CsInquiryReqDTO request,String userId) {
         CsInquiry cs = request.toEntity(request, userRepository.findByUserId(userId));
-        User user = userRepository.findByUserId(userId);
+        // User user = userRepository.findByUserId(userId);
         csInquiryRepository.save(cs);
-        return cs;
+        // 3. 저장된 엔티티를 DTO로 변환하여 반환
+        return new CsInquiryResDTO(cs);
 
     }
 
