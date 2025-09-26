@@ -10,27 +10,33 @@ export interface QuoteRequestReqDTO {
   longitude?: number;
 }
 
+// ✅ [수정] 백엔드 QuoteRequestResDTO.java 와 완전히 동일한 구조로 변경합니다.
 export interface QuoteRequestResDTO {
   requestId: number;
   requestDetails: string;
   address: string;
-  latitude: number;
-  longitude: number;
   createdAt: string;
+  // 중첩 객체 타입 정의
   writer: {
     userId: string;
     name: string;
   };
   car: {
     userCarId: number;
+    carModel: string;
+    modelYear: number;
   };
   images: {
     imageId: number;
     imageUrl: string;
   }[];
+  // 백엔드에서 보내주는 추가 필드들
   estimateCount: number;
+  customerName: string;
+  customerPhone: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; // ✅ 타입을 구체적으로 명시
+  preferredDate: string;
 }
-
 export interface ReviewReqDTO {
   centerId: string;
   rating: number;

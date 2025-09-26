@@ -47,5 +47,6 @@ public interface EstimateRepository extends JpaRepository<Estimate, Integer> {
     // 특정 QuoteRequest ID에 해당하는 Estimate의 개수를 반환합니다.
     Long countByQuoteRequest_RequestId(Integer requestId);
 
+    boolean existsByQuoteRequest_RequestIdAndCarCenter_CenterId(Integer requestId, Long centerId);
 
 }

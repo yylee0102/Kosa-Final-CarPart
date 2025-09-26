@@ -6,7 +6,6 @@ import com.spring.carparter.entity.User;
 import com.spring.carparter.entity.UserCar;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,14 +21,15 @@ public class QuoteRequestResDTO {
     private final Double latitude;
     private final Double longitude;
     private final LocalDateTime createdAt;
-    private final WriterInfo writer;
-    private final CarInfo car;
-    private final List<ImageInfo> images;
-    private final int estimateCount;
+    private final WriterInfo writer; // 작성자 정보 (내부 DTO)
+    private final CarInfo car; // 차량 정보 (내부 DTO)
+    private final List<ImageInfo> images; // 요청 이미지 목록 (내부 DTO)
+    private final int estimateCount; // 받은 견적 개수
 
+    // User 엔티티를 WriterInfo DTO로 변환하는 내부 DTO
     @Getter
     @Builder
-    public static class WriterInfo {
+    private static class WriterInfo {
         private final String userId;
         private final String name;
 
@@ -41,39 +41,41 @@ public class QuoteRequestResDTO {
         }
     }
 
+    // UserCar 엔티티를 CarInfo DTO로 변환하는 내부 DTO
     @Getter
     @Builder
-    public static class CarInfo {
-        // UserCar의 ID가 Long 타입일 가능성이 높으므로 Long으로 맞춰줍니다.
+    private static class CarInfo {
         private final Long userCarId;
+        // private final String modelName; // 예시: UserCar에 모델명 필드가 있다고 가정
+        // private final int year; // 예시: UserCar에 연식 필드가 있다고 가정
 
         static CarInfo from(UserCar userCar) {
             return CarInfo.builder()
-                    .userCarId(userCar.getUserCarId()) // 보통 엔티티의 PK 필드명은 id 입니다. userCarId라면 그대로 두세요.
+                    .userCarId(userCar.getUserCarId()) // UserCar의 ID 필드명에 맞게 수정 필요
+                    // .modelName(userCar.getModelName())
+                    // .year(userCar.getYear())
                     .build();
         }
     }
 
+    // RequestImage 엔티티를 ImageInfo DTO로 변환하는 내부 DTO
     @Getter
     @Builder
-    public static class ImageInfo {
-        private final Integer imageId;
-        @Setter
-        private String imageUrl;
+    private static class ImageInfo {
+        private final int imageId;
+        private final String imageUrl;
 
         static ImageInfo from(RequestImage image) {
             return ImageInfo.builder()
-                    .imageId(image.getImageId())
-                    .imageUrl(image.getImageUrl())
+                    .imageId(image.getImageId()) // RequestImage의 ID 필드명에 맞게 수정 필요
+                    .imageUrl(image.getImageUrl()) // RequestImage의 URL 필드명에 맞게 수정 필요
                     .build();
         }
     }
 
+
     /**
-     * QuoteRequest 엔티티와 외부에서 계산된 estimateCount를 받아 DTO를 생성합니다.
-     * @param quoteRequest 원본 엔티티
-     * @param estimateCount 서비스 레이어에서 효율적으로 계산한 견적 개수
-     * @return 생성된 DTO
+     * QuoteRequest 엔티티를 QuoteRequestRes DTO로 변환하는 정적 팩토리 메서드
      */
     public static QuoteRequestResDTO from(QuoteRequest quoteRequest, int estimateCount) {
         return QuoteRequestResDTO.builder()
@@ -88,7 +90,6 @@ public class QuoteRequestResDTO {
                 .images(quoteRequest.getRequestImages().stream()
                         .map(ImageInfo::from)
                         .collect(Collectors.toList()))
-                .estimateCount(estimateCount) // 파라미터로 받은 값을 사용
                 .build();
     }
 }

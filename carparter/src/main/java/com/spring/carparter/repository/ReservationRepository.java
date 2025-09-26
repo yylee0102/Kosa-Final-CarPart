@@ -10,14 +10,27 @@ import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     /**
-     * 특정 카센터의 모든 예약 목록을 JPQL로 조회합니다.
+     * [최적화] 특정 카센터의 모든 예약을 조회할 때,
+     * N+1 문제를 방지하기 위해 CarCenter 엔티티를 함께 fetch join 합니다.
      * @param centerId 카센터의 고유 ID
      * @return 해당 카센터의 Reservation 리스트
      */
-    @Query("Select r from Reservation r Where r.carCenter.centerId = :centerId")
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.carCenter WHERE r.carCenter.centerId = :centerId")
     List<Reservation> findAllByCenterId(@Param("centerId") String centerId);
 
+    /**
+     * 특정 날짜 이전의 모든 예약을 조회합니다. (이름 유지)
+     */
     List<Reservation> findAllByReservationDateBefore(LocalDateTime dateTime);
-    //특정 카센터의 오늘 예약 건수 조회(추가/2025.09.22)
-    Long countByCarCenterCenterIdAndReservationDateBetween(String centerId, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    /**
+     * [최적화] 특정 카센터의 오늘 예약 건수를 JPQL로 명확하게 조회합니다.
+     * 긴 메서드 이름보다 @Query를 사용하는 것이 가독성과 유지보수에 더 좋습니다.
+     */
+    @Query("SELECT COUNT(r) FROM Reservation r WHERE r.carCenter.centerId = :centerId AND r.reservationDate BETWEEN :startOfDay AND :endOfDay")
+    Long countByCarCenterCenterIdAndReservationDateBetween(
+            @Param("centerId") String centerId,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
 }

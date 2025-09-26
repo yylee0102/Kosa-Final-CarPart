@@ -1,6 +1,5 @@
 package com.spring.carparter.repository;
 
-import com.spring.carparter.dto.QuoteRequestResDTO;
 import com.spring.carparter.entity.QuoteRequest;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -49,7 +48,5 @@ public interface QuoteRequestRepository extends JpaRepository<QuoteRequest, Inte
     List<QuoteRequest> findByCreatedAtAfter(LocalDateTime dateTime);
 
     // 한 유저에 대한 견적요청서는 한개여야한다.
-    QuoteRequest findByUser_UserId(String userId);
-
-
+    Optional<QuoteRequest> findByUser_UserId(String userId);
 }

@@ -1,7 +1,28 @@
 // 카센터 통합 API 서비스 - 모든 카센터 관련 기능 통합
 const API_BASE_URL = '/api';
 
+
+
+// ✅ [수정] 백엔드 QuoteRequestResDTO.java 와 완전히 동일한 구조로 변경합니다.
+export interface QuoteRequestResDTO {
+  requestId: number;
+  requestDetails: string;
+  address: string;
+  createdAt: string; // LocalDateTime은 string으로 변환되어 넘어옵니다.
+  customerName: string;
+  customerPhone: string;
+  carModel: string;
+  carYear: number;
+  preferredDate: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; // status는 구체적인 타입으로 유지하는 것이 좋습니다.
+  imageUrls: string[]; // ✅ 객체 배열이 아닌, 문자열 배열입니다.
+}
+
 // ==================== 카센터 기본 정보 타입 ====================
+
+
+
+
 export interface CarCenterRegisterRequest {
   centerId: string;
   password: string;
@@ -112,26 +133,6 @@ export interface EstimateResDTO {
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
 }
 
-export interface QuoteRequestResDTO {
-  requestId: number;
-  requestDetails: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  createdAt: string;
-  writer: {
-    userId: string;
-    name: string;
-  };
-  car: {
-    userCarId: number;
-  };
-  images: {
-    imageId: number;
-    imageUrl: string;
-  }[];
-  estimateCount: number;
-}
 
 
 // ==================== 리뷰 관련 타입 ====================
@@ -443,6 +444,29 @@ private getMultipartHeaders(): Record<string, string> {
     });
     await this.handleResponse(response);
   }
+
+  /**
+   * ✅ [수정됨] 이제 '/api/car-centers/quote-requests'를 호출합니다.
+   * 함수 이름도 getQuoteRequests로 변경하여 명확하게 합니다.
+   */
+  async getQuoteRequests(): Promise<QuoteRequestResDTO[]> {
+    const response = await fetch(`${API_BASE_URL}/car-centers/quote-requests`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<QuoteRequestResDTO[]>(response);
+  }
+
+/**
+   * [신규] 내 카센터 정보 상세 조회
+   * GET /api/car-centers/my-info
+   */
+  async getMyCenterInfo(): Promise<CarCenterResponse> {
+    const response = await fetch(`${API_BASE_URL}/car-centers/my-info`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<CarCenterResponse>(response);
+  }
+
 }
 
 export default new CarCenterApiService();

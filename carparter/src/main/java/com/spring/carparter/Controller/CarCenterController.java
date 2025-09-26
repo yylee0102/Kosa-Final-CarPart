@@ -30,13 +30,27 @@ public class CarCenterController {
     private final ReviewReplyService reviewReplyService;
     private final ReviewReportService reviewReportService;
     private final UsedPartService usedPartService;
+    private final QuoteRequestService quoteRequestService; // ✅ 이 줄을 추가하세요.
 
     // 공통 에러 응답을 생성하는 private 헬퍼 메소드
     private ResponseEntity<Map<String, String>> createErrorResponse(String message, HttpStatus status, Exception e, String logMessage) {
         log.error(logMessage, e);
         return ResponseEntity.status(status).body(Collections.singletonMap("error", message));
     }
+    /**
+     * ✅ [수정된 기능] '로그인한' 카센터가 받은 모든 고객의 견적 요청 목록을 조회합니다.
+     */
 
+
+    @GetMapping("/quote-requests")
+    public ResponseEntity<?> getAllQuoteRequests() {
+        try {
+            List<QuoteRequestResDTO> requests = quoteRequestService.getQuoteRequestsByCenter();
+            return ResponseEntity.ok(requests);
+        } catch (Exception e) {
+            return createErrorResponse("전체 견적 요청 목록 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "전체 견적 요청 목록 조회 중 오류 발생");
+        }
+    }
     // =================== 1. 카센터 계정 관리 API ===================
 
     @PostMapping("/register")
@@ -85,7 +99,16 @@ public class CarCenterController {
             return createErrorResponse("내 정보 수정 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "내 정보 수정 중 오류 발생. UserId: " + userDetails.getUsername());
         }
     }
-
+    @GetMapping("/my-info")
+    public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String centerId = userDetails.getUsername();
+            CarCenterResDTO responseDto = carCenterService.findCarCenterById(centerId);
+            return ResponseEntity.ok(responseDto);
+        } catch (Exception e) {
+            return createErrorResponse("내 정보 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "내 정보 조회 중 오류 발생. UserId: " + userDetails.getUsername());
+        }
+    }
     @DeleteMapping("/{centerId}")
     public ResponseEntity<?> deleteCarCenter(@PathVariable String centerId) {
         try {
