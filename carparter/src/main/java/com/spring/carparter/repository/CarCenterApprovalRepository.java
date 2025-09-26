@@ -52,4 +52,8 @@ public interface CarCenterApprovalRepository extends JpaRepository<CarCenterAppr
       where c.approvalId = :approvalId
     """)
     Optional<CarCenterApprovalResDTO> findApprovalResById(Long approvalId);
+
+    // CarCenter ID로 Approval 기록을 찾는 메소드 추가
+    Optional<CarCenterApproval> findByCarCenter_CenterId(String centerId);
+
 }

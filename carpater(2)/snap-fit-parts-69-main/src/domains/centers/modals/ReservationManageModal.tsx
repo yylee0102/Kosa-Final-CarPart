@@ -15,7 +15,7 @@ import carCenterApi, { ReservationResDTO, ReservationReqDTO } from '@/services/c
 // props로 받을 예약 정보 타입 (API의 응답 DTO와 일치)
 type Reservation = ReservationResDTO;
 
-interface ReservationManageModalProps {
+ interface ReservationManageModalProps {
   open: boolean;
   onClose: () => void;
   reservation?: Reservation | null;

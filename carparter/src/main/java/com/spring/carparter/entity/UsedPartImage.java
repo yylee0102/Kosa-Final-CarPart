@@ -1,34 +1,35 @@
 package com.spring.carparter.entity;
 
-// package com.example.model;
-
 import jakarta.persistence.*;
 import lombok.*;
 
-/**
- * 중고부품 게시글에 첨부된 이미지 정보를 나타내는 엔티티
- */
 @Entity
-@Table(name = "used_part_images") // UsedPartImage랑 이름 겹쳐서 바꿈
+@Table(name = "used_part_images")
 @Getter
-@Setter
+@Setter // 양방향 관계 설정을 위해 Setter 필요
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UsedPartImage {
 
-    /** 이미지 고유 ID (PK, 자동생성) */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id")
     private Integer imageId;
 
-    /** 이미지가 속한 중고부품 게시글 (UsedPart) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "part_id", nullable = false)
     private UsedPart usedPart;
 
-    /** 이미지 파일의 URL */
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
+
+    // == 연관관계 편의 메소드 == //
+    /**
+     * ✅ [추가] UsedPart의 addImage 메소드 내부에서 호출되어 양방향 관계를 완성합니다.
+     * 이 Setter는 외부에서 직접 호출하기보다는, UsedPart를 통해서만 호출되도록 하는 것이 안전합니다.
+     */
+    public void setUsedPart(UsedPart usedPart) {
+        this.usedPart = usedPart;
+    }
 }

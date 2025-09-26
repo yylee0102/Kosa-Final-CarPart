@@ -168,7 +168,7 @@ public class QuoteRequestService {
      * ✅ 카센터용: 특정 요청 상세 + "이미 내가 견적 제출했는지" 여부 반환
      */
     @Transactional(readOnly = true)
-    public CenterQuoteRequestView getQuoteRequestDetailsForCenter(Long centerId, Integer requestId) {
+    public CenterQuoteRequestView getQuoteRequestDetailsForCenter(String centerId, Integer requestId) {
         QuoteRequest qr = quoteRequestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("견적 요청을 찾을 수 없습니다: " + requestId));
 
@@ -209,5 +209,20 @@ public class QuoteRequestService {
         // });
 
         return dto;
+    }
+
+    /**
+     * [이름 변경] 모든 견적 요청 목록을 조회하여 DTO 리스트로 변환하여 반환합니다.
+     * @return 모든 견적 요청 DTO 리스트
+     */
+    public List<QuoteRequestResDTO> getAvailableQuoteRequests() { // ⬅️ 이름 변경
+        List<QuoteRequest> quoteRequests = quoteRequestRepository.findAllWithDetails();
+
+        return quoteRequests.stream()
+                .map(quoteRequest -> {
+                    int estimateCount = quoteRequest.getEstimates() != null ? quoteRequest.getEstimates().size() : 0;
+                    return QuoteRequestResDTO.from(quoteRequest, estimateCount);
+                })
+                .collect(Collectors.toList());
     }
 }

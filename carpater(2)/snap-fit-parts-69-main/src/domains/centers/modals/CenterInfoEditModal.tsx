@@ -24,7 +24,7 @@ export interface CenterUpdateInfo {
   description?: string;
 }
 
-interface CenterInfoEditModalProps {
+ interface CenterInfoEditModalProps {
   open: boolean;
   onClose: () => void;
   onUpdate: (updatedInfo: CenterUpdateInfo) => void;

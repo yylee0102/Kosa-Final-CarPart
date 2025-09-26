@@ -1,134 +1,140 @@
-import { Heart, Eye, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import PageContainer from "@/shared/components/layout/PageContainer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { MessageSquare, Car, Tag, Calendar, Building, Wrench } from "lucide-react";
+// ✅ carCenter.api.ts에서 API 서비스와 UsedPartResDTO 타입을 가져옵니다.
+import carCenterApi, { UsedPartResDTO } from "@/services/carCenter.api";
 import { formatKRW, formatTimeAgo } from "@/shared/utils/format";
 
-interface WBCardProps {
-  part: {
-    id: string;
-    title: string;
-    price: number;
-    images: string[];
-    oem?: string;
-    compatible: string[];
-    condition: "신품" | "중고A급" | "중고B급" | "중고C급";
-    location: string;
-    postedAt: string;
-    views: number;
-    isLiked?: boolean;
-    sellerType: "개인" | "업체";
-  };
-  onClick: () => void;
-  onLike?: () => void;
-}
+export default function UsedPartDetailPage() {
+  const navigate = useNavigate();
+  // URL로부터 부품 ID를 가져옵니다. (예: /wb/123 -> partId는 '123')
+  const { partId } = useParams<{ partId: string }>();
 
-export default function WBCard({ part, onClick, onLike }: WBCardProps) {
+  // API 요청 관련 상태 관리
+  const [part, setPart] = useState<UsedPartResDTO | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getConditionColor = (condition: string) => {
-    switch (condition) {
-      case "신품": return "bg-primary text-primary-foreground";
-      case "중고A급": return "bg-secondary text-secondary-foreground";
-      case "중고B급": return "bg-tertiary text-tertiary-foreground";
-      default: return "bg-muted text-muted-foreground";
+  // 페이지가 로드되거나 partId가 변경될 때 API를 호출하여 부품 상세 정보 조회
+  useEffect(() => {
+    if (!partId) {
+      setError("부품 ID가 올바르지 않습니다.");
+      return;
     }
-  };
+
+    const fetchPartDetails = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await carCenterApi.getUsedPartDetails(Number(partId));
+        setPart(data);
+      } catch (e) {
+        setError("부품 정보를 불러오는 데 실패했습니다.");
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPartDetails();
+  }, [partId]);
+
+  // 로딩 및 에러 상태 표시
+  if (isLoading) {
+    return <PageContainer><div>로딩 중...</div></PageContainer>;
+  }
+  if (error) {
+    return <PageContainer><div className="text-center text-red-500 py-10">{error}</div></PageContainer>;
+  }
+  if (!part) {
+    return <PageContainer><div className="text-center py-10">부품 정보를 찾을 수 없습니다.</div></PageContainer>;
+  }
 
   return (
-    <div 
-      className="group bg-card border border-outline-variant rounded-lg overflow-hidden shadow-elevation-1 hover:shadow-elevation-2 transition-all cursor-pointer"
-      onClick={onClick}
-    >
-      {/* 이미지 영역 */}
-      <div className="relative aspect-square overflow-hidden bg-surface-container">
-        {part.images.length > 0 ? (
-          <img 
-            src={part.images[0]} 
-            alt={part.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-on-surface-variant">
-            이미지 없음
+    <PageContainer>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          {/* 좌측: 이미지 캐러셀 */}
+          <div>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {part.imageUrls.length > 0 ? (
+                  part.imageUrls.map((url, index) => (
+                    <CarouselItem key={index}>
+                      <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                        <img src={url} alt={`${part.partName} 이미지 ${index + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    </CarouselItem>
+                  ))
+                ) : (
+                  <CarouselItem>
+                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center">
+                      <p className="text-muted-foreground">이미지 없음</p>
+                    </div>
+                  </CarouselItem>
+                )}
+              </CarouselContent>
+              {part.imageUrls.length > 1 && (
+                <>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </>
+              )}
+            </Carousel>
           </div>
-        )}
-        
-        {/* 찜하기 버튼 */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className={`absolute top-2 right-2 p-1 rounded-full ${
-            part.isLiked 
-              ? "bg-destructive text-destructive-foreground" 
-              : "bg-black/20 text-white hover:bg-black/30"
-          }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onLike?.();
-          }}
-        >
-          <Heart className={`h-4 w-4 ${part.isLiked ? "fill-current" : ""}`} />
-        </Button>
 
-        {/* 이미지 개수 표시 */}
-        {part.images.length > 1 && (
-          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-            +{part.images.length - 1}
-          </div>
-        )}
-      </div>
-
-      {/* 정보 영역 */}
-      <div className="p-4 space-y-3">
-        {/* 제목 */}
-        <h3 className="font-semibold text-on-surface line-clamp-2 group-hover:text-primary transition-colors">
-          {part.title}
-        </h3>
-
-        {/* 상태 및 호환 정보 */}
-        <div className="flex flex-wrap gap-2">
-          <Badge className={getConditionColor(part.condition)}>
-            {part.condition}
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            {part.sellerType}
-          </Badge>
-        </div>
-
-        {/* OEM 정보 */}
-        {part.oem && (
-          <div className="text-sm text-on-surface-variant">
-            <span className="font-medium">OEM:</span> {part.oem}
-          </div>
-        )}
-
-        {/* 호환 정보 */}
-        {part.compatible.length > 0 && (
-          <div className="text-sm text-on-surface-variant">
-            <span className="font-medium">호환:</span> {part.compatible.slice(0, 2).join(", ")}
-            {part.compatible.length > 2 && ` 외 ${part.compatible.length - 2}개`}
-          </div>
-        )}
-
-        {/* 가격 */}
-        <div className="text-lg font-bold text-primary">
-          {formatKRW(part.price)}
-        </div>
-
-        {/* 하단 정보 */}
-        <div className="flex items-center justify-between text-xs text-on-surface-variant">
-          <div className="flex items-center space-x-1">
-            <Clock className="h-3 w-3" />
-            <span>{formatTimeAgo(part.postedAt)}</span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1">
-              <Eye className="h-3 w-3" />
-              <span>{part.views}</span>
+          {/* 우측: 부품 상세 정보 */}
+          <div className="flex flex-col space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold">{part.partName}</h1>
+              <p className="text-sm text-muted-foreground mt-2">
+                <span className="font-semibold">{part.centerId}</span> 에서 등록
+              </p>
             </div>
-            <span>{part.location}</span>
+
+            <div className="text-4xl font-extrabold text-primary">
+              {formatKRW(part.price)}
+            </div>
+
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center text-sm">
+                  <Tag className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="font-semibold w-24">카테고리</span>
+                  <span>{part.category || '미지정'}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Car className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="font-semibold w-24">호환 차종</span>
+                  <span>{part.compatibleCarModel}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="font-semibold w-24">등록일</span>
+                  <span>{formatTimeAgo(part.createdAt.toString())}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div>
+              <h2 className="text-lg font-semibold mb-2">상세 설명</h2>
+              <p className="text-base text-foreground/80 whitespace-pre-wrap">
+                {part.description}
+              </p>
+            </div>
+
+            <div className="flex gap-4 pt-4 border-t">
+        
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

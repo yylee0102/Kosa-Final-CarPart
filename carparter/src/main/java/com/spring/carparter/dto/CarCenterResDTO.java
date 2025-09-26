@@ -1,6 +1,7 @@
 package com.spring.carparter.dto;
 
 import com.spring.carparter.entity.CarCenter;
+import com.spring.carparter.entity.CarCenterStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,6 +14,7 @@ public class CarCenterResDTO {
     private String phoneNumber; // 연락처
     private String openingHours; // 영업시간
     private String description; // 업체 소개
+    private CarCenterStatus status; //카센터 상태값
 
     public static CarCenterResDTO from(CarCenter carCenter) {
         return CarCenterResDTO.builder()
@@ -22,6 +24,8 @@ public class CarCenterResDTO {
                 .phoneNumber(carCenter.getPhoneNumber())
                 .openingHours(carCenter.getOpeningHours())
                 .description(carCenter.getDescription())
+                .status(carCenter.getStatus())
+
                 .build();
     }
 }

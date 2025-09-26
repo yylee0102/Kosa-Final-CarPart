@@ -18,6 +18,13 @@ public interface QuoteRequestRepository extends JpaRepository<QuoteRequest, Inte
     @EntityGraph(attributePaths = {"user", "userCar"})
     Optional<QuoteRequest> findById(Integer requestId);
 
+
+    /**
+     * 모든 견적 요청을 연관된 User, UserCar 정보와 함께 조회합니다. (N+1 문제 해결)
+     */
+    @Query("SELECT qr FROM QuoteRequest qr JOIN FETCH qr.user u JOIN FETCH qr.userCar uc")
+    List<QuoteRequest> findAllWithDetails();
+
     //특정 사용자가 작성한 모든 견적 요청 목록을 User, UserCar 정보와 함께 조회합니다.
     @Query("SELECT qr FROM QuoteRequest qr JOIN FETCH qr.user u JOIN FETCH qr.userCar uc WHERE u.id = :userId ORDER BY qr.createdAt DESC")
     List<QuoteRequest> findUserRequestsWithDetails(@Param("userId") String userId);
