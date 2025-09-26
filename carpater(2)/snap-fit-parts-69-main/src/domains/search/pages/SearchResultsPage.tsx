@@ -173,11 +173,11 @@ export default function SearchResultsPage() {
                   /* 부품 결과 */
                   <div className="flex gap-4">
                     <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      <img 
+                      {/*<img 
                         src={result.image} 
                         alt={result.title}
                         className="w-full h-full object-cover"
-                      />
+                      />*/}
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between items-start mb-2">

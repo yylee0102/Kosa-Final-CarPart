@@ -45,7 +45,7 @@ public class QuoteRequestResDTO {
     @Builder
     public static class CarInfo {
         // UserCar의 ID가 Long 타입일 가능성이 높으므로 Long으로 맞춰줍니다.
-        private final Integer userCarId;
+        private final Long userCarId;
 
         static CarInfo from(UserCar userCar) {
             return CarInfo.builder()

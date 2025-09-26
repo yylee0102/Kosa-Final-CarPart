@@ -78,6 +78,22 @@ export interface CsInquiryResDTO {
   createdAt: string;
 }
 
+// ✅ [추가] 내 차량 정보 응답 DTO
+export interface UserCarResDTO {
+  userCarId: number;
+  carModel: string;
+  carNumber: string;
+  modelYear: number;
+  createdAt: string; // 또는 Date
+}
+
+// ✅ [추가] 내 차량 생성/수정 요청 DTO
+export interface UserCarReqDTO {
+  carModel: string;
+  carNumber: string;
+  modelYear: number;
+}
+
 // ==================== 사용자 API 서비스 ====================
 class UserApiService {
 
@@ -169,10 +185,10 @@ class UserApiService {
 
   /**
    * 리뷰 목록 조회
-   * GET /api/users/reviews
+   * GET /api/users/my-reviews
    */
   async getMyReviews(): Promise<ReviewResDTO[]> {
-    const response = await fetch(`${API_BASE_URL}/users/reviews`, {
+    const response = await fetch(`${API_BASE_URL}/users/my-reviews`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -204,7 +220,7 @@ class UserApiService {
    * GET /api/users/completed-repairs
    */
   async getCompletedRepairs(): Promise<CompletedRepairResDTO[]> {
-    const response = await fetch(`${API_BASE_URL}/users/completed-repairs`, {
+    const response = await fetch(`${API_BASE_URL}/users/my-completed-repairs`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -213,6 +229,53 @@ class UserApiService {
     }
 
     return response.json();
+  }
+
+
+  /**
+   * ✅ [신규 추가] 내 차량 목록 조회
+   * GET /api/users/vehicles
+   */
+  async getMyVehicles(): Promise<UserCarResDTO[]> {
+    const response = await fetch(`${API_BASE_URL}/users/vehicles`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('내 차량 목록 조회에 실패했습니다.');
+    }
+    return response.json();
+  }
+  /**
+   * ✅ [신규 추가] 내 차량 생성
+   * POST /api/users/vehicles
+   */
+  async createMyVehicle(vehicleData: UserCarReqDTO): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/users/vehicles`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(vehicleData),
+    });
+
+    if (!response.ok) {
+      throw new Error('차량 생성에 실패했습니다.');
+    }
+  }
+
+  /**
+   * ✅ [신규 추가] 내 차량 정보 수정
+   * PUT /api/users/vehicles/{id}
+   */
+  async updateMyVehicle(vehicleId: number, vehicleData: UserCarReqDTO): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/users/vehicles/${vehicleId}`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(vehicleData),
+    });
+
+    if (!response.ok) {
+      throw new Error('차량 정보 수정에 실패했습니다.');
+    }
   }
 
   /**

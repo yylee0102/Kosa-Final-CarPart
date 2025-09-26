@@ -28,5 +28,4 @@ replay_pid*
 
 # 모든 .env 파일을 재귀적으로 무시 (가장 일반적인 방법)
 **/.env
-application.properties
-application.yml
+**/application.properties

@@ -38,6 +38,7 @@ import { MyQuoteRequestsPage } from "./domains/users/pages/MyQuoteRequestsPage";
 import { QuoteRequestDetailPage } from "./domains/users/pages/QuoteRequestDetailPage";
 import { MyReviewsPage } from "./domains/users/pages/MyReviewsPage";
 import MyCompletedRepairsPage from "./domains/users/pages/MyCompletedRepairsPage";
+import MyVehiclesPage from "./domains/users/pages/MyVehiclesPage"; 
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -110,6 +111,9 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/notices" element={<AdminDashboard />} />
           <Route path="/admin/reports" element={<AdminDashboard />} />
+
+          {/* 차량 관리*/}
+          <Route path="/user/vehicles" element={<MyVehiclesPage />} />
           
           {/* 기타 페이지들 */}
           <Route path="/about" element={<AboutPage />} />

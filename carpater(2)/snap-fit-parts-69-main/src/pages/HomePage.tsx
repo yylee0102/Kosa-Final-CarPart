@@ -240,11 +240,11 @@ export default function HomePage() {
               >
                 <CardContent className="p-6">
                   <div className="relative overflow-hidden rounded-2xl bg-surface-container mb-6 group-hover:scale-105 transition-transform duration-300">
-                    <img 
+                    {/*<img 
                       src={part.image} 
                       alt={part.title}
                       className="w-full h-32 object-cover"
-                    />
+                    />*/}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   

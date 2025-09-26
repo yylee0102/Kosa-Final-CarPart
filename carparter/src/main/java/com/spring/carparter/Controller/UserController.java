@@ -2,6 +2,7 @@ package com.spring.carparter.controller;
 
 import com.spring.carparter.dto.*;
 import com.spring.carparter.entity.CsInquiry;
+import com.spring.carparter.entity.User;
 import com.spring.carparter.service.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -68,23 +69,31 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<UserResDTO> getUser(@AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails.getUsername();
+        UserResDTO user = userService.getUser(userId);
+
+        return ResponseEntity.ok(user);
+    }
+
     // =================== 2. 고객센터 문의 관리 ===================
 
-//    @PostMapping("/inquiries")
-//    public ResponseEntity<CsInquiryResDTO> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-//        String userId = userDetails.getUsername();
-//        // ✅ Service가 Entity 대신 DTO를 반환하도록 수정했다고 가정
-//        CsInquiryResDTO newInquiry = csInquiryService.makeCsInquiry(request, userId);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(newInquiry);
-//    }
+    @PostMapping("/cs")
+    public ResponseEntity<CsInquiryResDTO> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails.getUsername();
+        // ✅ Service가 Entity 대신 DTO를 반환하도록 수정했다고 가정
+        CsInquiryResDTO newInquiry = csInquiryService.makeCsInquiry(request, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newInquiry);
+    }
 
-    @DeleteMapping("/inquiries/{inquiryId}")
+    @DeleteMapping("/cs/{inquiryId}")
     public ResponseEntity<Void> deleteInquiry(@PathVariable Integer inquiryId) {
         csInquiryService.deleteCsInquiry(inquiryId);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/inquiries/{inquiryId}")
+    @PutMapping("/cs/{inquiryId}")
     public ResponseEntity<CsInquiryResDTO> updateQuestion(
             @PathVariable Integer inquiryId,
             @RequestBody CsInquiryReqDTO request,
@@ -204,5 +213,44 @@ public class UserController {
         String userId = userDetails.getUsername();
         List<CompletedRepairResDTO> res = completedRepairService.getCompletedRepairListByUserId(userId);
         return ResponseEntity.ok(res);
+    }
+
+    /// ============================= 7. 차량 등록
+
+    @PostMapping("/vehicles")
+    public ResponseEntity<UserCarResDTO> registerVehicle(
+            @RequestBody UserCarReqDTO request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String userId = userDetails.getUsername();
+       UserCarResDTO newVehicle = userService.createCar(request,userId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(newVehicle);
+    }
+
+    /**
+     * ✅ [신규 추가] 등록된 차량 정보를 수정하는 API
+     * @param id          경로 변수(Path Variable)로 받은 수정할 차량의 ID
+     * @param request     수정할 차량 정보 (모델, 번호, 연식 등)
+     * @param userDetails 현재 로그인한 사용자 정보 (본인 차량인지 확인용)
+     * @return 수정된 차량 정보
+     */
+    @PutMapping("/vehicles/{id}")
+    public ResponseEntity<UserCarResDTO> updateVehicle(
+            @PathVariable Long id,
+            @RequestBody UserCarReqDTO request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String userId = userDetails.getUsername();
+        UserCarResDTO updatedVehicle = userService.updateCar(id, userId, request);
+
+        return ResponseEntity.ok(updatedVehicle);
+    }
+
+    @GetMapping("/vehicles")
+    public ResponseEntity<List<UserCarResDTO>> getvehicles(@AuthenticationPrincipal UserDetails userDetails){
+        String userId = userDetails.getUsername();
+        List<UserCarResDTO> vehicles = userService.getMyCars(userId);
+        return ResponseEntity.ok(vehicles);
     }
 }
