@@ -23,9 +23,9 @@ export default function MyPage() {
     }
 
     // 사용자 타입에 따른 리디렉션
-    if (user.userType === "카센터") {
+    if (user.userType === "CAR_CENTER") {
       navigate("/center/mypage");
-    } else if (user.userType === "관리자") {
+    } else if (user.userType === "ADMIN") {
       navigate("/admin");
     }
     // 일반 사용자는 현재 페이지에서 UserMyPage 컴포넌트 렌더링
@@ -35,7 +35,7 @@ export default function MyPage() {
     return null;
   }
 
-  if (user.userType === "개인") {
+  if (user.userType === "USER") {
     return <UserMyPage />;
   }
 

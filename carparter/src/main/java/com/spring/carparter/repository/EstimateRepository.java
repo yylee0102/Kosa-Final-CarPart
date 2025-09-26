@@ -42,4 +42,10 @@ public interface EstimateRepository extends JpaRepository<Estimate, Integer> {
 
     @Query("select e from Estimate e join fetch e.estimateItems")
     List<Estimate> findAllWithItems();
+
+    // ✅ 아래 메소드를 추가합니다.
+    // 특정 QuoteRequest ID에 해당하는 Estimate의 개수를 반환합니다.
+    Long countByQuoteRequest_RequestId(Integer requestId);
+
+
 }

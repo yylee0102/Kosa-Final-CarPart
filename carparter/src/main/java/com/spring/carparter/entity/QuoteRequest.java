@@ -59,4 +59,16 @@ public class QuoteRequest {
     @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RequestImage> requestImages = new ArrayList<>();
 
+    // ✅ [신규 추가] 연관관계 편의 메소드
+    public void addRequestImage(RequestImage requestImage) {
+        this.requestImages.add(requestImage);
+        requestImage.setQuoteRequest(this); // RequestImage 엔티티에도 QuoteRequest를 설정
+    }
+
+//    // ✅ 아래 코드를 추가해주세요.
+//    /** 이 요청에 대해 카센터들이 제출한 견적서 목록 */
+//    @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @BatchSize(size = 10) // N+1 문제를 방지하기 위한 배치 사이즈 설정 (선택적이지만 권장)
+//    private List<Estimate> estimates = new ArrayList<>();
+
 }

@@ -15,7 +15,7 @@
  */
 
 // 일반 사용자 마이페이지 (임시)
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User, Settings, Car, FileText, MessageSquare, HelpCircle } from "lucide-react";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +27,7 @@ import { VehicleRegisterModal } from "@/domains/users/modals/VehicleRegisterModa
 import { QuoteRequestModal } from "@/domains/users/modals/QuoteRequestModal";
 import { ProfileEditModal } from "@/domains/users/modals/ProfileEditModal";
 import { useNavigate } from "react-router-dom";
+import UserApiService, { UserCarResDTO } from '@/services/user.api';
 
 export default function UserMyPage() {
   const { user } = useAuth();
@@ -36,12 +37,42 @@ export default function UserMyPage() {
   const [quoteRequestModalOpen, setQuoteRequestModalOpen] = useState(false);
   const [profileEditModalOpen, setProfileEditModalOpen] = useState(false);
 
+
+  // ✅ 1. 내 차량 목록을 저장할 상태 추가
+  const [myVehicles, setMyVehicles] = useState<UserCarResDTO[]>([]);
+
+  // ✅ 2. 페이지가 로드될 때 내 차량 목록을 미리 불러옵니다.
+  useEffect(() => {
+    // 이 함수는 API를 호출하여 myVehicles 상태를 채웁니다.
+    const fetchMyVehicles = async () => {
+      try {
+        const vehicles = await UserApiService.getMyVehicles();
+        setMyVehicles(vehicles);
+      } catch (error) {
+        console.error("차량 정보 로딩 실패:", error);
+      }
+    };
+    fetchMyVehicles();
+  }, []); // 빈 배열을 전달하여 한 번만 실행되도록 함
+
+  // ✅ 3. '내 차량 관리' 클릭 시 실행될 새로운 함수
+  const handleVehicleManagementClick = () => {
+    if (myVehicles.length === 0) {
+      // 등록된 차량이 없으면, 모달을 바로 엽니다.
+      setVehicleModalOpen(true);
+    } else {
+      // 등록된 차량이 있으면, 차량 목록 페이지로 이동합니다.
+      navigate('/user/vehicles');
+    }
+  };
   const menuItems = [
     { icon: User, label: "내 정보 관리", href: "/user/profile", action: () => setProfileEditModalOpen(true) },
-    { icon: Car, label: "내 차량 관리", href: "/user/vehicles", action: () => setVehicleModalOpen(true) },
+    { icon: Car, label: "내 차량 관리", action: handleVehicleManagementClick },
     { icon: FileText, label: "견적 요청 내역", href: "/user/quote-requests", action: () => navigate('/user/quote-requests') },
     { icon: MessageSquare, label: "견적 완료 내역", href: "/user/completed-repairs", action: () => navigate('/user/completed-repairs') },
   ];
+
+  
 
   return (
     <ProtectedRoute allowedUserTypes={["USER"]} fallbackMessage="일반 사용자만 접근할 수 있는 페이지입니다.">

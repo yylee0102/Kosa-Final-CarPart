@@ -24,7 +24,7 @@ public class UserCar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_car_id")
-    private Integer userCarId;
+    private Long userCarId;
 
     /** 차량 소유자 (User) */
     @ManyToOne(fetch = FetchType.LAZY)

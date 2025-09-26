@@ -1,3 +1,5 @@
+// ✅ 상단에 UserApiService와 DTO를 임포트합니다.
+import UserApiService, { QuoteRequestReqDTO } from "../../../services/user.api";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PageContainer from "@/shared/components/layout/PageContainer";
@@ -134,23 +136,18 @@ export default function EstimateCreatePage() {
     try {
       setIsSubmitting(true);
 
-      // API 연결: 견적 요청 생성 (QuoteRequest 엔티티 기준)
-      // POST /api/quote-requests
-      const formDataToSend = new FormData();
-      formDataToSend.append('requestDetails', formData.description);
-      formDataToSend.append('address', formData.location);
-      formDataToSend.append('carInfo', JSON.stringify(formData.carInfo));
-      
-      if (formData.centerId) {
-        formDataToSend.append('centerId', formData.centerId);
-      }
+      // 1. API에 보낼 DTO 객체를 준비합니다.
+      //    - userCarId는 실제로는 사용자가 등록한 차량 목록에서 선택된 ID여야 합니다. (지금은 임시값 1 사용)
+      //    - userId는 JWT 토큰에 담겨있으므로 프론트에서 보낼 필요가 없습니다.
+      const requestDto: QuoteRequestReqDTO = {
+        userCarId: 1, // ❗️ 임시값: 실제로는 사용자의 차량 ID를 가져와야 합니다.
+        requestDetails: formData.description,
+        address: formData.location,
+        // 필요하다면 위도/경도 정보도 추가
+      };
 
-      formData.images.forEach((image, index) => {
-        formDataToSend.append(`images`, image);
-      });
-
-      // 임시: 성공 응답 시뮬레이션
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 2. 위에서 만든 API 서비스 함수를 호출합니다.
+      await UserApiService.createQuoteRequest(requestDto, formData.images);
 
       toast({
         title: "견적 요청이 등록되었습니다",
