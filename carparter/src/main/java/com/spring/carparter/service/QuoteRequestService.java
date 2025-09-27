@@ -42,13 +42,14 @@ public class QuoteRequestService {
     ) {
         // 1) User / UserCar 조회
         User user = userRepository.findByUserId(userId);
-        if (user == null) throw new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userId);
+        if(user == null){
+            throw  new EntityNotFoundException("사용자를 찾을수 없습니다."+userId);
+        }
 
         UserCar userCar = userCarRepository.findById(request.getUserCarId())
                 .orElseThrow(() -> new EntityNotFoundException("사용자 차량을 찾을 수 없습니다: " + request.getUserCarId()));
 
         // 2) 엔티티 변환
-        // (toEntity 시그니처는 프로젝트에 맞게 유지)
         QuoteRequest quoteRequest = request.toEntity(request, user, userCar);
 
         // 3) 이미지 S3 업로드 → RequestImage 추가
@@ -77,7 +78,7 @@ public class QuoteRequestService {
         // 4) 저장
         QuoteRequest saved = quoteRequestRepository.save(quoteRequest);
 
-        // 5) DTO 변환(필요시 pre-signed URL 부여는 convertToDtoWithDetails 내부에서 처리 가능)
+        // 5) DTO 변환
         return convertToDtoWithDetails(saved);
     }
 
@@ -87,8 +88,9 @@ public class QuoteRequestService {
     @Transactional
     public QuoteRequest createAndSaveQuoteRequest(QuoteRequestReqDTO request) {
         User user = userRepository.findByUserId(request.getUserId());
-        if (user == null) throw new EntityNotFoundException("사용자를 찾을 수 없습니다: " + request.getUserId());
-
+        if(user == null){
+            throw  new EntityNotFoundException("사용자를 찾을수 없습니다."+request.getUserId());
+        }
         UserCar userCar = userCarRepository.findById(request.getUserCarId())
                 .orElseThrow(() -> new IllegalArgumentException("UserCar not found with id: " + request.getUserCarId()));
 
@@ -105,23 +107,22 @@ public class QuoteRequestService {
     /** 엔티티 단건 조회 */
     @Transactional(readOnly = true)
     public QuoteRequest getQuoteRequest(Integer quoteRequestId) {
-        return quoteRequestRepository.findById(quoteRequestId).orElseThrow();
+        return quoteRequestRepository.findById(quoteRequestId)
+                .orElseThrow(() -> new EntityNotFoundException("견적 요청을 찾을 수 없습니다: " + quoteRequestId));
     }
 
-//    /** ✅ 사용자 기준: 내 견적요청 단건 조회 (컨트롤러에서 사용) */
-//    @Transactional(readOnly = true)
-//    public QuoteRequestResDTO getQuoteRequestByUser(String userId) {
-//        QuoteRequest quoteRequest = quoteRequestRepository.findByUser_UserId(userId);
-//        if (quoteRequest == null) throw new EntityNotFoundException("사용자의 견적 요청이 없습니다: " + userId);
-//        return convertToDtoWithDetails(quoteRequest);
-//    }
-
-    /** 전체 목록 */
+    /**
+     * [수정] N+1 성능 문제를 해결했습니다.
+     * 기존 메소드 이름은 그대로 유지합니다.
+     */
     @Transactional(readOnly = true)
     public List<QuoteRequestResDTO> getAllQuoteRequests() {
-        return quoteRequestRepository.findAll()
+        return quoteRequestRepository.findAllWithDetails()
                 .stream()
-                .map(this::convertToDtoWithDetails)
+                .map(quoteRequest -> {
+                    int estimateCount = quoteRequest.getEstimates() != null ? quoteRequest.getEstimates().size() : 0;
+                    return QuoteRequestResDTO.from(quoteRequest, estimateCount);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -139,35 +140,22 @@ public class QuoteRequestService {
     // --------------------------------------------------------------------
 
     /**
-     * ✅ 카센터용: 견적요청 리스트 조회 (+ 이 센터가 이미 견적 보냈는지 플래그)
-     *
-     * @param centerId 카센터 PK
-     * @return 각 요청의 DTO (estimateCount 포함) + 이미 내가 견적 제출했는지 여부
-     *
-     * 필요 리포지토리 메서드 (EstimateRepository)에 아래 시그니처가 있어야 합니다.
-     * boolean existsByQuoteRequest_RequestIdAndCarCenter_CenterId(Integer requestId, Long centerId);
+     * [수정] N+1 성능 문제를 해결하고, centerId 타입을 String으로 통일했습니다.
+     * 기존 메소드 이름은 그대로 유지합니다.
      */
     @Transactional(readOnly = true)
-    public List<QuoteRequestResDTO> getQuoteRequestsForCenter(Long centerId) {
-        // 정책이 정해져 있지 않다면 우선 "전체 요청"을 보여주고,
-        // 각 요청에 대해 '이미 내가 견적 제출했는지'만 계산합니다.
-        return quoteRequestRepository.findAll().stream()
+    public List<QuoteRequestResDTO> getQuoteRequestsForCenter(String centerId) { // [수정] Long -> String
+        return quoteRequestRepository.findAllWithDetails().stream()
                 .map(qr -> {
-                    QuoteRequestResDTO dto = convertToDtoWithDetails(qr);
-
-                    // (선택) dto에 center-specific 정보(예: alreadyEstimatedByMe) 실어보내고 싶다면
-                    // DTO를 확장하거나, 별도 뷰 모델을 만들어야 합니다.
-                    // 여기서는 예시로 images의 첫 url에 쿼리파라미터를 넣는 등의 꼼수는 지양하고,
-                    // 필요한 경우 DTO 확장 권장.
-                    // → 당장은 컨트롤러에서 별도 응답 래핑을 추천합니다.
-
-                    return dto;
+                    // [수정] DB 쿼리 대신 메모리에서 사이즈 계산
+                    int estimateCount = qr.getEstimates() != null ? qr.getEstimates().size() : 0;
+                    return QuoteRequestResDTO.from(qr, estimateCount);
                 })
                 .collect(Collectors.toList());
     }
 
     /**
-     * ✅ 카센터용: 특정 요청 상세 + "이미 내가 견적 제출했는지" 여부 반환
+     * 카센터용: 특정 요청 상세 + "이미 내가 견적 제출했는지" 여부 반환
      */
     @Transactional(readOnly = true)
     public CenterQuoteRequestView getQuoteRequestDetailsForCenter(String centerId, Integer requestId) {
@@ -204,7 +192,6 @@ public class QuoteRequestService {
         QuoteRequestResDTO dto = QuoteRequestResDTO.from(quoteRequest, estimateCount);
 
         // 3) (옵션) presigned URL 치환
-        //   - 지금 주석 처리 상태를 유지합니다. 필요 시 주석 해제.
         // dto.getImages().forEach(image -> {
         //     String presignedUrl = s3Service.createPresignedUrl(image.getImageUrl());
         //     image.setImageUrl(presignedUrl);
@@ -214,11 +201,9 @@ public class QuoteRequestService {
     }
 
     /**
-     * [이름 변경] 모든 견적 요청 목록을 조회하여 DTO 리스트로 변환하여 반환합니다.
-     * @return 모든 견적 요청 DTO 리스트
+     * 모든 견적 요청 목록을 조회하여 DTO 리스트로 변환하여 반환합니다.
      */
-    public List<QuoteRequestResDTO> getAvailableQuoteRequests() { // ⬅️ 이름 변경
-
+    public List<QuoteRequestResDTO> getAvailableQuoteRequests() {
         List<QuoteRequest> quoteRequests = quoteRequestRepository.findAllWithDetails();
 
         return quoteRequests.stream()
