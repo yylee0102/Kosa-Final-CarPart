@@ -6,7 +6,6 @@ import com.spring.carparter.entity.User;
 import com.spring.carparter.entity.UserCar;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,51 +14,61 @@ import java.util.stream.Collectors;
 @Getter
 @Builder
 public class QuoteRequestResDTO {
+    private Integer requestId;
+    private String requestDetails;
+    private String address;
+    private LocalDateTime createdAt;
+    private String customerName;
+    private String customerPhone;
+    private String carModel;
+    private Integer carYear;
+    private String preferredDate;
+    private String status;
+    private List<String> imageUrls;
+    private int estimateCount; // [추가] 견적 개수 필드
 
-    private final Integer requestId;
-    private final String requestDetails;
-    private final String address;
-    private final Double latitude;
-    private final Double longitude;
-    private final LocalDateTime createdAt;
-    private final WriterInfo writer;
-    private final CarInfo car;
-    private final List<ImageInfo> images;
-    private final int estimateCount;
+    /**
+     * ✅ QuoteRequest 엔티티를 QuoteRequestResDTO로 변환하는 정적 팩토리 메서드
+     */
+    // [수정] int estimateCount 파라미터를 추가하여 서비스 계층의 호출과 일치시켰습니다.
+    public static QuoteRequestResDTO from(QuoteRequest quoteRequest, int estimateCount) {
+        User user = quoteRequest.getUser();
+        UserCar car = quoteRequest.getUserCar();
 
-    @Getter
-    @Builder
-    public static class WriterInfo {
-        private final String userId;
-        private final String name;
-
-        static WriterInfo from(User user) {
-            return WriterInfo.builder()
-                    .userId(user.getUserId())
-                    .name(user.getName())
-                    .build();
-        }
+        return QuoteRequestResDTO.builder()
+                .requestId(quoteRequest.getRequestId())
+                .requestDetails(quoteRequest.getRequestDetails())
+                .address(quoteRequest.getAddress())
+                .createdAt(quoteRequest.getCreatedAt())
+                .customerName(user.getName())
+                .customerPhone(user.getPhoneNumber())
+                .carModel(car.getCarModel())
+                .carYear(car.getModelYear())
+                .imageUrls(quoteRequest.getRequestImages().stream()
+                        .map(RequestImage::getImageUrl)
+                        .collect(Collectors.toList()))
+                .estimateCount(estimateCount) // [추가] 전달받은 견적 개수 매핑
+                .build();
     }
 
+    // 아래 내부 클래스들은 현재 직접 사용되지는 않지만, 구조상 유지합니다.
     @Getter
     @Builder
-    public static class CarInfo {
-        // UserCar의 ID가 Long 타입일 가능성이 높으므로 Long으로 맞춰줍니다.
+    private static class CarInfo {
         private final Long userCarId;
 
         static CarInfo from(UserCar userCar) {
             return CarInfo.builder()
-                    .userCarId(userCar.getUserCarId()) // 보통 엔티티의 PK 필드명은 id 입니다. userCarId라면 그대로 두세요.
+                    .userCarId(userCar.getUserCarId())
                     .build();
         }
     }
 
     @Getter
     @Builder
-    public static class ImageInfo {
-        private final Integer imageId;
-        @Setter
-        private String imageUrl;
+    private static class ImageInfo {
+        private final int imageId;
+        private final String imageUrl;
 
         static ImageInfo from(RequestImage image) {
             return ImageInfo.builder()
@@ -67,28 +76,5 @@ public class QuoteRequestResDTO {
                     .imageUrl(image.getImageUrl())
                     .build();
         }
-    }
-
-    /**
-     * QuoteRequest 엔티티와 외부에서 계산된 estimateCount를 받아 DTO를 생성합니다.
-     * @param quoteRequest 원본 엔티티
-     * @param estimateCount 서비스 레이어에서 효율적으로 계산한 견적 개수
-     * @return 생성된 DTO
-     */
-    public static QuoteRequestResDTO from(QuoteRequest quoteRequest, int estimateCount) {
-        return QuoteRequestResDTO.builder()
-                .requestId(quoteRequest.getRequestId())
-                .requestDetails(quoteRequest.getRequestDetails())
-                .address(quoteRequest.getAddress())
-                .latitude(quoteRequest.getLatitude())
-                .longitude(quoteRequest.getLongitude())
-                .createdAt(quoteRequest.getCreatedAt())
-                .writer(WriterInfo.from(quoteRequest.getUser()))
-                .car(CarInfo.from(quoteRequest.getUserCar()))
-                .images(quoteRequest.getRequestImages().stream()
-                        .map(ImageInfo::from)
-                        .collect(Collectors.toList()))
-                .estimateCount(estimateCount) // 파라미터로 받은 값을 사용
-                .build();
     }
 }

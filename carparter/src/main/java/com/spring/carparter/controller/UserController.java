@@ -5,8 +5,8 @@ import com.spring.carparter.entity.CsInquiry;
 import com.spring.carparter.entity.User;
 import com.spring.carparter.service.*;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users") // 사용자 관련 API 공통 경로
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     // ✅ 모든 Service 의존성에 final 키워드를 적용하여 생성자 주입이 되도록 보장
@@ -32,8 +33,8 @@ public class UserController {
     private final EstimateService estimateService;
 
 
-    // ✅ 1. 클래스 상단에 Logger 객체 추가
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+
+
 
     // =================== 1. 사용자 프로필 관리 ===================
 
@@ -153,13 +154,13 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/my-quote-request") // ✅ 더 명확한 경로로 변경
-    public ResponseEntity<QuoteRequestResDTO> getMyQuoteRequest(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        // ✅ 불필요한 User 객체 생성 대신 userId(String)를 직접 전달
-        QuoteRequestResDTO res = quoteRequestService.getQuoteRequestByUser(userId);
-        return ResponseEntity.ok(res);
-    }
+//    @GetMapping("/my-quote-request") // ✅ 더 명확한 경로로 변경
+//    public ResponseEntity<QuoteRequestResDTO> getMyQuoteRequest(@AuthenticationPrincipal UserDetails userDetails) {
+//        String userId = userDetails.getUsername();
+//        // ✅ 불필요한 User 객체 생성 대신 userId(String)를 직접 전달
+//        QuoteRequestResDTO res = quoteRequestService.getAvailableQuoteRequests(userId);
+//        return ResponseEntity.ok(res);
+//    }
 
     // =================== 4. 내가 받은 견적서 관리 ===================
 

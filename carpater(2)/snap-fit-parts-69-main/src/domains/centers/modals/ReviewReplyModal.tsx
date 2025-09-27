@@ -1,31 +1,25 @@
 /**
  * 리뷰 답글 작성 모달
- * 
- * 기능:
+ * * 기능:
  * - 카센터에서 고객 리뷰에 답글 작성
  * - 답글 수정
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
+import { Review } from "@/services/carCenter.api"; // Review 타입을 import
 
 interface ReviewReplyModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (replyData: any) => void;
-  review: {
-    reviewId: number;
-    writerName: string;
-    content: string;
-    rating: number;
-    createdAt: string;
-    reply?: string;
-  } | null;
+  // ✅ [수정] API의 ReviewReplyReqDTO에 맞게 타입을 명확히 합니다.
+  onSubmit: (replyData: { reviewId: number; content: string }) => void;
+  review: Review | null;
 }
 
 export function ReviewReplyModal({ 
@@ -34,10 +28,17 @@ export function ReviewReplyModal({
   onSubmit, 
   review 
 }: ReviewReplyModalProps) {
-  const [replyContent, setReplyContent] = useState(review?.reply || "");
+  const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // review prop이 변경될 때마다 답글 내용을 초기화합니다.
+  useEffect(() => {
+    setReplyContent(review?.reply || "");
+  }, [review]);
+
   const handleSubmit = async () => {
+    if (!review) return;
+
     if (!replyContent.trim()) {
       toast.error("답글 내용을 입력해주세요.");
       return;
@@ -46,15 +47,16 @@ export function ReviewReplyModal({
     setIsSubmitting(true);
     
     try {
+      // ✅ [수정] API DTO에 맞는 형식(`content`)으로 데이터를 전달합니다.
       await onSubmit({
-        reviewId: review?.reviewId,
-        reply: replyContent
+        reviewId: review.reviewId,
+        content: replyContent
       });
       
-      toast.success("답글이 성공적으로 등록되었습니다.");
+      // 성공/실패 토스트는 부모 컴포넌트(CenterMyPage)에서 처리하므로 여기서는 제거합니다.
       onClose();
     } catch (error) {
-      toast.error("답글 등록에 실패했습니다.");
+      // 에러 처리도 부모 컴포넌트로 위임합니다.
     } finally {
       setIsSubmitting(false);
     }
@@ -110,17 +112,15 @@ export function ReviewReplyModal({
           </div>
 
           {/* 액션 버튼 */}
-          <div className="flex gap-2">
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button
               variant="outline"
-              className="flex-1"
               onClick={onClose}
               disabled={isSubmitting}
             >
               취소
             </Button>
             <Button
-              className="flex-1"
               onClick={handleSubmit}
               disabled={isSubmitting}
             >

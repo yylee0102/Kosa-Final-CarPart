@@ -17,6 +17,12 @@ public interface UsedPartRepository extends JpaRepository<UsedPart, Integer> {
     List<UsedPart> findByCarCenter_CenterIdWithImages(@Param("centerId") String centerId);
 
     // 특정 중고 부품의 상세 정보를 이미지와 함께 조회
-    @Query("SELECT up FROM UsedPart up JOIN FETCH up.images WHERE up.partId = :partId")
+    @Query("SELECT up FROM UsedPart up " +
+            "LEFT JOIN FETCH up.images " +
+            "JOIN FETCH up.carCenter " +
+            "WHERE up.partId = :partId")
     Optional<UsedPart> findByIdWithImages(@Param("partId") Integer partId);
+
+    List<UsedPart> findByPartNameContainingIgnoreCase(String partName);
+
 }

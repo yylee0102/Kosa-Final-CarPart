@@ -103,18 +103,28 @@ public class AdminService {
         return carCenterApprovalRepository.findApprovalResById(approvalId)
                                         .orElseThrow(() -> new RuntimeException("카센터 대기 상세 보기중 오류"));
     }
+
     /**
-     * 10. 카센터 회원가입 반려
-     * */
+     * 10. 카센터 회원가입 반려 (수정된 코드)
+     */
     @Transactional
     public String removeCenterApproval(Long approvalId, String reason) {
-        CarCenterApprovalResDTO centerApprovalResDTO = carCenterApprovalRepository.findApprovalResById(approvalId)
-                .orElseThrow(
-                        () -> new RuntimeException("찾지 못했습니다.")
-                );
-        carCenterRepository.deleteById(centerApprovalResDTO.getCenterId());
+        // 1. DTO가 아닌, 실제 Approval '엔티티'를 조회합니다.
+        //    연관된 CarCenter 정보를 얻기 위함입니다.
+        CarCenterApproval approval = carCenterApprovalRepository.findById(approvalId)
+                .orElseThrow(() -> new RuntimeException("ID에 해당하는 승인 요청을 찾을 수 없습니다: " + approvalId));
 
-        return reason;
+        // 2. 나중에 삭제할 부모(CarCenter)의 ID를 미리 변수에 저장해 둡니다.
+        String centerIdToDelete = approval.getCarCenter().getCenterId();
+
+        // 3. 자식(CarCenterApproval)을 먼저 삭제합니다.
+        carCenterApprovalRepository.delete(approval);
+
+        // 4. 이제 부모(CarCenter)를 안전하게 삭제할 수 있습니다.
+        carCenterRepository.deleteById(centerIdToDelete);
+
+        // 반환 메시지를 좀 더 명확하게 바꿔주는 것이 좋습니다.
+        return "회원가입 요청이 반려 처리되었으며, 관련 정보가 삭제되었습니다.";
     }
 
     /**

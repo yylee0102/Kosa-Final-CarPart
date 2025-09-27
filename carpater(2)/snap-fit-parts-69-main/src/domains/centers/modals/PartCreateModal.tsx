@@ -207,22 +207,22 @@ export const PartCreateModal = ({ open, onClose, onSubmit }: PartCreateModalProp
             </div>
           </div>
           
-          {/* 가격 */}
-           <div className="space-y-2">
-              <Label htmlFor="price" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                가격 *
-              </Label>
-              <Input
-                id="price"
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
-                placeholder="가격 입력"
-                min="0"
-                required
-              />
-            </div>
+        {/* 가격 */}
+<div className="space-y-2">
+  <Label htmlFor="price" className="flex items-center gap-2">
+    <span className="text-lg">₩</span>
+    가격 *
+  </Label>
+  <Input
+    id="price"
+    type="number"
+    value={price}
+    onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
+    placeholder="가격 입력"
+    min="0"
+    required
+  />
+</div>
 
           {/* 상세 설명 */}
           <div className="space-y-2">

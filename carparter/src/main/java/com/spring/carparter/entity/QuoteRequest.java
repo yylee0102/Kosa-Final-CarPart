@@ -64,7 +64,8 @@ public class QuoteRequest {
         this.requestImages.add(requestImage);
         requestImage.setQuoteRequest(this); // RequestImage 엔티티에도 QuoteRequest를 설정
     }
-
+    @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Estimate> estimates = new ArrayList<>(); // 값이 없어서 보내질 못함
 //    // ✅ 아래 코드를 추가해주세요.
 //    /** 이 요청에 대해 카센터들이 제출한 견적서 목록 */
 //    @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)

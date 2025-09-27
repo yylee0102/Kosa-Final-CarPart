@@ -351,8 +351,9 @@ export const QuoteRequestDetailPage = () => {
                 carModel: quoteDetail.carModel,
                 carYear: quoteDetail.carYear,
                 issueDescription: quoteDetail.issueDescription,
-                preferredDate: quoteDetail.preferredDate,
-                location: quoteDetail.location
+                location: quoteDetail.location,
+                createdDate: quoteDetail.createdDate
+
               }}
             />
           )}

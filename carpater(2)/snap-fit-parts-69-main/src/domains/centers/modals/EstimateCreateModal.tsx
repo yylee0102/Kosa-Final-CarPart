@@ -21,8 +21,10 @@ interface QuoteRequest {
   carModel: string;
   carYear: number;
   issueDescription: string;
-  preferredDate: string;
   location: string;
+  // ✅ 아래 필드들을 EstimateRequestsPage와 동일하게 맞춰줍니다.
+  createdDate: string;
+  images?: string[];
 }
 
 interface EstimateItem {
@@ -116,7 +118,6 @@ export const EstimateCreateModal = ({ open, onClose, quoteRequest, onSubmit }: E
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>희망일: {quoteRequest.preferredDate}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />

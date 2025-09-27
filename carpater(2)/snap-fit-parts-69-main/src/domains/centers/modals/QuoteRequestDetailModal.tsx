@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Car, Calendar, MapPin, User, Phone, FileText, Edit } from 'lucide-react';
 
+// QuoteRequestDetailModal.tsx
+
 interface QuoteRequest {
   quoteRequestId: number;
   customerName: string;
@@ -17,9 +19,9 @@ interface QuoteRequest {
   carModel: string;
   carYear: number;
   issueDescription: string;
-  preferredDate: string;
   location: string;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  // ✅ 아래 필드들을 EstimateRequestsPage와 동일하게 맞춰줍니다.
   createdDate: string;
   images?: string[];
 }
@@ -125,11 +127,7 @@ export const QuoteRequestDetailModal: React.FC<QuoteRequestDetailModalProps> = (
               </div>
             </div>
             <div>
-              <span className="text-sm font-medium">희망 작업일: </span>
-              <span className="text-sm flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {quoteRequest.preferredDate}
-              </span>
+              
             </div>
           </div>
 

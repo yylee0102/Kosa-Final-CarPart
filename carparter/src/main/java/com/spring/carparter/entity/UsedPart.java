@@ -1,71 +1,67 @@
 package com.spring.carparter.entity;
 
-// package com.example.model;
-
 import com.spring.carparter.dto.UsedPartReqDTO;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 중고부품 판매 정보를 나타내는 엔티티
- */
 @Entity
 @Table(name = "used_parts")
 @Getter
-@Setter
+@Setter // 서비스 로직상 편의를 위해 Setter 유지
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EntityListeners(AuditingEntityListener.class) // 생성/수정 시간 자동화를 위해 리스너 추가
+@EntityListeners(AuditingEntityListener.class)
 public class UsedPart {
 
-    /** 중고부품 게시글 고유 ID (PK, 자동생성) */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "part_id")
     private Integer partId;
 
-    /** 판매자 (카센터) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "center_id", nullable = false)
     private CarCenter carCenter;
 
-    /** 부품 이름 (e.g., "LF 쏘나타 순정 18인치 휠") */
     @Column(nullable = false)
     private String partName;
 
-    /** 부품에 대한 상세 설명 (상태, 사용기간 등) */
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    /** 판매 가격 */
     @Column(nullable = false)
     private Integer price;
 
-    /** 부품 카테고리 (e.g., 휠/타이어, 엔진, 외장 등) */
     private String category;
 
-    /** 이 부품이 호환되는 차량 모델명 */
     @Column(name = "compatible_car_model")
     private String compatibleCarModel;
 
-    /** 게시글 생성 시간 (최초 저장 시 자동 생성) */
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    /** 이 부품에 첨부된 이미지 목록 */
+    @Builder.Default
     @OneToMany(mappedBy = "usedPart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UsedPartImage> images = new ArrayList<>();
 
-    // ✨ 요청 DTO를 받아 엔티티의 상태를 스스로 변경하는 비즈니스 메소드
+    // == 연관관계 편의 메소드 == //
+    /**
+     * ✅ [추가] UsedPart에 이미지를 추가하면서, UsedPartImage에도 UsedPart를 설정하여 양방향 관계를 동기화합니다.
+     * 이 메소드를 사용하면 데이터 불일치를 방지할 수 있습니다.
+     */
+    public void addImage(UsedPartImage image) {
+        this.images.add(image);
+        image.setUsedPart(this);
+    }
+
+    // == 비즈니스 로직 메소드 == //
     public void updateInfo(UsedPartReqDTO requestDto) {
         if (requestDto.getPartName() != null) {
             this.partName = requestDto.getPartName();
@@ -84,4 +80,3 @@ public class UsedPart {
         }
     }
 }
-

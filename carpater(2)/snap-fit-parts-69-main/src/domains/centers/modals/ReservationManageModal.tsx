@@ -1,7 +1,7 @@
 /**
- * 예약 상세 관리 모달 (백엔드 LocalDateTime 기준)
- * - props로 받은 reservationDate (ISO 문자열)를 날짜와 시간으로 분리/조합하여 처리
- */
+ * 예약 상세 관리 모달 (백엔드 LocalDateTime 기준)
+ * - props로 받은 reservationDate (ISO 문자열)를 날짜와 시간으로 분리/조합하여 처리
+ */
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,47 +9,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, User, Phone, Car, FileText, Trash2 } from 'lucide-react';
+import { Calendar, User, Phone, Car, FileText } from 'lucide-react';
+import carCenterApi, { ReservationResDTO, ReservationReqDTO } from '@/services/carCenter.api';
 
-// 백엔드 Reservation.java 엔티티와 일치하는 타입 (CenterMyPage에서 가져오거나 공유)
-interface Reservation {
-  reservationId: number;
-  customerName: string;
-  customerPhone: string;
-  carInfo: string;
-  reservationDate: string; // "2025-09-25T14:00:00"
-  requestDetails: string;
-}
+// props로 받을 예약 정보 타입 (API의 응답 DTO와 일치)
+type Reservation = ReservationResDTO;
 
-interface ReservationManageModalProps {
+ interface ReservationManageModalProps {
   open: boolean;
   onClose: () => void;
-  reservation?: Reservation | null; // null일 수도 있음을 명시
-  onUpdate: (updatedReservation: Reservation) => void;
+  reservation?: Reservation | null;
+  onUpdate: () => void; // 성공 시 부모에게 알리는 콜백
 }
 
 export const ReservationManageModal = ({ open, onClose, reservation, onUpdate }: ReservationManageModalProps) => {
   const { toast } = useToast();
   
-  // ** 변경점: 폼 데이터와 UI용 날짜/시간 상태 분리 **
-  const [formData, setFormData] = useState<Omit<Reservation, 'reservationId' | 'reservationDate'>>({
-    customerName: '',
-    customerPhone: '',
-    carInfo: '',
-    requestDetails: ''
-  });
+  // 폼 데이터 상태
+  const [formData, setFormData] = useState<Partial<Reservation>>({});
   const [datePart, setDatePart] = useState('');
   const [timePart, setTimePart] = useState('');
 
-  // ** 변경점: 모달이 열리거나 reservation 데이터가 바뀔 때 상태 초기화 **
+  // 모달이 열리거나 reservation 데이터가 바뀔 때 상태 초기화
   useEffect(() => {
     if (reservation) {
-      const { reservationId, reservationDate, ...rest } = reservation;
-      setFormData(rest);
+      setFormData(reservation);
       
-      if (reservationDate) {
+      if (reservation.reservationDate) {
         // ISO 문자열을 날짜('YYYY-MM-DD')와 시간('HH:mm')으로 분리
-        const dateObj = new Date(reservationDate);
+        const dateObj = new Date(reservation.reservationDate);
         const year = dateObj.getFullYear();
         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
         const day = String(dateObj.getDate()).padStart(2, '0');
@@ -63,35 +51,41 @@ export const ReservationManageModal = ({ open, onClose, reservation, onUpdate }:
     }
   }, [reservation]);
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
+  const handleInputChange = (field: keyof Omit<Reservation, 'reservationId' | 'reservationDate' | 'centerId'>, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!reservation) return;
     if (!datePart || !timePart) {
       toast({ title: "예약 날짜와 시간을 모두 입력해주세요.", variant: "destructive"});
       return;
     }
 
-    // ** 변경점: 분리된 날짜와 시간을 다시 LocalDateTime 형식의 문자열로 조합 **
-    // 백엔드가 ZonedDateTime을 사용하면 new Date().toISOString()이 더 적합할 수 있음
+    // 분리된 날짜와 시간을 다시 LocalDateTime 형식의 문자열로 조합
     const combinedDateTime = `${datePart}T${timePart}:00`;
 
-    const updatedReservation: Reservation = {
-      ...formData,
-      reservationId: reservation.reservationId,
-      reservationDate: combinedDateTime
+    // API 요청을 위한 DTO 생성
+    const updateData: ReservationReqDTO = {
+      customerName: formData.customerName || '',
+      customerPhone: formData.customerPhone || '',
+      carInfo: formData.carInfo || '',
+      reservationDate: combinedDateTime,
+      requestDetails: formData.requestDetails || ''
     };
 
-    onUpdate(updatedReservation);
-    toast({ title: '예약 정보가 업데이트되었습니다.' });
-    onClose();
-  };
-
-  const handleCall = () => {
-    if (reservation) {
-       window.open(`tel:${reservation.customerPhone}`);
+    try {
+      // API 호출
+      await carCenterApi.updateReservation(reservation.reservationId, updateData);
+      toast({ title: '예약 정보가 성공적으로 업데이트되었습니다.' });
+      onUpdate(); // 부모 컴포-넌트에 성공 알림 (목록 새로고침)
+      onClose();  // 모달 닫기
+    } catch(error) {
+      toast({
+        title: "업데이트 실패",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
     }
   };
 
@@ -106,15 +100,15 @@ export const ReservationManageModal = ({ open, onClose, reservation, onUpdate }:
         </DialogHeader>
         <div className="space-y-4">
           {/* 예약 기본 정보 */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-gray-50 p-4 rounded-lg border">
             <div className="flex justify-between items-center mb-3">
-              <span className="font-medium">예약 #{reservation.reservationId}</span>
+              <span className="font-bold text-lg">예약 #{reservation.reservationId}</span>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center gap-2"><User className="h-4 w-4" /><span>{reservation.customerName}</span></div>
-              <div className="flex items-center gap-2"><Phone className="h-4 w-4" /><span>{reservation.customerPhone}</span></div>
-              <div className="flex items-center gap-2"><Car className="h-4 w-4" /><span>{formData.carInfo}</span></div>
-              <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /><span>{datePart}</span></div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div className="flex items-center gap-2"><User className="h-4 w-4 text-gray-500" /><span>{formData.customerName}</span></div>
+              <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-gray-500" /><span>{formData.customerPhone}</span></div>
+              <div className="flex items-center gap-2"><Car className="h-4 w-4 text-gray-500" /><span>{formData.carInfo}</span></div>
+              <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-gray-500" /><span>{`${datePart} ${timePart}`}</span></div>
             </div>
           </div>
 
@@ -145,7 +139,7 @@ export const ReservationManageModal = ({ open, onClose, reservation, onUpdate }:
             <Label htmlFor="carInfo">차량 정보</Label>
             <Input
               id="carInfo"
-              value={formData.carInfo}
+              value={formData.carInfo || ''}
               onChange={(e) => handleInputChange('carInfo', e.target.value)}
             />
           </div>
@@ -155,7 +149,7 @@ export const ReservationManageModal = ({ open, onClose, reservation, onUpdate }:
             <Label htmlFor="requestDetails">요청 사항</Label>
             <Textarea
               id="requestDetails"
-              value={formData.requestDetails}
+              value={formData.requestDetails || ''}
               onChange={(e) => handleInputChange('requestDetails', e.target.value)}
               placeholder="요청 사항 또는 카센터 메모를 입력하세요"
               rows={3}
@@ -163,14 +157,13 @@ export const ReservationManageModal = ({ open, onClose, reservation, onUpdate }:
           </div>
 
           {/* 액션 버튼 */}
-          <div className="flex gap-2 pt-4 border-t">
-            <Button onClick={handleSubmit} className="flex-1">
-              <FileText className="h-4 w-4 mr-2" />
-              수정 완료
-            </Button>
-           
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="ghost" onClick={onClose}>
               취소
+            </Button>
+            <Button onClick={handleSubmit}>
+              <FileText className="h-4 w-4 mr-2" />
+              수정 완료
             </Button>
           </div>
         </div>
