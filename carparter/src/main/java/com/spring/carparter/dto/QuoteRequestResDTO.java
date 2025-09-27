@@ -14,51 +14,62 @@ import java.util.stream.Collectors;
 @Getter
 @Builder
 public class QuoteRequestResDTO {
+    private Integer requestId;
+    private String requestDetails;
+    private String address;
+    private LocalDateTime createdAt;
+    private String customerName;
+    private String customerPhone;
+    private String carModel;
+    private Integer carYear;
+    private String preferredDate;
+    private String status;
+    private List<String> imageUrls;
 
-    private final Integer requestId;
-    private final String requestDetails;
-    private final String address;
-    private final Double latitude;
-    private final Double longitude;
-    private final LocalDateTime createdAt;
-    private final WriterInfo writer; // 작성자 정보 (내부 DTO)
-    private final CarInfo car; // 차량 정보 (내부 DTO)
-    private final List<ImageInfo> images; // 요청 이미지 목록 (내부 DTO)
-    private final int estimateCount; // 받은 견적 개수
+    /**
+     * ✅ QuoteRequest 엔티티를 QuoteRequestResDTO로 변환하는 정적 팩토리 메서드
+     */
+    public static QuoteRequestResDTO from(QuoteRequest quoteRequest) {
+        // [수정] quoteRequest 객체에서 User와 UserCar 정보를 가져옵니다.
+        User user = quoteRequest.getUser();
+        UserCar car = quoteRequest.getUserCar();
 
-    // User 엔티티를 WriterInfo DTO로 변환하는 내부 DTO
-    @Getter
-    @Builder
-    private static class WriterInfo {
-        private final String userId;
-        private final String name;
-
-        static WriterInfo from(User user) {
-            return WriterInfo.builder()
-                    .userId(user.getUserId())
-                    .name(user.getName())
-                    .build();
-        }
+        return QuoteRequestResDTO.builder()
+                .requestId(quoteRequest.getRequestId())
+                .requestDetails(quoteRequest.getRequestDetails())
+                .address(quoteRequest.getAddress())
+                .createdAt(quoteRequest.getCreatedAt())
+                // [수정] user 객체에서 이름과 전화번호를 가져옵니다.
+                .customerName(user.getName())
+                .customerPhone(user.getPhoneNumber()) // User 엔티티에 getPhoneNumber()가 있다고 가정
+                // [수정] car 객체에서 모델명과 연식을 가져옵니다.
+                .carModel(car.getCarModel()) // UserCar 엔티티에 getCarModel()가 있다고 가정
+                .carYear(car.getModelYear()) // UserCar 엔티티에 getModelYear()가 있다고 가정
+                .status("PENDING") // 엔티티에 status 필드가 있다면 그 값을 사용
+                .imageUrls(quoteRequest.getRequestImages().stream()
+                        .map(RequestImage::getImageUrl)
+                        .collect(Collectors.toList()))
+                .build();
     }
 
-    // UserCar 엔티티를 CarInfo DTO로 변환하는 내부 DTO
+    // 💡 [삭제] 불필요하고 잘못된 위치에 있던 WriterInfo 클래스와 from 메서드를 제거했습니다.
+
+    // 💡 [수정] 아래 내부 클래스들을 QuoteRequestResDTO 클래스 안으로 이동시켰습니다.
+    
+    // UserCar 엔티티를 CarInfo DTO로 변환하는 내부 DTO (현재는 사용되지 않으나 구조상 유지)
     @Getter
     @Builder
     private static class CarInfo {
         private final Long userCarId;
-        // private final String modelName; // 예시: UserCar에 모델명 필드가 있다고 가정
-        // private final int year; // 예시: UserCar에 연식 필드가 있다고 가정
 
         static CarInfo from(UserCar userCar) {
             return CarInfo.builder()
-                    .userCarId(userCar.getUserCarId()) // UserCar의 ID 필드명에 맞게 수정 필요
-                    // .modelName(userCar.getModelName())
-                    // .year(userCar.getYear())
+                    .userCarId(userCar.getUserCarId())
                     .build();
         }
     }
 
-    // RequestImage 엔티티를 ImageInfo DTO로 변환하는 내부 DTO
+    // RequestImage 엔티티를 ImageInfo DTO로 변환하는 내부 DTO (현재는 사용되지 않으나 구조상 유지)
     @Getter
     @Builder
     private static class ImageInfo {
@@ -67,29 +78,9 @@ public class QuoteRequestResDTO {
 
         static ImageInfo from(RequestImage image) {
             return ImageInfo.builder()
-                    .imageId(image.getImageId()) // RequestImage의 ID 필드명에 맞게 수정 필요
-                    .imageUrl(image.getImageUrl()) // RequestImage의 URL 필드명에 맞게 수정 필요
+                    .imageId(image.getImageId())
+                    .imageUrl(image.getImageUrl())
                     .build();
         }
     }
-
-
-    /**
-     * QuoteRequest 엔티티를 QuoteRequestRes DTO로 변환하는 정적 팩토리 메서드
-     */
-    public static QuoteRequestResDTO from(QuoteRequest quoteRequest, int estimateCount) {
-        return QuoteRequestResDTO.builder()
-                .requestId(quoteRequest.getRequestId())
-                .requestDetails(quoteRequest.getRequestDetails())
-                .address(quoteRequest.getAddress())
-                .latitude(quoteRequest.getLatitude())
-                .longitude(quoteRequest.getLongitude())
-                .createdAt(quoteRequest.getCreatedAt())
-                .writer(WriterInfo.from(quoteRequest.getUser()))
-                .car(CarInfo.from(quoteRequest.getUserCar()))
-                .images(quoteRequest.getRequestImages().stream()
-                        .map(ImageInfo::from)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-}
+} // ✅ [수정] 클래스의 끝을 나타내는 괄호를 파일의 가장 마지막으로 이동시켰습니다.

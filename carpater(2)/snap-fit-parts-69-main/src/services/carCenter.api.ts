@@ -18,6 +18,7 @@ export interface QuoteRequestResDTO {
 
 // ==================== 카센터 기본 정보 타입 ====================
 
+
 export interface CarCenterRegisterRequest {
   centerId: string;
   password: string;
@@ -439,6 +440,10 @@ private getMultipartHeaders(): Record<string, string> {
     await this.handleResponse(response);
   }
 
+  /**
+   * ✅ [수정됨] 이제 '/api/car-centers/quote-requests'를 호출합니다.
+   * 함수 이름도 getQuoteRequests로 변경하여 명확하게 합니다.
+   */
   async getQuoteRequests(): Promise<QuoteRequestResDTO[]> {
     const response = await fetch(`${API_BASE_URL}/car-centers/quote-requests`, {
       headers: this.getAuthHeaders(),
@@ -446,26 +451,15 @@ private getMultipartHeaders(): Record<string, string> {
     return this.handleResponse<QuoteRequestResDTO[]>(response);
   }
 
+/**
+   * [신규] 내 카센터 정보 상세 조회
+   * GET /api/car-centers/my-info
+   */
   async getMyCenterInfo(): Promise<CarCenterResponse> {
     const response = await fetch(`${API_BASE_URL}/car-centers/my-info`, {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse<CarCenterResponse>(response);
-  }
-  /**
-   * ✅ [신규 추가] 부품 이름으로 검색하는 API
-   * @param query 검색어
-   * @returns 검색된 부품 목록
-   */
-  async searchParts(query: string): Promise<UsedPartResDTO[]> {
-    const queryParams = new URLSearchParams({ query });
-    
-    // 백엔드에 새로 만든 /api/parts/search 엔드포인트를 호출합니다.
-    const response = await fetch(`${API_BASE_URL}/car-centers/parts/search?${queryParams.toString()}`, {
-        headers: this.getAuthHeaders(),
-    });
-    
-    return this.handleResponse<UsedPartResDTO[]>(response);
   }
 
 }

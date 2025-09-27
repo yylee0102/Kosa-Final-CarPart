@@ -32,6 +32,10 @@ public class UserController {
     private final CompletedRepairService completedRepairService;
     private final EstimateService estimateService;
 
+
+
+
+
     // =================== 1. 사용자 프로필 관리 ===================
 
     @PostMapping("/join") // ✅ 회원가입 경로는 /profile 보다 /join 이 더 명확

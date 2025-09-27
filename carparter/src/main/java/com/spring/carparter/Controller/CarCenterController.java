@@ -43,11 +43,13 @@ public class CarCenterController {
 
 
     @GetMapping("/quote-requests")
+
     public ResponseEntity<?> getAllQuoteRequests() { // ⬅️ 이 메서드 이름은 URL과 관련있어 그대로 둬도 괜찮습니다.
         try {
             // [수정!] 서비스의 변경된 메서드 이름을 호출합니다.
             List<QuoteRequestResDTO> requests = quoteRequestService.getAvailableQuoteRequests();
             log.info("✅ Returning quote requests: {}", requests); // 로그 추가
+
             return ResponseEntity.ok(requests);
         } catch (Exception e) {
             return createErrorResponse("전체 견적 요청 목록 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "전체 견적 요청 목록 조회 중 오류 발생");
@@ -111,6 +113,8 @@ public class CarCenterController {
             String centerId = userDetails.getUsername();
             CarCenterResDTO responseDto = carCenterService.findCarCenterById(centerId);
             log.info("✅ Returning my info: {}", responseDto); // 로그 추가
+
+
             return ResponseEntity.ok(responseDto);
         } catch (Exception e) {
             return createErrorResponse("내 정보 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "내 정보 조회 중 오류 발생. UserId: " + userDetails.getUsername());

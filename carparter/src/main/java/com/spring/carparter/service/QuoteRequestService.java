@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -124,6 +125,7 @@ public class QuoteRequestService {
                 .collect(Collectors.toList());
     }
 
+
     /** 아이디로 상세 */
     @Transactional(readOnly = true)
     public QuoteRequestResDTO getQuoteRequestDetails(Integer requestId) {
@@ -216,6 +218,7 @@ public class QuoteRequestService {
      * @return 모든 견적 요청 DTO 리스트
      */
     public List<QuoteRequestResDTO> getAvailableQuoteRequests() { // ⬅️ 이름 변경
+
         List<QuoteRequest> quoteRequests = quoteRequestRepository.findAllWithDetails();
 
         return quoteRequests.stream()

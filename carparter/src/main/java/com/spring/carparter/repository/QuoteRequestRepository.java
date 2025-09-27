@@ -56,4 +56,14 @@ public interface QuoteRequestRepository extends JpaRepository<QuoteRequest, Inte
 
     // 한 유저에 대한 견적요청서는 한개여야한다.
     Optional<QuoteRequest> findByUser_UserId(String userId);
+
+    /**
+     * ✅ [수정] 모든 견적 요청을 관련 정보(사용자, 차량, 이미지)와 함께 조회합니다.
+     */
+    @Query("SELECT qr FROM QuoteRequest qr " +
+            "JOIN FETCH qr.user u " +
+            "JOIN FETCH qr.userCar uc " +
+            "LEFT JOIN FETCH qr.requestImages img " + // 이미지가 없는 요청도 있을 수 있으므로 LEFT JOIN
+            "ORDER BY qr.createdAt DESC")
+    List<QuoteRequest> findAllWithDetails();
 }
