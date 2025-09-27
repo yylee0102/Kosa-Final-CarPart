@@ -1,467 +1,198 @@
-// 카센터 통합 API 서비스 - 모든 카센터 관련 기능 통합
+/**
+ * API 서비스 (개선된 최종본)
+ * - 백엔드 컨트롤러와 1:1로 매칭하여 누락된 API 함수들 모두 추가
+ * - API 경로를 백엔드 컨트롤러 기준으로 통일하여 오류 수정
+ * - 타입 정의를 명확하게 하여 프론트엔드-백엔드 데이터 불일치 문제 해결
+ */
+
+// =================================================================
+//  API 타입 정의 (Interfaces)
+// =================================================================
+export interface QuoteRequestResDTO { requestId: number; requestDetails: string; address: string; createdAt: string; customerName: string; customerPhone: string; carModel: string; carYear: number; preferredDate: string; status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; imageUrls: string[]; }
+export interface CarCenterRegisterRequest { centerId: string; password: string; centerName: string; address: string; phoneNumber: string; businessRegistrationNumber: string; openingHours: string; description?: string; }
+export interface CarCenterUpdateRequest { centerName?: string; address?: string; phoneNumber?: string; openingHours?: string; description?: string; }
+export interface CarCenterResponse { id?: string; centerId: string; centerName: string; businessRegistrationNumber: string; address: string; phoneNumber: string; status: 'PENDING' | 'ACTIVE'; description?: string; openingHours?: string; latitude?: number; longitude?: number; }
+export interface ReservationReqDTO { customerName: string; customerPhone: string; carInfo: string; reservationDate: string; requestDetails?: string; }
+export interface ReservationResDTO { reservationId: number; centerId: string; customerName: string; customerPhone: string; carInfo: string; reservationDate: string; requestDetails?: string; }
+export interface UsedPartReqDTO { partName: string; description: string; price: number; category: string; compatibleCarModel: string; }
+export interface UsedPartResDTO { partId: number; centerId: string; partName: string; description: string; price: number; category: string; compatibleCarModel: string; createdAt: string; imageUrls: string[]; centerPhoneNumber: string; }
+export interface EstimateItemReqDTO { itemName: string; price: number; requiredHours: number; partType: string; }
+export interface EstimateItemResDTO { itemId: number; itemName: string; price: number; requiredHours: number; partType: string; }
+export interface EstimateReqDTO { requestId: number; estimatedCost: number; details: string; estimateItems: EstimateItemReqDTO[]; }
+export interface EstimateResDTO { estimateId: number; requestId: number; estimatedCost: number; details: string; createdAt: string; estimateItems: EstimateItemResDTO[]; status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'; customerName: string; carModel: string; carYear: number; }
+export interface Review { reviewId: number; centerName: string; writerName: string; rating: number; content: string; createdAt: string; reply?: string; }
+export interface ReviewReplyReqDTO { reviewId: number; content: string; }
+export interface ReviewReplyResDTO { replyId: number; reviewId: number; centerName: string; content: string; createdAt: string; }
+export interface ReviewReportReqDTO { reviewId: number; reason: string; content: string; }
+export interface ReviewReportResDTO { reportId: number; reviewId: number; reviewContent: string; reviewRating: number; reviewCreatedAt: string; reportingCenterId: string; reportingCenterName: string; reason: string; content: string; status: 'PENDING' | 'APPROVED' | 'REJECTED'; createdAt: string; }
+
+// =================================================================
+//  API 서비스 로직
+// =================================================================
+
 const API_BASE_URL = '/api';
 
-// ✅ [수정] 백엔드 QuoteRequestResDTO.java 와 완전히 동일한 구조로 변경합니다.
-export interface QuoteRequestResDTO {
-  requestId: number;
-  requestDetails: string;
-  address: string;
-  createdAt: string; // LocalDateTime은 string으로 변환되어 넘어옵니다.
-  customerName: string;
-  customerPhone: string;
-  carModel: string;
-  carYear: number;
-  preferredDate: string;
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; // status는 구체적인 타입으로 유지하는 것이 좋습니다.
-  imageUrls: string[]; // ✅ 객체 배열이 아닌, 문자열 배열입니다.
-}
-
-// ==================== 카센터 기본 정보 타입 ====================
-
-
-export interface CarCenterRegisterRequest {
-  centerId: string;
-  password: string;
-  centerName: string;
-  address: string;
-  phoneNumber: string;
-  businessRegistrationNumber: string;
-  openingHours: string;
-  description?: string;
-}
-
-export interface CarCenterUpdateRequest {
-  centerName?: string;
-  address?: string;
-  phoneNumber?: string;
-  openingHours?: string;
-  description?: string;
-}
-
-// ✅ [수정됨] 백엔드 CarCenter.java 엔티티와 필드명을 일치시켰습니다.
-export interface CarCenterResponse {
-  centerId: string;
-  centerName: string;
-  businessRegistrationNumber: string; // 'businessNumber' -> 'businessRegistrationNumber'
-  address: string;
-  phoneNumber: string; // 'phone' -> 'phoneNumber'
-  status: 'PENDING' | 'ACTIVE'; // 'isApproved' -> 'status' (Enum 타입)
-  description?: string;
-  openingHours?: string;
-  latitude?: number;
-  longitude?: number;
-  // rating, totalReviews 등은 별도의 API로 조회하거나 백엔드 DTO에 추가해야 합니다.
-}
-
-// ==================== 예약 관련 타입 ====================
-// ✅ [수정됨] 백엔드 Reservation.java 엔티티를 기반으로 재작성되었습니다.
-export interface ReservationReqDTO {
-  customerName: string;
-  customerPhone: string;
-  carInfo: string;
-  reservationDate: string; // LocalDateTime은 string (ISO 형식)으로 전송 (e.g., "2025-09-26T10:00:00")
-  requestDetails?: string;
-}
-
-// ✅ [수정됨] 백엔드 Reservation.java 엔티티를 기반으로 재작성되었습니다.
-export interface ReservationResDTO {
-  reservationId: number;
-  centerId: string;
-  customerName: string;
-  customerPhone: string;
-  carInfo: string;
-  reservationDate: string;
-  requestDetails?: string;
-}
-
-// ==================== 중고부품 관련 타입 ====================
-export interface UsedPartReqDTO {
-  partName: string;
-  description: string;
-  price: number;
-  category: string;
-  compatibleCarModel: string;
-}
-
-export interface UsedPartResDTO {
-  partId: number;
-  centerId: string;
-  partName: string;
-  description: string;
-  price: number;
-  category: string;
-  compatibleCarModel: string;
-  createdAt: string;
-  imageUrls: string[];
-  centerPhoneNumber: string;
-
-}
-
-// ==================== 견적 관련 타입 ====================
-// Estimate.java, EstimateItem.java과 일치하여 수정이 필요 없습니다.
-export interface EstimateItemReqDTO {
-  itemName: string;
-  price: number;
-  requiredHours: number;
-  partType: string;
-}
-
-export interface EstimateItemResDTO {
-  itemId: number;
-  itemName: string;
-  price: number;
-  requiredHours: number;
-  partType: string;
-}
-
-export interface EstimateReqDTO {
-  requestId: number;
-  estimatedCost: number;
-  details: string;
-  estimateItems: EstimateItemReqDTO[];
-}
-
-export interface EstimateResDTO {
-  estimateId: number;
-  requestId: number;
-  estimatedCost: number;
-  details: string;
-  createdAt: string;
-  estimateItems: EstimateItemResDTO[];
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
-}
-
-
-
-// ==================== 리뷰 관련 타입 ====================
-// ReviewReply.java, ReviewReport.java과 일치하여 큰 수정이 필요 없습니다.
-export interface Review {
-  reviewId: number;
-  centerName: string;
-  writerName: string;
-  rating: number;
-  content: string;
-  createdAt: string;
-  reply?: string; // 답글 내용은 optional
-}
-
-export interface ReviewReplyReqDTO {
-  reviewId: number;
-  content: string;
-}
-
-export interface ReviewReplyResDTO {
-  replyId: number;
-  reviewId: number;
-  centerName: string; // 백엔드에서 CarCenter 정보를 조합하여 제공
-  content: string;
-  createdAt: string;
-}
-
-export interface ReviewReportReqDTO {
-  reviewId: number;
-  reason: string;
-  content: string;
-}
-
-export interface ReviewReportResDTO {
-  reportId: number;
-  reviewId: number;
-  reviewContent: string;
-  reviewRating: number;
-  reviewCreatedAt: string;
-  reportingCenterId: string;
-  reportingCenterName: string;
-  reason: string;
-  content: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  createdAt: string;
-}
-
-// ==================== 카센터 통합 API 서비스 ====================
-class CarCenterApiService {
-private getAuthHeaders(): Record<string, string> {
-    const token = localStorage.getItem('authToken');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    return headers;
-}
-
-private getMultipartHeaders(): Record<string, string> {
+class BaseApiService {
+  private getHeaders(isMultipart: boolean = false): Record<string, string> {
     const token = localStorage.getItem('authToken');
     const headers: Record<string, string> = {};
-
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-
     return headers;
-}
-
-  private async handleResponse<T>(response: Response): Promise<T> {
+  }
+  protected async request<T>(method: string, url: string, body?: any, isMultipart: boolean = false): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method,
+      headers: this.getHeaders(isMultipart),
+      body: isMultipart ? body : JSON.stringify(body),
+    });
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: '알 수 없는 오류가 발생했습니다.' }));
+      const errorData = await response.json().catch(() => ({ message: '알 수 없는 서버 오류가 발생했습니다.' }));
       throw new Error(errorData.message || 'API 요청에 실패했습니다.');
     }
-    if (response.status === 204) {
-        return Promise.resolve(null as T);
-    }
+    if (response.status === 204) { return null as T; }
     return response.json();
   }
-  
-  // ==================== 카센터 회원가입 및 기본 정보 ====================
-  async register(registerData: CarCenterRegisterRequest): Promise<CarCenterResponse> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(registerData),
-    });
-    return this.handleResponse<CarCenterResponse>(response);
+}
+
+class CarCenterApiService extends BaseApiService {
+
+  // =================================================================
+  //  1. 카센터 계정 및 정보 관리 API
+  // =================================================================
+  register(data: CarCenterRegisterRequest): Promise<CarCenterResponse> {
+    return this.request('POST', '/car-centers/register', data);
+  }
+  getMyCenterInfo(): Promise<CarCenterResponse> {
+    return this.request('GET', '/car-centers/my-info');
+  }
+  updateMyInfo(data: CarCenterUpdateRequest): Promise<CarCenterResponse> {
+    return this.request('PUT', '/car-centers/my-info', data);
+  }
+  checkDuplicate(type: 'id' | 'businessNumber', value: string): Promise<{ isDuplicate: boolean; message: string }> {
+    return this.request('GET', `/car-centers/check-duplicate?type=${type}&value=${encodeURIComponent(value)}`);
+  }
+  deleteCarCenter(centerId: string): Promise<void> {
+    return this.request('DELETE', `/car-centers/${centerId}`);
   }
 
-  // ✅ [수정됨] type 파라미터 값을 'businessRegistrationNumber'로 명확하게 변경했습니다.
-  async checkDuplicate(type: 'id' | 'businessRegistrationNumber', value: string): Promise<{ isDuplicate: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/check-duplicate?type=${type}&value=${encodeURIComponent(value)}`);
-    return this.handleResponse(response);
+  // =================================================================
+  //  2. 카센터 검색 및 조회 (고객용) API
+  // =================================================================
+  searchCenters(params: { category?: string; district?: string; keyword?: string; sort?: string; }): Promise<CarCenterResponse[]> {
+    const query = new URLSearchParams(params as Record<string, string>);
+    // ✅ [수정] 백엔드 경로('/api/car-centers')와 일치시킴
+    return this.request('GET', `/car-centers?${query.toString()}`);
   }
-  
-  async updateMyInfo(updateData: CarCenterUpdateRequest): Promise<CarCenterResponse> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/my-info`, {
-        method: 'PUT',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(updateData),
-    });
-    return this.handleResponse<CarCenterResponse>(response);
-  }
-
-  async getCarCenterById(centerId: string): Promise<CarCenterResponse> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/${centerId}`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<CarCenterResponse>(response);
-  }
-
-  async deleteCarCenter(centerId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/${centerId}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-    await this.handleResponse(response);
-  }
-
-
-  // ==================== 예약 관리 ====================
-  async getMyReservations(): Promise<ReservationResDTO[]> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/reservations/my`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<ReservationResDTO[]>(response);
-  }
-
-  async createReservation(reservation: ReservationReqDTO): Promise<ReservationResDTO> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/reservations`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(reservation),
-    });
-    return this.handleResponse<ReservationResDTO>(response);
+  getCarCenterById(centerId: string): Promise<CarCenterResponse> {
+    // ✅ [수정] 백엔드 경로와 일치시킴
+    return this.request('GET', `/car-centers/${centerId}`);
   }
   
-  async deleteReservation(reservationId: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/reservations/${reservationId}`, {
-        method: 'DELETE',
-        headers: this.getAuthHeaders(),
-    });
-    await this.handleResponse(response);
+  // =================================================================
+  //  3. 예약 관리 API
+  // =================================================================
+  getMyReservations(): Promise<ReservationResDTO[]> {
+    return this.request('GET', '/car-centers/reservations/my');
+  }
+  createReservation(data: ReservationReqDTO): Promise<ReservationResDTO> {
+    return this.request('POST', '/car-centers/reservations', data);
+  }
+  updateReservation(reservationId: number, data: ReservationReqDTO): Promise<ReservationResDTO> {
+    return this.request('PUT', `/car-centers/reservations/${reservationId}`, data);
+  }
+  deleteReservation(reservationId: number): Promise<void> {
+    return this.request('DELETE', `/car-centers/reservations/${reservationId}`);
+  }
+  getTodayReservationCount(): Promise<number> {
+    return this.request('GET', '/car-centers/today-count');
   }
 
-  async getTodayReservationCount(): Promise<number> {
-      const response = await fetch(`${API_BASE_URL}/car-centers/today-count`, {
-          headers: this.getAuthHeaders(),
-      });
-      return this.handleResponse<number>(response);
+  // =================================================================
+  //  4. 리뷰 답변 및 신고 API
+  // =================================================================
+  getMyReviews(): Promise<Review[]> {
+    return this.request('GET', '/car-centers/me/reviews');
+  }
+  createReviewReply(data: ReviewReplyReqDTO): Promise<ReviewReplyResDTO> {
+    return this.request('POST', '/car-centers/replies', data);
+  }
+  // ✅ [누락된 기능 추가] 리뷰 답변 수정
+  updateReviewReply(replyId: number, data: ReviewReplyReqDTO): Promise<ReviewReplyResDTO> {
+    return this.request('PUT', `/car-centers/replies/${replyId}`, data);
+  }
+  // ✅ [누락된 기능 추가] 리뷰 답변 삭제
+  deleteReviewReply(replyId: number): Promise<void> {
+    return this.request('DELETE', `/car-centers/replies/${replyId}`);
+  }
+  // ✅ [누락된 기능 추가] 리뷰 신고
+  createReviewReport(data: ReviewReportReqDTO): Promise<ReviewReportResDTO> {
+    return this.request('POST', `/car-centers/reports`, data);
+  }
+  
+  // ✅ [수정] 특정 카센터의 리뷰 목록 조회 API 경로를 실제 컨트롤러와 일치시킵니다.
+  getReviewsByCenterId(centerId: string): Promise<Review[]> {
+    // 기존: return this.request('GET', `/reviews/center/${centerId}`);
+    // 변경:
+    return this.request('GET', `/car-centers/${centerId}/reviews`);
   }
 
-  async updateReservation(reservationId: number, reservationData: ReservationReqDTO): Promise<ReservationResDTO> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/reservations/${reservationId}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(reservationData),
-    });
-    return this.handleResponse<ReservationResDTO>(response);
+  // =================================================================
+  //  5. 중고 부품 관리 API
+  // =================================================================
+  getMyUsedParts(): Promise<UsedPartResDTO[]> {
+    return this.request('GET', '/car-centers/me/used-parts');
   }
-
-
-  // ==================== 견적서 관리 ====================
-  async getEstimateRequests(): Promise<QuoteRequestResDTO[]> {
-    const response = await fetch(`${API_BASE_URL}/estimates/requests`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<QuoteRequestResDTO[]>(response);
-  }
-
-  async submitEstimate(estimate: EstimateReqDTO): Promise<EstimateResDTO> {
-    const response = await fetch(`${API_BASE_URL}/estimates`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(estimate),
-    });
-    return this.handleResponse<EstimateResDTO>(response);
-  }
-
-  async getMyEstimates(): Promise<EstimateResDTO[]> {
-    const response = await fetch(`${API_BASE_URL}/estimates/My-estimates`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<EstimateResDTO[]>(response);
-  }
-
-  async updateEstimate(estimateId: number, estimate: EstimateReqDTO): Promise<EstimateResDTO> {
-    const response = await fetch(`${API_BASE_URL}/estimates/${estimateId}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(estimate),
-    });
-    return this.handleResponse<EstimateResDTO>(response);
-  }
-
-  async getEstimateDetails(estimateId: number): Promise<EstimateResDTO> {
-    const response = await fetch(`${API_BASE_URL}/estimates/${estimateId}`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<EstimateResDTO>(response);
-  }
-
-  async deleteEstimate(estimateId: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/estimates/${estimateId}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-    await this.handleResponse(response);
-  }
-
-
-  // ==================== 중고부품 관리 ====================
-  async getMyUsedParts(): Promise<UsedPartResDTO[]> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/me/used-parts`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<UsedPartResDTO[]>(response);
-  }
-
-  async createUsedPart(partData: UsedPartReqDTO, images: File[]): Promise<UsedPartResDTO> {
+  createUsedPart(partData: UsedPartReqDTO, images: File[]): Promise<UsedPartResDTO> {
     const formData = new FormData();
     formData.append('request', new Blob([JSON.stringify(partData)], { type: "application/json" }));
     images.forEach((image) => formData.append('images', image));
-    const response = await fetch(`${API_BASE_URL}/car-centers/used-parts`, {
-      method: 'POST',
-      headers: this.getMultipartHeaders(),
-      body: formData,
-    });
-    return this.handleResponse<UsedPartResDTO>(response);
+    return this.request('POST', '/car-centers/used-parts', formData, true);
   }
-  
-  async updateUsedPart(partId: number, partData: UsedPartReqDTO, newImages?: File[]): Promise<UsedPartResDTO> {
+  // ✅ [누락된 기능 추가] 중고 부품 상세 정보 조회
+  getUsedPartDetails(partId: number): Promise<UsedPartResDTO> {
+    return this.request('GET', `/car-centers/used-parts/${partId}`);
+  }
+  // ✅ [누락된 기능 추가] 중고 부품 정보 수정
+  updateUsedPart(partId: number, partData: UsedPartReqDTO, newImages: File[]): Promise<UsedPartResDTO> {
     const formData = new FormData();
     formData.append('request', new Blob([JSON.stringify(partData)], { type: "application/json" }));
-    if (newImages) {
-        newImages.forEach(image => formData.append('images', image));
-    }
-    const response = await fetch(`${API_BASE_URL}/car-centers/used-parts/${partId}`, {
-        method: 'PUT',
-        headers: this.getMultipartHeaders(),
-        body: formData,
-    });
-    return this.handleResponse<UsedPartResDTO>(response);
+    newImages.forEach((image) => formData.append('images', image));
+    return this.request('PUT', `/car-centers/used-parts/${partId}`, formData, true);
+  }
+  deleteUsedPart(partId: number): Promise<void> {
+    return this.request('DELETE', `/car-centers/used-parts/${partId}`);
+  }
+  searchParts(query: string): Promise<UsedPartResDTO[]> {
+    if (!query.trim()) { return Promise.resolve([]); }
+    return this.request('GET', `/car-centers/parts/search?query=${encodeURIComponent(query)}`);
   }
 
-  async deleteUsedPart(partId: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/used-parts/${partId}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-    await this.handleResponse(response);
+  // =================================================================
+  //  6. 견적 요청/견적서 관리 API
+  // =================================================================
+  getQuoteRequests(): Promise<QuoteRequestResDTO[]> {
+    return this.request('GET', `/car-centers/quote-requests`);
   }
-
-  async getUsedPartDetails(partId: number): Promise<UsedPartResDTO> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/used-parts/${partId}`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<UsedPartResDTO>(response);
+  submitEstimate(data: EstimateReqDTO): Promise<EstimateResDTO> {
+    return this.request('POST', '/estimates/', data);
   }
-
-
-  // ==================== 리뷰 답변 및 신고 관리 ====================
-  async getMyReviews(): Promise<Review[]> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/me/reviews`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<Review[]>(response);
+  getMyEstimates(): Promise<EstimateResDTO[]> {
+    return this.request('GET', '/estimates/my-estimates');
   }
-  
-  async createReviewReply(reply: ReviewReplyReqDTO): Promise<ReviewReplyResDTO> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/replies`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(reply),
-    });
-    return this.handleResponse<ReviewReplyResDTO>(response);
+  getEstimateDetails(estimateId: number): Promise<EstimateResDTO> {
+    return this.request('GET', `/estimates/${estimateId}`);
   }
-
-  async reportReview(report: ReviewReportReqDTO): Promise<ReviewReportResDTO> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/reports`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(report),
-    });
-    return this.handleResponse<ReviewReportResDTO>(response);
+  updateEstimate(estimateId: number, data: EstimateReqDTO): Promise<EstimateResDTO> {
+    return this.request('PUT', `/estimates/${estimateId}`, data);
   }
-  
-  async updateReviewReply(replyId: number, replyData: ReviewReplyReqDTO): Promise<ReviewReplyResDTO> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/replies/${replyId}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(replyData),
-    });
-    return this.handleResponse<ReviewReplyResDTO>(response);
+  deleteEstimate(estimateId: number): Promise<void> {
+    return this.request('DELETE', `/estimates/${estimateId}`);
   }
-
-  async deleteReviewReply(replyId: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/replies/${replyId}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-    await this.handleResponse(response);
-  }
-
-  /**
-   * ✅ [수정됨] 이제 '/api/car-centers/quote-requests'를 호출합니다.
-   * 함수 이름도 getQuoteRequests로 변경하여 명확하게 합니다.
-   */
-  async getQuoteRequests(): Promise<QuoteRequestResDTO[]> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/quote-requests`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<QuoteRequestResDTO[]>(response);
-  }
-
-/**
-   * [신규] 내 카센터 정보 상세 조회
-   * GET /api/car-centers/my-info
-   */
-  async getMyCenterInfo(): Promise<CarCenterResponse> {
-    const response = await fetch(`${API_BASE_URL}/car-centers/my-info`, {
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse<CarCenterResponse>(response);
-  }
-
 }
 
 export default new CarCenterApiService();

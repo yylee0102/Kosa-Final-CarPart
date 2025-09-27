@@ -2,9 +2,11 @@ package com.spring.carparter.repository;
 
 import com.spring.carparter.entity.CarCenter;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 import java.util.Optional;
 
-public interface CarCenterRepository extends JpaRepository<CarCenter, String> {
+public interface CarCenterRepository extends JpaRepository<CarCenter, String> , JpaSpecificationExecutor<CarCenter> {
 
     /**
      * 로그인 ID로 카센터 조회

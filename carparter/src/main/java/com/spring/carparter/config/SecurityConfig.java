@@ -4,7 +4,12 @@ import com.spring.carparter.JWT.JWTFilter;
 import com.spring.carparter.JWT.JWTUtil;
 import com.spring.carparter.JWT.LoginFilter;
 import com.spring.carparter.entity.Admin;
+import com.spring.carparter.entity.CarCenter;
+import com.spring.carparter.entity.CarCenterStatus;
+import com.spring.carparter.entity.User;
 import com.spring.carparter.repository.AdminRepository;
+import com.spring.carparter.repository.CarCenterRepository;
+import com.spring.carparter.repository.UserRepository;
 import com.spring.carparter.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -119,18 +124,52 @@ public class SecurityConfig {
      * 애플리케이션 시작 시 관리자 계정을 생성하는 CommandLineRunner Bean
      */
     @Bean
-    public CommandLineRunner initAdminData(AdminRepository adminRepository, PasswordEncoder passwordEncoder) {
+    public CommandLineRunner initData(
+            AdminRepository adminRepository,
+            UserRepository userRepository,
+            CarCenterRepository carCenterRepository,
+            PasswordEncoder passwordEncoder
+    ) {
         return args -> {
-            // "admin01" 이라는 아이디의 관리자가 없는 경우에만 생성
+            // --- 총관리자(Admin) 생성 ---
             if (!adminRepository.existsById("admin01")) {
                 Admin admin = Admin.builder()
                         .adminId("admin01")
                         .name("총관리자")
-                        .password(passwordEncoder.encode("adminpass")) // 비밀번호 암호화
+                        .password(passwordEncoder.encode("adminpass"))
                         .build();
                 adminRepository.save(admin);
                 System.out.println("====== SecurityConfig: 총관리자(admin01) 계정이 생성되었습니다. ======");
             }
-        };
-    }
-}
+
+            // --- 테스트용 일반 사용자(User) 생성 ---
+            if (!userRepository.existsById("user01")) {
+                User testUser = User.builder()
+                        .userId("user01")
+                        .password(passwordEncoder.encode("user1234"))
+                        .name("김테스트")
+                        .phoneNumber("010-1234-5678")
+                        .build();
+                userRepository.save(testUser);
+                System.out.println("====== SecurityConfig: 테스트 사용자(user01) 계정이 생성되었습니다. ======");
+            }
+
+            // --- 테스트용 카센터(CarCenter) 생성 ---
+            if (!carCenterRepository.existsById("kosa")) {
+                CarCenter testCenter = CarCenter.builder()
+                        .centerId("kosa")
+                        .password(passwordEncoder.encode("center1234"))
+                        .centerName("KOSA 테스트 카센터")
+                        .address("서울시 금천구 가산디지털2로")
+                        .phoneNumber("02-1234-5678")
+                        .businessRegistrationNumber("123-45-67890")
+                        // ✅ [수정] CarCenter. 접두사를 제거합니다.
+                        .status(CarCenterStatus.ACTIVE)
+                        .openingHours("09:00-18:00")
+                        .description("개발 테스트용 카센터입니다.")
+                        .build();
+                carCenterRepository.save(testCenter);
+                System.out.println("====== SecurityConfig: 테스트 카센터(kosa) 계정이 생성되었습니다. ======");
+            }
+     };
+}}

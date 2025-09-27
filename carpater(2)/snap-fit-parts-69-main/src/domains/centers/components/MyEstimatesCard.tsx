@@ -1,29 +1,22 @@
-/**
- * 카센터 마이페이지용 견적서 목록 카드 컴포넌트 (API 연동 버전)
- */
+// src/domains/centers/components/MyEstimatesCard.tsx
+
 import React, { useState, useEffect } from 'react';
+// ✅ [추가] useNavigate를 import 합니다.
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  FileText, Eye, Edit, Trash2, Calendar, DollarSign, 
-  User, Car, CheckCircle, XCircle, Clock
+  FileText, Calendar, DollarSign, User, Car, CheckCircle, XCircle, Clock
 } from 'lucide-react';
-import carCenterApi, { EstimateResDTO } from '@/services/carCenter.api'; // ✅ API 서비스 및 타입 임포트
-
-// 🚨 주석: 모달들은 현재 SentEstimate 타입을 받도록 되어있어, EstimateResDTO 타입과 맞지 않을 수 있습니다.
-// 추후 모달을 호출할 때 데이터를 변환하거나 모달 자체를 수정해야 합니다.
-// import { EstimateDetailModal } from '../modals/EstimateDetailModal';
-// import { EstimateEditModal } from '../modals/EstimateEditModal';
-
+import carCenterApi, { EstimateResDTO } from '@/services/carCenter.api';
 
 export const MyEstimatesCard = () => {
   const { toast } = useToast();
-  const [estimates, setEstimates] = useState<EstimateResDTO[]>([]); // ✅ API 응답 타입으로 상태 관리
+  const [estimates, setEstimates] = useState<EstimateResDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // 모달 관련 상태는 이 컴포넌트에서 제거하고, 전체보기 페이지에서 관리하는 것이 좋습니다.
+  const navigate = useNavigate(); // ✅ [추가] navigate 함수를 초기화합니다.
 
   useEffect(() => {
     loadEstimates();
@@ -32,7 +25,6 @@ export const MyEstimatesCard = () => {
   const loadEstimates = async () => {
     setIsLoading(true);
     try {
-      // ✅ API 호출: 내가 보낸 견적서 목록 조회
       const data = await carCenterApi.getMyEstimates();
       setEstimates(data);
     } catch (error) {
@@ -52,6 +44,9 @@ export const MyEstimatesCard = () => {
         return { Icon: CheckCircle, text: '수락됨', color: 'bg-green-100 text-green-800' };
       case 'REJECTED':
         return { Icon: XCircle, text: '거절됨', color: 'bg-red-100 text-red-800' };
+      // ✅ [추가] CANCELLED 상태에 대한 UI 처리
+      case 'CANCELLED':
+        return { Icon: XCircle, text: '취소됨', color: 'bg-gray-100 text-gray-800' };
       default: // PENDING
         return { Icon: Clock, text: '검토중', color: 'bg-yellow-100 text-yellow-800' };
     }
@@ -66,11 +61,11 @@ export const MyEstimatesCard = () => {
             최근 보낸 견적서
           </CardTitle>
           <div className="flex gap-2">
-            {/* ✅ '견적서 작성' 버튼 삭제됨 */}
             <Button 
               size="sm" 
               variant="outline"
-              onClick={() => window.location.href = '/center/estimates/sent'} // ✅ 전체보기 페이지 경로로 수정
+              // ✅ [수정] onClick 핸들러를 useNavigate로 변경하고, 경로를 '/estimates'로 수정합니다.
+             onClick={() => navigate('/center/estimates#sent')}
             >
               전체보기
             </Button>
@@ -84,7 +79,7 @@ export const MyEstimatesCard = () => {
           <div className="text-center py-6 text-muted-foreground">작성한 견적서가 없습니다.</div>
         ) : (
           <div className="space-y-4">
-            {estimates.slice(0, 3).map((estimate) => { // ✅ 최근 3개만 표시
+            {estimates.slice(0, 3).map((estimate) => {
               const statusInfo = getStatusInfo(estimate.status);
               return (
                 <div key={estimate.estimateId} className="border rounded-lg p-3">
@@ -98,18 +93,17 @@ export const MyEstimatesCard = () => {
                       </Badge>
                       <span className="text-sm text-muted-foreground">#{estimate.estimateId}</span>
                     </div>
-                    {/* 미리보기에서는 상세 버튼을 제거하거나, 페이지 이동으로 변경할 수 있습니다. */}
                   </div>
                   
-                  {/* 🚨 중요: 아래 customerName 등은 현재 API에 없어 임시 표시합니다. */}
+                  {/* ✅ [수정] API에서 받아온 실제 데이터로 교체합니다. */}
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <span>요청 #{estimate.requestId} 고객</span>
+                      <span>{estimate.customerName}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Car className="h-4 w-4 text-muted-foreground" />
-                      <span>차량 정보 필요</span>
+                      <span>{estimate.carModel} ({estimate.carYear}년)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-muted-foreground" />

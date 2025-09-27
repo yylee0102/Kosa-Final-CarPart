@@ -1,3 +1,5 @@
+// CarCenterResDTO.java
+
 package com.spring.carparter.dto;
 
 import com.spring.carparter.entity.CarCenter;
@@ -8,13 +10,18 @@ import lombok.Getter;
 @Getter
 @Builder
 public class CarCenterResDTO {
-    private String centerId; // 카센터 고유 ID
-    private String centerName; // 업체명
-    private String address; // 주소
-    private String phoneNumber; // 연락처
-    private String openingHours; // 영업시간
-    private String description; // 업체 소개
-    private CarCenterStatus status; //카센터 상태값
+    private String centerId;
+    private String centerName;
+    private String address;
+    private String phoneNumber;
+    private String openingHours;
+    private String description;
+    private CarCenterStatus status;
+
+    // ✅ [추가] 프론트엔드에서 필요한 필드들을 추가합니다.
+    private String businessRegistrationNumber;
+    private Double latitude;
+    private Double longitude;
 
     public static CarCenterResDTO from(CarCenter carCenter) {
         return CarCenterResDTO.builder()
@@ -25,7 +32,10 @@ public class CarCenterResDTO {
                 .openingHours(carCenter.getOpeningHours())
                 .description(carCenter.getDescription())
                 .status(carCenter.getStatus())
-
+                // ✅ [추가] 추가된 필드들을 매핑합니다.
+                .businessRegistrationNumber(carCenter.getBusinessRegistrationNumber())
+                .latitude(carCenter.getLatitude())
+                .longitude(carCenter.getLongitude())
                 .build();
     }
 }

@@ -2,8 +2,11 @@
  * 카센터 마이페이지 (사장님 페이지) - 최종 수정본
  * [수정] 1. 관리자 승인 상태에 따른 접근 제어 로직 추가
  * [수정] 2. 등록 부품 관리 테이블의 버튼 UI 레이아웃 수정
+ * [요청사항 수정] 3. 부품 관리 UI를 체크박스 선택 방식으로 변경하고, 부품명 클릭 시 상세 페이지로 이동 기능 추가
+ * [요청사항 수정] 4. 부품 관련 버튼(등록, 삭제)을 '등록 부품 관리' 카드 헤더로 위치 이동
  */
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, Calendar, User, Star, Settings, Info, Package, Trash2, Edit, ShieldAlert } from "lucide-react";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +23,8 @@ import { ReservationCreateModal } from "@/domains/centers/modals/ReservationCrea
 import { PartEditModal } from "@/domains/centers/modals/PartEditModal";
 
 export default function CenterMyPage() {
+  const navigate = useNavigate();
+
   // 상태 변수들
   const [centerInfo, setCenterInfo] = useState<CarCenterResponse | null>(null);
   const [reservations, setReservations] = useState<ReservationResDTO[]>([]);
@@ -29,6 +34,7 @@ export default function CenterMyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedReservations, setSelectedReservations] = useState<number[]>([]);
+  const [selectedParts, setSelectedParts] = useState<number[]>([]);
 
   // 모달 상태
   const [centerInfoModalOpen, setCenterInfoModalOpen] = useState(false);
@@ -77,7 +83,7 @@ export default function CenterMyPage() {
     );
   };
 
-  const handleSelectAll = () => {
+  const handleSelectAllReservations = () => {
     if (selectedReservations.length === reservations.length) {
       setSelectedReservations([]);
     } else {
@@ -85,7 +91,7 @@ export default function CenterMyPage() {
     }
   };
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelectedReservations = async () => {
     if (selectedReservations.length === 0) {
       alert('삭제할 예약을 선택해주세요.');
       return;
@@ -98,6 +104,37 @@ export default function CenterMyPage() {
         fetchData();
       } catch (e) {
         alert(`삭제 중 오류가 발생했습니다: ${(e as Error).message}`);
+      }
+    }
+  };
+
+  const handlePartSelect = (id: number) => {
+    setSelectedParts(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllParts = () => {
+    if (selectedParts.length === usedParts.length) {
+      setSelectedParts([]);
+    } else {
+      setSelectedParts(usedParts.map(p => p.partId));
+    }
+  };
+
+  const handleDeleteSelectedParts = async () => {
+    if (selectedParts.length === 0) {
+      alert('삭제할 부품을 선택해주세요.');
+      return;
+    }
+    if (window.confirm(`선택된 ${selectedParts.length}개의 부품을 정말 삭제하시겠습니까?`)) {
+      try {
+        await Promise.all(selectedParts.map(id => carCenterApi.deleteUsedPart(id)));
+        alert('선택된 부품이 삭제되었습니다.');
+        setSelectedParts([]);
+        fetchData();
+      } catch (e) {
+        alert(`부품 삭제 중 오류가 발생했습니다: ${(e as Error).message}`);
       }
     }
   };
@@ -142,18 +179,6 @@ export default function CenterMyPage() {
     }
   };
   
-  const handlePartDelete = async (partId: number) => {
-    if (window.confirm('정말로 이 부품을 삭제하시겠습니까?')) {
-      try {
-        await carCenterApi.deleteUsedPart(partId);
-        alert('부품이 삭제되었습니다.');
-        fetchData();
-      } catch (e) {
-        alert(`부품 삭제 중 오류가 발생했습니다: ${(e as Error).message}`);
-      }
-    }
-  };
-  
   const handlePartEdit = (part: UsedPartResDTO) => {
       setSelectedPart(part);
       setPartEditModalOpen(true);
@@ -164,7 +189,7 @@ export default function CenterMyPage() {
       await carCenterApi.updateMyInfo(updatedInfo);
       alert('카센터 정보가 수정되었습니다.');
       setCenterInfoModalOpen(false);
-      fetchData(); // 정보 수정 후 최신 정보 다시 불러오기
+      fetchData();
     } catch (e) {
       alert(`정보 수정 중 오류가 발생했습니다: ${(e as Error).message}`);
     }
@@ -186,10 +211,8 @@ export default function CenterMyPage() {
   if (error) {
     return <PageContainer><div className="text-red-500">오류: {error}</div></PageContainer>;
   }
-   console.log("서버에서 받은 카센터 정보:", centerInfo);
 
-  // 카센터 승인 상태에 따른 접근 제어
-    if (centerInfo && centerInfo.status !== 'ACTIVE') {
+  if (centerInfo && centerInfo.status !== 'ACTIVE') {
     return (
       <PageContainer>
         <div className="container mx-auto px-4 py-20 max-w-2xl text-center">
@@ -225,9 +248,8 @@ export default function CenterMyPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" variant="destructive" onClick={handleDeleteSelected}>내역 삭제</Button>
+              <Button size="sm" variant="destructive" onClick={handleDeleteSelectedReservations}>선택 예약 삭제</Button>
               <Button size="sm" onClick={() => setReservationCreateModalOpen(true)}>예약 추가</Button>
-              <Button size="sm" onClick={() => setPartCreateModalOpen(true)}>부품 등록</Button>
             </div>
           </div>
 
@@ -291,7 +313,7 @@ export default function CenterMyPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-7 gap-4 p-3 bg-muted font-medium text-sm">
-                <div className="flex items-center"><Checkbox onCheckedChange={handleSelectAll} /></div>
+                <div className="flex items-center"><Checkbox onCheckedChange={handleSelectAllReservations} /></div>
                 <div>예약자</div><div>연락처</div><div>차량정보</div><div>예약일시</div><div>요청사항</div><div></div>
               </div>
               {reservations.length === 0 ? (
@@ -329,24 +351,37 @@ export default function CenterMyPage() {
             </CardHeader>
             <CardContent><p className="text-sm text-muted-foreground">고객에게 보여지는 카센터 정보를 수정할 수 있습니다.</p></CardContent>
           </Card>
-          
+   
+
           <MyEstimatesCard />
 
           {/* 등록 부품 관리 */}
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  등록 부품 관리
-              </CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    등록 부품 관리
+                </CardTitle>
+                <div className="flex gap-2">
+                    <Button size="sm" variant="destructive" onClick={handleDeleteSelectedParts}>선택 삭제</Button>
+                    <Button size="sm" onClick={() => setPartCreateModalOpen(true)}>부품 등록</Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-12 gap-4 p-3 bg-muted font-medium text-sm">
-                <div className="col-span-4">부품명</div>
+                <div className="col-span-1 flex items-center">
+                  <Checkbox 
+                    checked={usedParts.length > 0 && selectedParts.length === usedParts.length}
+                    onCheckedChange={handleSelectAllParts}
+                  />
+                </div>
+                <div className="col-span-3">부품명</div>
                 <div className="col-span-2">카테고리</div>
                 <div className="col-span-3">호환 차종</div>
-                <div className="col-span-1 text-right">가격</div>
-                <div className="col-span-2 text-center">관리</div>
+                <div className="col-span-2 text-right">가격</div>
+                <div className="col-span-1 text-center">관리</div>
               </div>
               {usedParts.length === 0 ? (
                 <div className="text-center py-10 text-muted-foreground flex flex-col items-center gap-2">
@@ -356,18 +391,26 @@ export default function CenterMyPage() {
               ) : (
                 usedParts.map((part) => (
                   <div key={part.partId} className="grid grid-cols-12 gap-4 p-3 border-b items-center text-sm">
-                    <div className="col-span-4 font-medium">{part.partName}</div>
+                    <div className="col-span-1 flex items-center">
+                      <Checkbox
+                        checked={selectedParts.includes(part.partId)}
+                        onCheckedChange={() => handlePartSelect(part.partId)}
+                      />
+                    </div>
+                    <div className="col-span-3 font-medium">
+                      <button 
+                        onClick={() => navigate(`/part/${part.partId}`)} 
+                        className="text-left hover:underline hover:text-primary transition-colors"
+                      >
+                        {part.partName}
+                      </button>
+                    </div>
                     <div className="col-span-2">{part.category}</div>
                     <div className="col-span-3 truncate">{part.compatibleCarModel}</div>
-                    <div className="col-span-1 text-right">{part.price.toLocaleString()}원</div>
-                    <div className="col-span-2 flex justify-center gap-2">
+                    <div className="col-span-2 text-right">{part.price.toLocaleString()}원</div>
+                    <div className="col-span-1 flex justify-center">
                       <Button variant="outline" size="sm" onClick={() => handlePartEdit(part)}>
-                          <Edit className="h-3 w-3 mr-1" />
-                          수정
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handlePartDelete(part.partId)}>
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          삭제
+                          <Edit className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>

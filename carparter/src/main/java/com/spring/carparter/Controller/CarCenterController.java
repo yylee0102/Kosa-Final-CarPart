@@ -42,6 +42,18 @@ public class CarCenterController {
      */
 
 
+    @GetMapping
+    public ResponseEntity<List<CarCenterResDTO>> searchCenters(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String district,
+            @RequestParam(required = false, defaultValue = "rating") String sort) {
+
+        List<CarCenterResDTO> centers = carCenterService.searchCenters(keyword, category, district, sort);
+        return ResponseEntity.ok(centers);
+    }
+
+
     @GetMapping("/quote-requests")
 
     public ResponseEntity<?> getAllQuoteRequests() { // ⬅️ 이 메서드 이름은 URL과 관련있어 그대로 둬도 괜찮습니다.
@@ -194,6 +206,18 @@ public class CarCenterController {
 
     // =================== 3. 리뷰 답변 및 신고 API ===================
 
+
+    // 특정 카센터의 모든 리뷰 목록을 조회하는 API (모든 사용자가 접근 가능)
+    @GetMapping("/{centerId}/reviews")
+    public ResponseEntity<?> getReviewsByCenterId(@PathVariable String centerId) {
+        try {
+            // ReviewService에 centerId로 리뷰 목록을 가져오는 로직이 필요합니다.
+            List<ReviewResDTO> reviews = reviewService.getReviewsForCarCenter(centerId);
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            return createErrorResponse("리뷰 목록 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "리뷰 목록 조회 중 오류 발생. CenterId: " + centerId);
+        }
+    }
     /**
      * ✅ [추가된 기능] 내 카센터에 달린 모든 리뷰 목록을 조회합니다.
      */

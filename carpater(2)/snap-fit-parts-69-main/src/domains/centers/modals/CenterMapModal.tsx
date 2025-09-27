@@ -1,21 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Phone } from "lucide-react";
-
-interface CarCenter {
-  centerId: string;
-  centerName: string;
-  businessNumber: string;
-  address: string;
-  phone: string;
-  rating?: number;
-  totalReviews?: number;
-  isApproved: boolean;
-  createdAt: string;
-}
+// ✅ [수정 1] 올바른 경로에서 올바른 타입 이름(CarCenterResponse)을 가져옵니다.
+// 'as CarCenter'를 사용해 이 파일 내에서는 'CarCenter'라는 짧은 이름으로 사용할 수 있게 합니다.
+import { CarCenterResponse as CarCenter } from "@/services/carCenter.api"; 
+import { KakaoMapComponent } from "./KakaoMapComponent"; 
+import { MapPin, Phone } from "lucide-react";
 
 interface CenterMapModalProps {
   isOpen: boolean;
@@ -23,70 +14,74 @@ interface CenterMapModalProps {
   centers: CarCenter[];
 }
 
-export default function CenterMapModal({ 
-  isOpen, 
-  onClose, 
-  centers 
-}: CenterMapModalProps) {
+export default function CenterMapModal({ isOpen, onClose, centers }: CenterMapModalProps) {
   const [selectedCenter, setSelectedCenter] = useState<CarCenter | null>(null);
+  const [map, setMap] = useState<kakao.maps.Map | null>(null);
 
+  // 모달이 열릴 때 지도 크기 및 위치를 재조정하는 로직
+  useEffect(() => {
+    if (isOpen && map && centers.length > 0) {
+      const bounds = new kakao.maps.LatLngBounds();
+      centers.forEach(center => {
+        if (center.latitude && center.longitude) {
+          bounds.extend(new kakao.maps.LatLng(center.latitude, center.longitude));
+        }
+      });
+      
+      const timer = setTimeout(() => {
+        map.relayout();
+        map.setBounds(bounds);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, map, centers]);
+
+  // 길찾기 함수
   const handleDirections = (center: CarCenter) => {
-    // 네이버 지도 길찾기 링크 (임시 좌표)
-    const url = `https://map.naver.com/v5/directions/127.027618,37.497952`;
+    if (!center.latitude || !center.longitude) {
+      alert("이 카센터의 위치 정보가 등록되지 않았습니다.");
+      return;
+    }
+    const url = `https://map.kakao.com/link/to/${center.centerName},${center.latitude},${center.longitude}`;
     window.open(url, '_blank');
   };
 
-  if (!isOpen) return null;
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh]">
-        <DialogHeader>
-          <DialogTitle>지도에서 카센터 찾기</DialogTitle>
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-4">
+          <DialogTitle className="korean-text">지도에서 카센터 찾기</DialogTitle>
         </DialogHeader>
         
-        <div className="flex h-full gap-4">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 px-6 overflow-hidden">
           {/* 지도 영역 */}
-          <div className="flex-1 bg-muted rounded-lg flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <MapPin className="h-12 w-12 mx-auto mb-2" />
-              <p>지도 API 연결 필요</p>
-              <p className="text-sm">네이버 지도 또는 카카오 지도 API</p>
-            </div>
+          <div className="md:col-span-2 h-full rounded-lg overflow-hidden">
+            <KakaoMapComponent
+              centers={centers}
+              onMarkerClick={setSelectedCenter}
+              // ✅ [수정 2] onMapLoad prop 타입을 맞춰주기 위해 직접 함수를 전달합니다.
+              onMapLoad={(mapInstance) => setMap(mapInstance)}
+            />
           </div>
-          
-          {/* 카센터 목록 */}
-          <div className="w-80 space-y-3 overflow-y-auto">
+
+          {/* 카센터 목록 영역 */}
+          <div className="md:col-span-1 h-full overflow-y-auto space-y-3">
+            <h3 className="text-lg font-semibold korean-text mb-2">카센터 목록 ({centers.length}개)</h3>
             {centers.map((center) => (
               <Card 
+                // ✅ [수정 3] 고유한 key prop으로 centerId를 사용합니다.
                 key={center.centerId}
-                className={`cursor-pointer transition-colors ${
-                  selectedCenter?.centerId === center.centerId ? 'ring-2 ring-primary' : ''
+                className={`cursor-pointer transition-all ${
+                  selectedCenter?.centerId === center.centerId 
+                    ? 'ring-2 ring-blue-500 shadow-md' 
+                    : 'hover:bg-gray-50'
                 }`}
                 onClick={() => setSelectedCenter(center)}
               >
                 <CardContent className="p-3">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-sm text-on-surface">{center.centerName}</h3>
-                  </div>
-                  <p className="text-xs text-on-surface-variant mb-2">{center.address}</p>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1 text-xs">
-                      <Star className="h-3 w-3 fill-primary text-primary" />
-                      <span>{center.rating || 0}★ ({center.totalReviews || 0})</span>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDirections(center);
-                      }}
-                      className="h-6 px-2 text-xs"
-                    >
-                      길찾기
-                    </Button>
-                  </div>
+                  <p className="font-semibold text-sm korean-text truncate">{center.centerName}</p>
+                  <p className="text-xs text-gray-500 mt-1 truncate">{center.address}</p>
                 </CardContent>
               </Card>
             ))}
@@ -94,45 +89,35 @@ export default function CenterMapModal({
         </div>
         
         {/* 선택된 카센터 상세 정보 */}
-        {selectedCenter && (
-          <div className="border-t pt-4">
-            <div className="flex justify-between items-start">
+        <div className="border-t">
+          {selectedCenter ? (
+            <div className="flex justify-between items-center p-6">
               <div>
-                <h3 className="font-semibold text-on-surface">{selectedCenter.centerName}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-primary text-primary" />
-                    <span className="font-medium text-on-surface">{selectedCenter.rating || 0}</span>
-                    <span className="text-on-surface-variant">
-                      ({selectedCenter.totalReviews || 0})
-                    </span>
-                  </div>
-                  {selectedCenter.isApproved && (
-                    <Badge variant="default" className="bg-green-100 text-green-800">
-                      승인완료
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-on-surface-variant mt-2">
+                <h3 className="font-bold text-lg korean-text">{selectedCenter.centerName}</h3>
+                <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
                   <MapPin className="h-4 w-4" />
                   <span>{selectedCenter.address}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                   <Phone className="h-4 w-4" />
-                  <span>{selectedCenter.phone}</span>
+                  <span>{selectedCenter.phoneNumber || '전화번호 정보 없음'}</span>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" onClick={() => handleDirections(selectedCenter)}>
+                <Button onClick={() => handleDirections(selectedCenter)}>
                   길찾기
                 </Button>
-                <Button size="sm" variant="outline" onClick={onClose}>
-                  견적 요청
+                <Button variant="outline">
+                  상세보기
                 </Button>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center text-gray-500 p-6 korean-text">
+              목록에서 카센터를 선택하거나 지도에서 마커를 클릭하세요.
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
