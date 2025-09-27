@@ -6,6 +6,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/shared/contexts/AuthContext";
 
 // Pages
+import { EstimateManagementPage } from "./domains/centers/pages/EstimateManagementPage";
+
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import InvestmentPage from "./pages/InvestmentPage";
@@ -22,8 +24,6 @@ import EstimateRequestPage from "./domains/estimates/pages/EstimateRequestPage";
 import CenterEstimatesPage from "./domains/centers/pages/CenterEstimatesPage";
 import { EstimateRequestsPage } from "./domains/centers/pages/EstimateRequestsPage";
 import CenterEstimateCreatePage from "./domains/centers/pages/EstimateCreatePage";
-import { SentEstimatesPage } from "./domains/centers/pages/SentEstimatesPage";
-import { EstimateManagementPage } from "./domains/centers/pages/EstimateManagementPage";
 import { QuoteRequestDetailPage as CenterQuoteRequestDetailPage } from "./domains/centers/pages/QuoteRequestDetailPage";
 import { SentEstimatesManagementPage } from "./domains/centers/pages/SentEstimatesManagementPage";
 import ChatPage from "./domains/chat/pages/ChatPage";
@@ -76,7 +76,6 @@ const App = () => (
           <Route path="/center/estimates/requests" element={<EstimateRequestsPage />} />
           <Route path="/center/estimates/requests/:id" element={<CenterQuoteRequestDetailPage />} />
           <Route path="/center/estimates/create/:requestId?" element={<CenterEstimateCreatePage />} />
-          <Route path="/center/estimates/sent" element={<SentEstimatesPage />} />
           <Route path="/center/estimates/sent-management" element={<SentEstimatesManagementPage />} />
           
           {/* 카센터 추가 관리 페이지 */}

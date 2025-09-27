@@ -3,6 +3,7 @@ package com.spring.carparter.service;
 import com.spring.carparter.dto.EstimateReqDTO;
 import com.spring.carparter.dto.EstimateResDTO;
 import com.spring.carparter.entity.*;
+import com.spring.carparter.exception.ResourceNotFoundException;
 import com.spring.carparter.repository.CarCenterRepository;
 import com.spring.carparter.repository.EstimateRepository;
 import com.spring.carparter.repository.QuoteRequestRepository;
@@ -25,10 +26,10 @@ public class EstimateService {
     @Transactional
     public EstimateResDTO submitEstimate(String centerId, EstimateReqDTO requestDto) {
         CarCenter carCenter = carCenterRepository.findById(centerId)
-                .orElseThrow(() -> new IllegalArgumentException("카센터 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("카센터 정보를 찾을 수 없습니다."));
 
         QuoteRequest quoteRequest = quoteRequestRepository.findById(requestDto.getRequestId())
-                .orElseThrow(() -> new IllegalArgumentException("견적 요청 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("견적 요청 정보를 찾을 수 없습니다."));
 
         Estimate estimate = requestDto.toEntity();
         estimate.setCarCenter(carCenter);
@@ -60,7 +61,7 @@ public class EstimateService {
     @Transactional(readOnly = true)
     public EstimateResDTO getEstimateDetails(Integer estimateId) {
         Estimate estimate = estimateRepository.findByIdWithItems(estimateId)
-                .orElseThrow(() -> new IllegalArgumentException("견적서를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("견적서를 찾을 수 없습니다."));
         return EstimateResDTO.from(estimate);
     }
 
@@ -72,6 +73,10 @@ public class EstimateService {
 
         if (!estimate.getCarCenter().getCenterId().equals(centerId)) {
             throw new SecurityException("견적서를 삭제할 권한이 없습니다.");
+        }
+        // 이미 수락된 견적인지 확인
+        if (estimate.getStatus() == EstimateStatus.ACCEPTED) {
+            throw new IllegalStateException("이미 수락된 견적은 취소할 수 없습니다.");
         }
 
         // ✅ 2. 견적서가 삭제되기 전에 사용자에게 알림 전송
@@ -130,5 +135,69 @@ public class EstimateService {
         String carCenterId = estimate.getCarCenter().getCenterId();
         String message = "회원님이 보내신 견적이 거절되었습니다. (견적 ID: " + estimateId + ")";
         notificationService.sendNotificationToUser(carCenterId, message);
+    }
+
+    /**
+     * 사용자가 받은 견적서를 거절합니다.
+     *
+     * @param userId     요청한 사용자의 ID
+     * @param estimateId 거절할 견적서의 ID
+     * @throws ResourceNotFoundException 견적서를 찾을 수 없을 때
+     * @throws SecurityException         견적서를 거절할 권한이 없을 때
+     * @throws IllegalStateException     대기중인 견적이 아닐 때
+     */
+    @Transactional
+    public void rejectEstimate(String userId, Integer estimateId) {
+        Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ResourceNotFoundException("거절할 견적서를 찾을 수 없습니다."));
+
+        // 견적 요청을 올린 본인인지 권한 확인
+        if (!estimate.getQuoteRequest().getUser().getUserId().equals(userId)) {
+            throw new SecurityException("견적서를 거절할 권한이 없습니다.");
+        }
+
+        // 대기중인 견적인지 확인
+        if (estimate.getStatus() != EstimateStatus.PENDING) {
+            throw new IllegalStateException("대기중인 견적만 거절할 수 있습니다.");
+        }
+
+        estimate.setStatus(EstimateStatus.REJECTED);
+
+        // 해당 견적서를 보낸 카센터에 알림 전송
+        String carCenterId = estimate.getCarCenter().getCenterId();
+        String message = "회원님이 보내신 견적이 거절되었습니다. (견적 ID: " + estimateId + ")";
+        notificationService.sendNotificationToUser(carCenterId, message);
+    }
+
+    /**
+     * 사용자가 받은 견적서를 수락합니다.
+     *
+     * @param userId     요청한 사용자의 ID
+     * @param estimateId 수락할 견적서의 ID
+     * @throws ResourceNotFoundException 견적서를 찾을 수 없을 때
+     * @throws SecurityException         견적서를 수락할 권한이 없을 때
+     * @throws IllegalStateException     대기중인 견적이 아닐 때
+     */
+    @Transactional
+    public void acceptEstimate(String userId, Integer estimateId) {
+        Estimate estimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ResourceNotFoundException("수락할 견적서를 찾을 수 없습니다."));
+
+        // 견적 요청을 올린 본인인지 권한 확인
+        if (!estimate.getQuoteRequest().getUser().getUserId().equals(userId)) {
+            throw new SecurityException("견적서를 수락할 권한이 없습니다.");
+        }
+
+        // 대기중인 견적인지 확인
+        if (estimate.getStatus() != EstimateStatus.PENDING) {
+            throw new IllegalStateException("대기중인 견적만 수락할 수 있습니다.");
+        }
+
+        estimate.setStatus(EstimateStatus.ACCEPTED);
+
+        // 해당 견적서를 보낸 카센터에 알림 전송
+        String carCenterId = estimate.getCarCenter().getCenterId();
+        String message = "회원님이 보내신 견적이 수락되었습니다. (견적 ID: " + estimateId + ")";
+        notificationService.sendNotificationToUser(carCenterId, message); // 카센터 ID도 사용자 ID처럼 취급하여 전송
     }
 }

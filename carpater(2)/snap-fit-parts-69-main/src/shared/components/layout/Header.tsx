@@ -143,7 +143,7 @@ export default function Header({ className }: HeaderProps) {
                     </DropdownMenuItem>
                   )}
                   {user?.userType === "CAR_CENTER" && (
-                    <DropdownMenuItem onClick={() => navigate("/center/estimates/requests")}>
+                    <DropdownMenuItem onClick={() => navigate("/center/estimates#sent")}>
                       견적 관리
                     </DropdownMenuItem>
                   )}
