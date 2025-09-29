@@ -16,58 +16,102 @@
 
 // 일반 사용자 마이페이지 (임시)
 import { useEffect, useState } from "react";
-import { User, Settings, Car, FileText, MessageSquare, HelpCircle } from "lucide-react";
+import { User, Settings, Car, FileText, MessageSquare, HelpCircle, PlusCircle } from "lucide-react";
 import PageContainer from "@/shared/components/layout/PageContainer";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/shared/contexts/AuthContext";
 import ProtectedRoute from "@/shared/components/ProtectedRoute";
+// 새로 만든 모달과 기존 모달들을 임포트합니다.
+import { MyVehicleListModal } from "@/domains/users/modals/MyVehicleListModal";
 import { VehicleRegisterModal } from "@/domains/users/modals/VehicleRegisterModal";
 import { QuoteRequestModal } from "@/domains/users/modals/QuoteRequestModal";
 import { ProfileEditModal } from "@/domains/users/modals/ProfileEditModal";
 import { useNavigate } from "react-router-dom";
-import UserApiService, { UserCarResDTO } from '@/services/user.api';
+import UserApiService, { UserCarReqDTO, UserCarResDTO } from '@/services/user.api';
+
+
 
 export default function UserMyPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
-  const [quoteRequestModalOpen, setQuoteRequestModalOpen] = useState(false);
-  const [profileEditModalOpen, setProfileEditModalOpen] = useState(false);
+  // --- 데이터 상태 ---
+const [myVehicles, setMyVehicles] = useState<UserCarResDTO[]>([]);
+const [isLoading, setIsLoading] = useState(true);
+
+// --- 모달 상태 ---
+// '차량 목록' 모달과 '차량 등록/수정' 모달 상태를 명확히 구분
+const [isVehicleListModalOpen, setIsVehicleListModalOpen] = useState(false); 
+const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+const [profileEditModalOpen, setProfileEditModalOpen] = useState(false);
+
+// '차량 등록/수정' 모달이 열릴 때 어떤 차량을 수정할지 저장하는 상태
+const [selectedVehicle, setSelectedVehicle] = useState<UserCarResDTO | undefined>(undefined);
 
 
-  // ✅ 1. 내 차량 목록을 저장할 상태 추가
-  const [myVehicles, setMyVehicles] = useState<UserCarResDTO[]>([]);
+// ✅ 1. isLoading 상태를 올바르게 제어하는 이 함수만 남겨둡니다.
+const fetchMyVehicles = async () => {
+  setIsLoading(true);
+  try {
+    const vehicles = await UserApiService.getMyVehicles();
+    setMyVehicles(vehicles);
+  } catch (error) {
+    console.error("차량 정보 로딩 실패:", error);
+  } finally {
+    // try/catch 결과와 상관없이 항상 실행되어 로딩 상태를 끝냅니다.
+    setIsLoading(false);
+  }
+};
 
-  // ✅ 2. 페이지가 로드될 때 내 차량 목록을 미리 불러옵니다.
-  useEffect(() => {
-    // 이 함수는 API를 호출하여 myVehicles 상태를 채웁니다.
-    const fetchMyVehicles = async () => {
-      try {
-        const vehicles = await UserApiService.getMyVehicles();
-        setMyVehicles(vehicles);
-      } catch (error) {
-        console.error("차량 정보 로딩 실패:", error);
-      }
-    };
+
+   useEffect(() => {
     fetchMyVehicles();
-  }, []); // 빈 배열을 전달하여 한 번만 실행되도록 함
+  }, []);
 
-  // ✅ 3. '내 차량 관리' 클릭 시 실행될 새로운 함수
-  const handleVehicleManagementClick = () => {
-    if (myVehicles.length === 0) {
-      // 등록된 차량이 없으면, 모달을 바로 엽니다.
-      setVehicleModalOpen(true);
-    } else {
-      // 등록된 차량이 있으면, 차량 목록 페이지로 이동합니다.
-      navigate('/user/vehicles');
+// ✅ [추가] 모달 흐름을 제어하는 핸들러 함수들
+
+// '내 차량 관리' 메뉴 클릭 시 -> '차량 목록' 모달을 연다
+const handleVehicleManagementClick = () => {
+  setIsVehicleListModalOpen(true);
+};
+
+// '차량 목록' 모달에서 '새 차량 등록' 버튼 클릭 시
+const handleAddNewVehicle = () => {
+  setSelectedVehicle(undefined); // 새 차량이므로 수정할 차량 정보는 비운다
+  setIsVehicleListModalOpen(false); // 목록 모달은 닫고
+  setIsRegisterModalOpen(true);     // 등록 모달을 연다
+};
+
+
+// '차량 목록' 모달에서 특정 차량의 '수정' 버튼 클릭 시
+const handleEditVehicle = (vehicle: UserCarResDTO) => {
+  setSelectedVehicle(vehicle); // 수정할 차량 정보를 저장한다
+  setIsVehicleListModalOpen(false); // 목록 모달은 닫고
+  setIsRegisterModalOpen(true);     // 등록 모달을 연다
+};
+
+// '차량 등록/수정' 모달에서 최종 '저장' 버튼 클릭 시 (API 호출)
+const handleVehicleFormSubmit = async (vehicleData: UserCarReqDTO) => { // vehicleData 타입은 UserCarReqDTO 입니다.
+  try {
+    if (selectedVehicle) { // selectedVehicle 정보가 있으면 '수정'
+      await UserApiService.updateMyVehicle(selectedVehicle.userCarId, vehicleData);
+      // toast({ title: "성공", description: "차량 정보가 수정되었습니다." });
+    } else { // 정보가 없으면 '신규 등록'
+      await UserApiService.createMyVehicle(vehicleData);
+      // toast({ title: "성공", description: "새로운 차량이 등록되었습니다." });
     }
-  };
-  const menuItems = [
+    setIsRegisterModalOpen(false); // 등록 모달 닫기
+    fetchMyVehicles(); // 차량 목록 새로고침
+  } catch (error) {
+     // toast({ title: "오류", description: "차량 등록/수정에 실패했습니다.", variant: "destructive" });
+     console.error("Failed to submit vehicle form:", error);
+  }
+};
+const menuItems = [
     { icon: User, label: "내 정보 관리", href: "/user/profile", action: () => setProfileEditModalOpen(true) },
-    { icon: Car, label: "내 차량 관리", action: handleVehicleManagementClick },
+    { icon: Car, label: "내 차량 관리", action: handleVehicleManagementClick }, 
     { icon: FileText, label: "견적 요청 내역", href: "/user/quote-requests", action: () => navigate('/user/quote-requests') },
     { icon: MessageSquare, label: "견적 완료 내역", href: "/user/completed-repairs", action: () => navigate('/user/completed-repairs') },
   ];
