@@ -10,19 +10,20 @@ export interface QuoteRequestReqDTO {
   longitude?: number;
 }
 
-// ✅ [수정] 백엔드 QuoteRequestResDTO.java 와 완전히 동일한 구조로 변경합니다.
 export interface QuoteRequestResDTO {
   requestId: number;
   requestDetails: string;
   address: string;
+  latitude: number;
+  longitude: number;
   createdAt: string;
-  // 중첩 객체 타입 정의
   writer: {
     userId: string;
     name: string;
   };
   car: {
     userCarId: number;
+    // ✅ 백엔드 DTO에 맞춰 carModel, modelYear도 추가해주는 것이 좋습니다.
     carModel: string;
     modelYear: number;
   };
@@ -30,13 +31,47 @@ export interface QuoteRequestResDTO {
     imageId: number;
     imageUrl: string;
   }[];
-  // 백엔드에서 보내주는 추가 필드들
   estimateCount: number;
-  customerName: string;
-  customerPhone: string;
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; // ✅ 타입을 구체적으로 명시
-  preferredDate: string;
+
+  // ✅ [추가] 이 부분이 빠져있습니다. 백엔드에서 보내주는 견적 목록을 추가해주세요.
+  estimates: Estimate[];
 }
+export interface QuoteRequestResDTO {
+  requestId: number;
+  requestDetails: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  createdAt: string;
+  writer: {
+    userId: string;
+    name: string;
+  };
+  car: {
+    userCarId: number;
+    // ✅ 백엔드 DTO에 맞춰 carModel, modelYear도 추가해주는 것이 좋습니다.
+    carModel: string;
+    modelYear: number;
+  };
+  images: {
+    imageId: number;
+    imageUrl: string;
+  }[];
+  estimateCount: number;
+
+  // ✅ [추가] 이 부분이 빠져있습니다. 백엔드에서 보내주는 견적 목록을 추가해주세요.
+  estimates: Estimate[];
+}
+
+
+// ✅ [추가] 백엔드의 EstimateResDTO에 맞춰 Estimate 타입을 정의합니다.
+export interface Estimate {
+  estimateId: number;
+  centerName: string;
+  estimatedCost: number;
+  details: string;
+}
+
 export interface ReviewReqDTO {
   centerId: string;
   rating: number;
@@ -103,18 +138,24 @@ export interface UserCarReqDTO {
 // ==================== 사용자 API 서비스 ====================
 class UserApiService {
 
-  private getAuthToken(): string {
-    return localStorage.getItem('authToken') || '';
+   private getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem('authToken');
+    return {
+      // ✅ [수정] 토큰이 존재할 경우, 표준에 맞는 'Bearer ' 접두사를 추가합니다.
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Content-Type': 'application/json',
+    };
   }
 
   
 
 
-  private getAuthHeaders(): Record<string, string> {
+  // FormData와 함께 사용할 헤더 (Content-Type 제외)
+  private getAuthHeadersForFormData(): Record<string, string> {
     const token = localStorage.getItem('authToken');
     return {
-      'Authorization': token || '',
-      'Content-Type': 'application/json',
+        // ✅ [수정] 여기에도 동일하게 'Bearer ' 접두사를 추가합니다.
+        'Authorization': token ? `Bearer ${token}` : '',
     };
   }
 
@@ -144,25 +185,27 @@ class UserApiService {
     const response = await fetch(`${API_BASE_URL}/users/quote-requests`, { // ✅ 최종 엔드포인트
       method: 'POST',
       headers: {
-        // FormData 사용 시 'Content-Type' 헤더는 브라우저가 자동 설정하므로 지정하지 않음
-        'Authorization': this.getAuthToken(),
+         // ✅ [수정된 코드] 이 클래스에 이미 정의된 getAuthHeadersForFormData()를 사용해야 합니다.
+        ...this.getAuthHeadersForFormData(),
       },
       body: formData,
     });
 
-    if (!response.ok) {
+if (!response.ok) {
       const errorText = await response.text();
       console.error("API Error:", errorText);
       throw new Error('견적 요청 생성에 실패했습니다.');
     }
   }
 
+
+
   /**
    * 내 견적 요청 목록 조회
    * GET /api/users/my-quote-requests
    */
-  async getMyQuoteRequests(): Promise<QuoteRequestResDTO[]> {
-    const response = await fetch(`${API_BASE_URL}/users/my-quote-requests`, {
+  async getMyQuoteRequest(): Promise<QuoteRequestResDTO> {
+    const response = await fetch(`${API_BASE_URL}/users/my-quote-request`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -172,6 +215,22 @@ class UserApiService {
 
     return response.json();
   }
+
+  /**
+   * 내 견적 요청 삭제
+   * DELETE /api/users/quote-requests/{id}
+   */
+  async deleteQuoteRequest(quoteRequestId: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/users/quote-requests/${quoteRequestId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('견적 요청 삭제에 실패했습니다.');
+    }
+  }
+
 
   /**
    * 리뷰 작성
