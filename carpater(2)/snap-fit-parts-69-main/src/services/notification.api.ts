@@ -29,9 +29,14 @@ const notificationApi = {
    * 실시간 알림 구독 (EventSource 객체를 반환)
    */
   subscribe: (): EventSource => {
+     const token = localStorage.getItem('authToken');
+    if (!token) {
+        // 토큰이 없으면 연결 시도조차 하지 않도록 처리
+        throw new Error("로그인이 필요합니다.");
+    }
     // SSE는 일반 fetch와 다르므로 EventSource API를 직접 사용합니다.
     // 인증이 필요하다면 백엔드에서 URL 파라미터로 토큰을 받도록 수정해야 할 수 있습니다.
-    return new EventSource(`${API_BASE_URL}/notifications/subscribe`);
+    return new EventSource(`${API_BASE_URL}/notifications/subscribe?token=${token}`);
   },
 
   /**

@@ -398,12 +398,9 @@ export default function CenterMyPage() {
                       />
                     </div>
                     <div className="col-span-3 font-medium">
-                      <button 
-                        onClick={() => navigate(`/part/${part.partId}`)} 
-                        className="text-left hover:underline hover:text-primary transition-colors"
-                      >
-                        {part.partName}
-                      </button>
+                      
+                       <span> {part.partName} </span>
+                     
                     </div>
                     <div className="col-span-2">{part.category}</div>
                     <div className="col-span-3 truncate">{part.compatibleCarModel}</div>
