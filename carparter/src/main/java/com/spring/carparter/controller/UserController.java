@@ -168,7 +168,7 @@ public class UserController {
     public ResponseEntity<Void> rejectEstimate(@PathVariable Integer estimateId,
                                                @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
-        estimateService.rejectEstimateByUser(userId, estimateId);
+        estimateService.rejectEstimate(userId, estimateId);
         return ResponseEntity.ok().build();
     }
 

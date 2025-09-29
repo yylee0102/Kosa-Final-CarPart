@@ -1,25 +1,36 @@
 /**
- * 카센터 제출 견적서 관리 페이지 (최종 통합본)
- * - [수정] 부모 탭 컨테이너에 포함될 수 있도록 불필요한 헤더 및 레이아웃 제거
+ * 카센터 제출 견적서 관리 페이지 (모달 연결 최종본)
+ * - 상세보기, 수정 모달 기능 연결
+ * - 로딩, 에러, 데이터 없음 상태를 명확히 구분하여 UI에 표시
  */
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  FileText, Eye, Edit, Trash2, Calendar, CheckCircle, XCircle, Clock, TrendingUp
+import {
+  FileText, Eye, Edit, Trash2, Calendar, CheckCircle, XCircle, Clock, TrendingUp, AlertTriangle, Loader2
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import carCenterApi, { EstimateResDTO } from '@/services/carCenter.api';
 import { EstimateEditModal } from '@/domains/centers/modals/EstimateEditModal';
+// ✅ 1. 상세보기 모달을 import 합니다.
+import { EstimateDetailModal } from '@/domains/centers/modals/EstimateDetailModal';
+
 
 export const SentEstimatesManagementPage = () => {
   const { toast } = useToast();
   const [estimates, setEstimates] = useState<EstimateResDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // 수정 모달 상태
   const [editingEstimate, setEditingEstimate] = useState<EstimateResDTO | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  // ✅ 2. 상세보기 모달 상태를 추가합니다.
+  const [viewingEstimate, setViewingEstimate] = useState<EstimateResDTO | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   useEffect(() => {
     loadSentEstimates();
@@ -27,13 +38,16 @@ export const SentEstimatesManagementPage = () => {
 
   const loadSentEstimates = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await carCenterApi.getMyEstimates();
       setEstimates(data);
     } catch (error) {
-      toast({ 
+      const errorMessage = (error as Error).message;
+      setError(errorMessage);
+      toast({
         title: '견적서 목록을 불러오는데 실패했습니다.',
-        description: (error as Error).message,
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -41,20 +55,28 @@ export const SentEstimatesManagementPage = () => {
     }
   };
   
+  // ✅ 3. 상세보기 버튼 클릭 시 실행될 핸들러 함수를 추가합니다.
+  const handleViewDetails = (estimate: EstimateResDTO) => {
+    setViewingEstimate(estimate);
+    setIsDetailModalOpen(true);
+  };
+
   const handleEditEstimate = (estimate: EstimateResDTO) => {
     setEditingEstimate(estimate);
     setIsEditModalOpen(true);
   };
 
   const handleDeleteEstimate = async (estimateId: number) => {
+    // window.confirm은 브라우저 기본 UI이므로, 더 나은 UX를 위해 커스텀 모달 사용을 권장합니다.
     if (!window.confirm(`견적서 #${estimateId}를 정말 삭제하시겠습니까?`)) return;
     try {
       await carCenterApi.deleteEstimate(estimateId);
       toast({ title: '견적서가 삭제되었습니다.' });
-      loadSentEstimates();
+      loadSentEstimates(); // 목록 새로고침
     } catch (error) {
-      toast({ 
+      toast({
         title: '견적서 삭제에 실패했습니다.',
+        description: (error as Error).message,
         variant: 'destructive'
       });
     }
@@ -76,8 +98,28 @@ export const SentEstimatesManagementPage = () => {
   const pendingCount = estimates.filter(est => est.status === 'PENDING').length;
   const acceptanceRate = totalEstimates > 0 ? Math.round((acceptedCount / totalEstimates) * 100) : 0;
 
+  // 로딩 및 에러 상태에 따른 UI 분기 처리
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12">
+        <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+        <p className="mt-4 text-muted-foreground">데이터를 불러오는 중입니다...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 bg-red-50 rounded-lg">
+        <AlertTriangle className="h-10 w-10 text-destructive" />
+        <p className="mt-4 font-semibold text-destructive">오류가 발생했습니다</p>
+        <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+        <Button onClick={loadSentEstimates} className="mt-4">다시 시도</Button>
+      </div>
+    );
+  }
+
   return (
-    // ✅ [수정] PageContainer와 헤더 <div>를 제거하고 바로 콘텐츠부터 시작합니다.
     <>
       <div className="space-y-6">
         {/* 통계 카드 */}
@@ -91,7 +133,7 @@ export const SentEstimatesManagementPage = () => {
               <div className="text-2xl font-bold">{totalEstimates}건</div>
             </CardContent>
           </Card>
-          <Card>
+           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">수락된 견적</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-500" />
@@ -127,9 +169,7 @@ export const SentEstimatesManagementPage = () => {
             <CardDescription>제출한 견적서의 상태를 확인하세요</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">데이터를 불러오는 중...</div>
-            ) : estimates.length === 0 ? (
+            {estimates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 아직 제출한 견적서가 없습니다.
               </div>
@@ -148,7 +188,7 @@ export const SentEstimatesManagementPage = () => {
                 <TableBody>
                   {estimates.map((estimate) => {
                     const statusInfo = getStatusInfo(estimate.status);
-                    return(
+                    return (
                       <TableRow key={estimate.estimateId}>
                         <TableCell className="font-mono">#{estimate.estimateId}</TableCell>
                         <TableCell>
@@ -178,7 +218,8 @@ export const SentEstimatesManagementPage = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" title="상세보기">
+                            {/* ✅ 4. 상세보기 버튼에 onClick 이벤트를 연결합니다. */}
+                            <Button size="sm" variant="outline" title="상세보기" onClick={() => handleViewDetails(estimate)}>
                               <Eye className="h-4 w-4" />
                             </Button>
                             {estimate.status !== 'ACCEPTED' && (
@@ -202,17 +243,28 @@ export const SentEstimatesManagementPage = () => {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* 수정 모달 렌더링 */}
-      <EstimateEditModal
-        open={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        estimate={editingEstimate}
-        onUpdate={() => {
-          setIsEditModalOpen(false);
-          loadSentEstimates();
-        }}
-      />
+      {editingEstimate && (
+          <EstimateEditModal
+            open={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            estimate={editingEstimate}
+            onUpdate={() => {
+              setIsEditModalOpen(false);
+              loadSentEstimates();
+            }}
+          />
+      )}
+      
+      {/* ✅ 5. 상세보기 모달을 렌더링하고, 상태와 함수를 props로 전달합니다. */}
+      {viewingEstimate && (
+        <EstimateDetailModal
+          open={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
+          estimate={viewingEstimate}
+        />
+      )}
     </>
   );
 };
