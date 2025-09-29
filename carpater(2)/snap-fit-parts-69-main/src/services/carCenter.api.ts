@@ -168,46 +168,48 @@ class CarCenterApiService extends BaseApiService {
   }
   searchParts(query: string): Promise<UsedPartResDTO[]> {
     if (!query.trim()) { return Promise.resolve([]); }
-    return this.request('GET', `/car-centers/parts/search?query=${encodeURIComponent(query)}`);
+    return this.request('GET', `/parts/search?query=${encodeURIComponent(query)}`);
   }
 
   // =================================================================
   //  6. 견적 요청/견적서 관리 API
   // =================================================================
  /** 모든 카센터가 볼 수 있는 전체 견적 요청 목록을 조회합니다. */
-  getQuoteRequests(): Promise<QuoteRequestResDTO[]> {
-    return this.request('GET', `/car-centers/quote-requests`);
-  }
-  
-  /** 로그인한 카센터가 특정 견적 요청에 대한 견적서를 제출합니다. */
-  submitEstimate(data: EstimateReqDTO): Promise<EstimateResDTO> {
-    // ✅ [수정] 카센터가 주체이므로 '/car-centers' 경로로 통일합니다.
-    return this.request('POST', '/car-centers/estimates', data);
-  }
-  
-  /** 로그인한 카센터가 '자신이 보낸' 모든 견적서 목록을 조회합니다. */
-  getMyEstimates(): Promise<EstimateResDTO[]> {
-    // ✅ [수정] 다른 '내 정보' API들과 경로 일관성을 맞춥니다.
-    return this.request('GET', '/car-centers/me/estimates');
-  }
-  
-  /** 로그인한 카센터가 '자신의' 특정 견적서 상세 정보를 조회합니다. */
-  getEstimateDetails(estimateId: number): Promise<EstimateResDTO> {
-    // ✅ [수정] 다른 리소스와 마찬가지로 보안과 일관성을 위해 경로를 변경합니다.
-    return this.request('GET', `/car-centers/estimates/${estimateId}`);
-  }
+  /** 모든 카센터가 볼 수 있는 전체 견적 요청 목록을 조회합니다. */
+getQuoteRequests(): Promise<QuoteRequestResDTO[]> {
+  // ✅ [수정] CarCenterController의 @GetMapping("/quote-requests")와 일치시킴
+  return this.request('GET', `/car-centers/quote-requests`);
+}
 
-  /** 로그인한 카센터가 '자신의' 견적서를 수정합니다. */
-  updateEstimate(estimateId: number, data: EstimateReqDTO): Promise<EstimateResDTO> {
-    // ✅ [수정] 경로를 통일합니다.
-    return this.request('PUT', `/car-centers/estimates/${estimateId}`, data);
-  }
+/** 로그인한 카센터가 특정 견적 요청에 대한 견적서를 제출합니다. */
+submitEstimate(data: EstimateReqDTO): Promise<EstimateResDTO> {
+  // ✅ [수정] EstimateController의 @PostMapping("/")와 일치시킴 (기본 경로: /api/estimates)
+  return this.request('POST', '/estimates/', data);
+}
 
-  /** 로그인한 카센터가 '자신의' 견적서를 삭제합니다. */
-  deleteEstimate(estimateId: number): Promise<void> {
-    // ✅ [수정] 경로를 통일합니다.
-    return this.request('DELETE', `/car-centers/estimates/${estimateId}`);
-  }
+/** 로그인한 카센터가 '자신이 보낸' 모든 견적서 목록을 조회합니다. */
+getMyEstimates(): Promise<EstimateResDTO[]> {
+  // ✅ [수정] EstimateController의 @GetMapping("/my-estimates")와 일치시킴
+  return this.request('GET', '/estimates/my-estimates');
+}
+
+/** 로그인한 카센터가 '자신의' 특정 견적서 상세 정보를 조회합니다. */
+getEstimateDetails(estimateId: number): Promise<EstimateResDTO> {
+  // ✅ [수정] EstimateController의 @GetMapping("/{estimateId}")와 일치시킴
+  return this.request('GET', `/estimates/${estimateId}`);
+}
+
+/** 로그인한 카센터가 '자신의' 견적서를 수정합니다. */
+updateEstimate(estimateId: number, data: EstimateReqDTO): Promise<EstimateResDTO> {
+  // ✅ [수정] EstimateController의 @PutMapping("/{estimateId}")와 일치시킴
+  return this.request('PUT', `/estimates/${estimateId}`, data);
+}
+
+/** 로그인한 카센터가 '자신의' 견적서를 삭제합니다. */
+deleteEstimate(estimateId: number): Promise<void> {
+  // ✅ [수정] EstimateController의 @DeleteMapping("/{estimateId}")와 일치시킴
+  return this.request('DELETE', `/estimates/${estimateId}`);
+}
 }
 
 export default new CarCenterApiService();

@@ -82,7 +82,7 @@ export default function Header({ className }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   // 4. 로그인 시 API 호출 및 실시간 알림 구독 로직
-  useEffect(() => {
+    useEffect(() => {
     if (!isLoggedIn) return;
 
     const fetchInitialData = async () => {
@@ -97,6 +97,7 @@ export default function Header({ className }: HeaderProps) {
         console.error("초기 알림 데이터 로딩 실패:", error);
       }
     };
+
 
     fetchInitialData();
 

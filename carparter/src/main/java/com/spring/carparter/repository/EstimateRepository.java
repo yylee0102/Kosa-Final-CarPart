@@ -2,6 +2,8 @@ package com.spring.carparter.repository;
 
 import com.spring.carparter.entity.Estimate;
 import com.spring.carparter.entity.EstimateItem;
+import com.spring.carparter.entity.EstimateStatus;
+import com.spring.carparter.entity.QuoteRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,5 +45,6 @@ public interface EstimateRepository extends JpaRepository<Estimate, Integer> {
     Long countByQuoteRequest_RequestId(Integer requestId);
 
     boolean existsByQuoteRequest_RequestIdAndCarCenter_CenterId(Integer requestId, String centerId);
+    List<Estimate> findByQuoteRequestAndStatus(QuoteRequest quoteRequest, EstimateStatus status);
 
 }

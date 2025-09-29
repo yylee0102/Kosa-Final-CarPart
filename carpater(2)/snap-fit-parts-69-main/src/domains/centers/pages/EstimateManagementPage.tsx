@@ -9,7 +9,8 @@ import { EstimateRequestsPage } from './EstimateRequestsPage';
 import { SentEstimatesManagementPage } from './SentEstimatesManagementPage';
 import PageContainer from '@/shared/components/layout/PageContainer';
 import ProtectedRoute from '@/shared/components/ProtectedRoute';
-import { Send, Clock } from 'lucide-react';
+import { Send, Clock ,Wrench } from 'lucide-react';
+import { RepairManagementPage } from './RepairManagementPage'; 
 
 // ✅ 파일 이름과 동일한 이름의 컴포넌트를 export 합니다.
 export const EstimateManagementPage = () => {
@@ -32,23 +33,28 @@ export const EstimateManagementPage = () => {
             <h1 className="text-3xl font-bold">견적 관리</h1>
             <p className="text-muted-foreground">견적서 요청과 견적서를 관리하세요.</p>
           </div>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
+           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            {/* ✅ 탭 리스트를 3개로 늘립니다. */}
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="requests" className="gap-2">
                 <Clock className="h-4 w-4" />
                 견적 요청 관리
               </TabsTrigger>
               <TabsTrigger value="sent" className="gap-2">
                 <Send className="h-4 w-4" />
-                전송한 견적서
+                보낸 견적서
+              </TabsTrigger>
+              {/* ✅ 수리 관리 탭 추가 */}
+              <TabsTrigger value="repairs" className="gap-2">
+                <Wrench className="h-4 w-4" />
+                수리 관리
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="requests" className="space-y-0">
-              <EstimateRequestsPage />
-            </TabsContent>
-            <TabsContent value="sent" className="space-y-0">
-              <SentEstimatesManagementPage />
-            </TabsContent>
+            
+            <TabsContent value="requests"><EstimateRequestsPage /></TabsContent>
+            <TabsContent value="sent"><SentEstimatesManagementPage /></TabsContent>
+            {/* ✅ 수리 관리 탭 컨텐츠 추가 */}
+            <TabsContent value="repairs"><RepairManagementPage /></TabsContent>
           </Tabs>
         </div>
       </PageContainer>

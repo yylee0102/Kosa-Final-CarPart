@@ -6,6 +6,7 @@ import com.spring.carparter.entity.*;
 import com.spring.carparter.exception.ResourceNotFoundException;
 import com.spring.carparter.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EstimateService {
 
     private final EstimateRepository estimateRepository;
@@ -146,36 +148,80 @@ public class EstimateService {
     // 7. 사용자가 견적서 수락
     @Transactional
     public void acceptEstimate(String userId, Integer estimateId) {
-        Estimate estimate = estimateRepository.findById(estimateId)
+        log.info("===== [START] 견적서 수락: 사용자 ID '{}', 견적서 ID '{}' =====", userId, estimateId);
+        Estimate acceptedEstimate = estimateRepository.findById(estimateId)
                 .orElseThrow(() -> new ResourceNotFoundException("수락할 견적서를 찾을 수 없습니다."));
+        log.info(" -> 견적서 ID '{}' 조회 완료.", estimateId);
 
-        // ... (기존 권한 및 상태 검증 로직은 동일) ...
-        if (!estimate.getQuoteRequest().getUser().getUserId().equals(userId)) {
+        // 권한 및 상태 검증
+        if (!acceptedEstimate.getQuoteRequest().getUser().getUserId().equals(userId)) {
+            log.error("   ❌ 권한 없음: 사용자 '{}'가 다른 사람의 견적서 수락 시도.", userId);
             throw new SecurityException("견적서를 수락할 권한이 없습니다.");
         }
-        if (estimate.getStatus() != EstimateStatus.PENDING) {
+        if (acceptedEstimate.getStatus() != EstimateStatus.PENDING) {
+            log.warn("   -> 이미 처리된 견적(상태: {})은 수락할 수 없습니다.", acceptedEstimate.getStatus());
             throw new IllegalStateException("대기중인 견적만 수락할 수 있습니다.");
         }
 
-        estimate.setStatus(EstimateStatus.ACCEPTED);
+        log.info(" -> 견적서 상태를 ACCEPTED로 변경합니다...");
+        acceptedEstimate.setStatus(EstimateStatus.ACCEPTED);
 
-        // ▼▼▼▼▼ 3. [신규 추가] 수리 내역 생성 로직 ▼▼▼▼▼
+        // ▼▼▼▼▼ [추가된 핵심 로직] ▼▼▼▼▼
+        log.info(" -> 나머지 '대기중' 상태의 견적서들을 '거절됨'으로 변경합니다...");
+        QuoteRequest quoteRequest = acceptedEstimate.getQuoteRequest();
+        List<Estimate> otherEstimates = estimateRepository.findByQuoteRequestAndStatus(quoteRequest, EstimateStatus.PENDING);
+
+        for (Estimate other : otherEstimates) {
+            // 방금 수락한 견적서는 제외
+            if (!other.getEstimateId().equals(acceptedEstimate.getEstimateId())) {
+                other.setStatus(EstimateStatus.REJECTED);
+                log.info("   -> 견적서 ID '{}' 상태를 REJECTED로 변경.", other.getEstimateId());
+            }
+        }
+        // ▲▲▲▲▲ [추가된 핵심 로직] ▲▲▲▲▲
+
+
+        log.info(" -> '수리 내역(CompletedRepair)' 생성을 시작합니다...");
         CompletedRepair newRepair = CompletedRepair.builder()
-                .user(estimate.getQuoteRequest().getUser())
-                .carCenter(estimate.getCarCenter())
-                .repairDetail(estimate.getQuoteRequest().getRequestDetails()) // 초기 수리 내용은 견적 요청 내용으로 설정
-                // completionDate는 Auditing 기능으로 자동 생성됩니다.
+                .userId(acceptedEstimate.getQuoteRequest().getUser().getUserId())
+                .userName(acceptedEstimate.getQuoteRequest().getUser().getName())
+                .carCenterId(acceptedEstimate.getCarCenter().getCenterId())
+                .carCenterName(acceptedEstimate.getCarCenter().getCenterName())
+                .originalRequestId(acceptedEstimate.getQuoteRequest().getRequestId())
+                .originalEstimateId(acceptedEstimate.getEstimateId())
+                .finalCost(acceptedEstimate.getEstimatedCost())
+                .repairDetails(acceptedEstimate.getQuoteRequest().getRequestDetails())
+                .status(RepairStatus.IN_PROGRESS)
                 .build();
 
         completedRepairRepository.save(newRepair);
-        // ▲▲▲▲▲ [신규 추가] 여기까지 ▲▲▲▲▲
+        log.info("   -> '수리 내역' 생성 및 저장 완료.");
 
-        // ... (기존 카센터 알림 전송 로직은 동일) ...
-        String carCenterId = estimate.getCarCenter().getCenterId();
-        String message = "회원님이 보내신 견적이 수락되었습니다. (견적 ID: " + estimateId + ")";
-        String url = "/center/estimates#sent";
-        userRepository.findById(carCenterId).ifPresent(carCenterUser -> {
-            notificationService.sendNotificationToUser(carCenterUser, message, url);
-        });
+        log.info(" -> 카센터에게 수락 알림을 전송합니다...");
+        notificationService.sendNotificationToCarCenter(acceptedEstimate.getCarCenter(), "회원님이 보내신 견적이 수락되었습니다. 수리를 진행해주세요.", "/center/repairs");
+
+
+        log.info("===== [END] 견적서 수락 완료 =====");
+    }
+    /**
+     * ✅ [신규 추가] 특정 견적 요청에 대한 모든 견적서 목록 조회 (사용자용)
+     */
+    @Transactional(readOnly = true)
+    public List<EstimateResDTO> getEstimatesForRequest(Integer requestId, String userId) {
+        // 1. 견적 요청이 존재하는지, 그리고 요청한 사용자가 주인인지 먼저 확인
+        QuoteRequest quoteRequest = quoteRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("견적 요청을 찾을 수 없습니다."));
+
+        if (!quoteRequest.getUser().getUserId().equals(userId)) {
+            throw new SecurityException("자신의 견적 요청에 대한 견적서만 조회할 수 있습니다.");
+        }
+
+        // 2. 해당 견적 요청 ID를 가진 모든 견적서를 DB에서 조회
+        List<Estimate> estimates = estimateRepository.findByQuoteRequest_RequestIdWithItems(requestId);
+
+        // 3. DTO로 변환하여 반환
+        return estimates.stream()
+                .map(EstimateResDTO::from)
+                .collect(Collectors.toList());
     }
 }
