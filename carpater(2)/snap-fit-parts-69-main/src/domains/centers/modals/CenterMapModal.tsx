@@ -107,9 +107,7 @@ export default function CenterMapModal({ isOpen, onClose, centers }: CenterMapMo
                 <Button onClick={() => handleDirections(selectedCenter)}>
                   길찾기
                 </Button>
-                <Button variant="outline">
-                  상세보기
-                </Button>
+              
               </div>
             </div>
           ) : (

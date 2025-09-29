@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,13 @@ public class QuoteRequestResDTO {
         User user = quoteRequest.getUser();
         UserCar car = quoteRequest.getUserCar();
 
+        // requestImages가 null일 경우를 대비해 빈 리스트를 생성하는 로직
+        List<String> imageUrls = (quoteRequest.getRequestImages() == null)
+                ? new ArrayList<>()
+                : quoteRequest.getRequestImages().stream()
+                .map(RequestImage::getImageUrl)
+                .collect(Collectors.toList());
+
         return QuoteRequestResDTO.builder()
                 .requestId(quoteRequest.getRequestId())
                 .requestDetails(quoteRequest.getRequestDetails())
@@ -44,10 +52,8 @@ public class QuoteRequestResDTO {
                 .customerPhone(user.getPhoneNumber())
                 .carModel(car.getCarModel())
                 .carYear(car.getModelYear())
-                .imageUrls(quoteRequest.getRequestImages().stream()
-                        .map(RequestImage::getImageUrl)
-                        .collect(Collectors.toList()))
-                .estimateCount(estimateCount) // [추가] 전달받은 견적 개수 매핑
+                .imageUrls(imageUrls) // 안전하게 처리된 imageUrls 리스트를 사용
+                .estimateCount(estimateCount)
                 .build();
     }
 
