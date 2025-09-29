@@ -6,6 +6,7 @@ import com.spring.carparter.entity.User;
 import com.spring.carparter.entity.UserCar;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Builder
+@Setter
 public class QuoteRequestResDTO {
     private Integer requestId;
     private String requestDetails;

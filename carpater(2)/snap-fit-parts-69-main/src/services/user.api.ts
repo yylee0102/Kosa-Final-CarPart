@@ -36,41 +36,6 @@ export interface QuoteRequestResDTO {
   // ✅ [추가] 이 부분이 빠져있습니다. 백엔드에서 보내주는 견적 목록을 추가해주세요.
   estimates: Estimate[];
 }
-export interface QuoteRequestResDTO {
-  requestId: number;
-  requestDetails: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  createdAt: string;
-  writer: {
-    userId: string;
-    name: string;
-  };
-  car: {
-    userCarId: number;
-    // ✅ 백엔드 DTO에 맞춰 carModel, modelYear도 추가해주는 것이 좋습니다.
-    carModel: string;
-    modelYear: number;
-  };
-  images: {
-    imageId: number;
-    imageUrl: string;
-  }[];
-  estimateCount: number;
-
-  // ✅ [추가] 이 부분이 빠져있습니다. 백엔드에서 보내주는 견적 목록을 추가해주세요.
-  estimates: Estimate[];
-}
-
-
-// ✅ [추가] 백엔드의 EstimateResDTO에 맞춰 Estimate 타입을 정의합니다.
-export interface Estimate {
-  estimateId: number;
-  centerName: string;
-  estimatedCost: number;
-  details: string;
-}
 
 export interface ReviewReqDTO {
   centerId: string;
@@ -135,6 +100,13 @@ export interface UserCarReqDTO {
   modelYear: number;
 }
 
+// ✅ [추가] 백엔드의 EstimateResDTO에 맞춰 Estimate 타입을 정의합니다.
+export interface Estimate {
+  estimateId: number;
+  centerName: string;
+  estimatedCost: number;
+  details: string;
+}
 
 // ==================== 사용자 API 서비스 ====================
 class UserApiService {
@@ -147,10 +119,7 @@ class UserApiService {
       'Content-Type': 'application/json',
     };
   }
-
   
-
-
   // FormData와 함께 사용할 헤더 (Content-Type 제외)
   private getAuthHeadersForFormData(): Record<string, string> {
     const token = localStorage.getItem('authToken');
@@ -165,37 +134,22 @@ class UserApiService {
    * POST /api/users/quote-requests
    */
   /**
-   * ✅ 신규 견적 요청 생성 API (이미지 포함)
-   * @param request - 견적 요청 정보 (JSON)
-   * @param images - 첨부할 이미지 파일 목록
-   */
-  async createQuoteRequest(request: QuoteRequestReqDTO, images: File[]): Promise<void> {
-    const formData = new FormData();
-
-    // 1. DTO 객체는 JSON 문자열로 변환하여 'request'라는 이름의 파트로 추가
-    formData.append(
-      'request',
-      new Blob([JSON.stringify(request)], { type: 'application/json' })
-    );
-
-    // 2. 이미지 파일들은 'images'라는 이름의 파트로 각각 추가
-    images.forEach(image => {
-      formData.append('images', image);
-    });
-
-    const response = await fetch(`${API_BASE_URL}/users/quote-requests`, { // ✅ 최종 엔드포인트
+  // 
+  
+  /** [임시] 이미지 없는 견적 요청 생성 API */
+async createQuoteRequest(request: QuoteRequestReqDTO): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/users/quote-requests`, {
       method: 'POST',
-      headers: {
-         // ✅ [수정된 코드] 이 클래스에 이미 정의된 getAuthHeadersForFormData()를 사용해야 합니다.
-        ...this.getAuthHeadersForFormData(),
-      },
-      body: formData,
+      // ✅ 'Content-Type': 'application/json' 이 포함된 헤더를 사용하는지 확인
+      headers: this.getAuthHeaders(), 
+      // ✅ FormData가 아닌, DTO 객체를 JSON 문자열로 변환해서 보내는지 확인
+      body: JSON.stringify(request),
     });
 
-if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error:", errorText);
-      throw new Error('견적 요청 생성에 실패했습니다.');
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error('견적 요청 생성에 실패했습니다.');
     }
   }
 
@@ -210,11 +164,16 @@ if (!response.ok) {
       headers: this.getAuthHeaders(),
     });
 
+    // ✅ [추가] 204 No Content 상태 코드를 먼저 확인
+    if (response.status === 204) {
+      return null; // 데이터가 없으면 null을 반환
+    }
+
     if (!response.ok) {
       throw new Error('견적 요청 목록 조회에 실패했습니다.');
     }
 
-    return response.json();
+    return response.json(); // 204가 아니면 JSON 파싱 시도
   }
 
   /**
@@ -231,7 +190,6 @@ if (!response.ok) {
       throw new Error('견적 요청 삭제에 실패했습니다.');
     }
   }
-
 
   /**
    * 리뷰 작성

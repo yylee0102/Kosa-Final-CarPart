@@ -29,17 +29,21 @@ import { VehicleRegisterModal } from "@/domains/users/modals/VehicleRegisterModa
 import { QuoteRequestModal } from "@/domains/users/modals/QuoteRequestModal";
 import { ProfileEditModal } from "@/domains/users/modals/ProfileEditModal";
 import { useNavigate } from "react-router-dom";
-import UserApiService, { UserCarReqDTO, UserCarResDTO } from '@/services/user.api';
-
+import UserApiService, { UserCarReqDTO, UserCarResDTO, QuoteRequestResDTO, ReviewResDTO, CsInquiryResDTO } from '@/services/user.api';
 
 
 export default function UserMyPage() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  /// ✅ [수정] 상태 변수 정리 및 통합
+const { user } = useAuth();
+const navigate = useNavigate();
 
-  // --- 데이터 상태 ---
-const [myVehicles, setMyVehicles] = useState<UserCarResDTO[]>([]);
-const [isLoading, setIsLoading] = useState(true);
+/// --- 데이터 상태 ---
+  const [myVehicles, setMyVehicles] = useState<UserCarResDTO[]>([]);
+  // ✅ [추가] 견적, 리뷰, 문의 데이터를 위한 상태
+  const [myQuoteRequest, setMyQuoteRequest] = useState<QuoteRequestResDTO | null>(null);
+  const [myReviews, setMyReviews] = useState<ReviewResDTO[]>([]);
+  const [myInquiries, setMyInquiries] = useState<CsInquiryResDTO[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
 // --- 모달 상태 ---
 // '차량 목록' 모달과 '차량 등록/수정' 모달 상태를 명확히 구분
@@ -51,14 +55,31 @@ const [profileEditModalOpen, setProfileEditModalOpen] = useState(false);
 const [selectedVehicle, setSelectedVehicle] = useState<UserCarResDTO | undefined>(undefined);
 
 
+
 // ✅ 1. isLoading 상태를 올바르게 제어하는 이 함수만 남겨둡니다.
-const fetchMyVehicles = async () => {
+const fetchAllData = async () => {
   setIsLoading(true);
   try {
-    const vehicles = await UserApiService.getMyVehicles();
+    c// 여러 API를 동시에 호출합니다.
+    const [
+      vehicles,
+      quoteRequest,
+      reviews,
+      inquiries
+    ] = await Promise.all([
+      UserApiService.getMyVehicles(),
+      UserApiService.getMyQuoteRequest(),
+      UserApiService.getMyReviews(),
+      UserApiService.getMyCsInquiries()
+    ]);
+
+    // 각 API 응답 결과를 상태에 저장합니다.
     setMyVehicles(vehicles);
+    setMyQuoteRequest(quoteRequest);
+    setMyReviews(reviews);
+    setMyInquiries(inquiries);
   } catch (error) {
-    console.error("차량 정보 로딩 실패:", error);
+    console.error("마이페이지 데이터 로딩 실패:", error);
   } finally {
     // try/catch 결과와 상관없이 항상 실행되어 로딩 상태를 끝냅니다.
     setIsLoading(false);
@@ -66,9 +87,11 @@ const fetchMyVehicles = async () => {
 };
 
 
-   useEffect(() => {
-    fetchMyVehicles();
-  }, []);
+    
+
+useEffect(() => {
+  fetchAllData(); // ✅ 수정한 함수를 호출
+}, []);
 
 // ✅ [추가] 모달 흐름을 제어하는 핸들러 함수들
 
@@ -84,13 +107,14 @@ const handleAddNewVehicle = () => {
   setIsRegisterModalOpen(true);     // 등록 모달을 연다
 };
 
-
 // '차량 목록' 모달에서 특정 차량의 '수정' 버튼 클릭 시
 const handleEditVehicle = (vehicle: UserCarResDTO) => {
   setSelectedVehicle(vehicle); // 수정할 차량 정보를 저장한다
   setIsVehicleListModalOpen(false); // 목록 모달은 닫고
   setIsRegisterModalOpen(true);     // 등록 모달을 연다
 };
+
+ 
 
 // '차량 등록/수정' 모달에서 최종 '저장' 버튼 클릭 시 (API 호출)
 const handleVehicleFormSubmit = async (vehicleData: UserCarReqDTO) => { // vehicleData 타입은 UserCarReqDTO 입니다.
@@ -109,7 +133,8 @@ const handleVehicleFormSubmit = async (vehicleData: UserCarReqDTO) => { // vehic
      console.error("Failed to submit vehicle form:", error);
   }
 };
-const menuItems = [
+
+  const menuItems = [
     { icon: User, label: "내 정보 관리", href: "/user/profile", action: () => setProfileEditModalOpen(true) },
     { icon: Car, label: "내 차량 관리", action: handleVehicleManagementClick }, 
     { icon: FileText, label: "견적 요청 내역", href: "/user/quote-requests", action: () => navigate('/user/quote-requests') },
@@ -125,12 +150,13 @@ const menuItems = [
         {/* 통계 요약 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card>
+            
             <CardContent className="pt-6">
               <div className="flex items-center">
                 <Car className="h-4 w-4 text-blue-500" />
                 <div className="ml-2">
                   <p className="text-sm font-medium text-muted-foreground">등록 차량</p>
-                  <p className="text-2xl font-bold text-blue-600">2대</p>
+                  <p className="text-2xl font-bold text-blue-600">{myVehicles.length}대</p>
                 </div>
               </div>
             </CardContent>
@@ -141,7 +167,8 @@ const menuItems = [
                 <FileText className="h-4 w-4 text-green-500" />
                 <div className="ml-2">
                   <p className="text-sm font-medium text-muted-foreground">견적 요청</p>
-                  <p className="text-2xl font-bold text-green-600">3건</p>
+                  {/* ✅ [수정] myQuoteRequest가 있으면 1, 없으면 0으로 표시 */}
+                  <p className="text-2xl font-bold text-green-600">{myQuoteRequest ? '1건' : '0건'}</p>
                 </div>
               </div>
             </CardContent>
@@ -152,7 +179,8 @@ const menuItems = [
                 <MessageSquare className="h-4 w-4 text-yellow-500" />
                 <div className="ml-2">
                   <p className="text-sm font-medium text-muted-foreground">작성 리뷰</p>
-                  <p className="text-2xl font-bold text-yellow-600">5개</p>
+                  {/* ✅ [수정] myReviews 배열의 길이로 교체 */}
+                  <p className="text-2xl font-bold text-yellow-600">{myReviews.length}개</p>
                 </div>
               </div>
             </CardContent>
@@ -163,14 +191,14 @@ const menuItems = [
                 <HelpCircle className="h-4 w-4 text-purple-500" />
                 <div className="ml-2">
                   <p className="text-sm font-medium text-muted-foreground">문의 건수</p>
-                  <p className="text-2xl font-bold text-purple-600">1건</p>
+                  {/* ✅ [수정] myInquiries 배열의 길이로 교체 */}
+                  <p className="text-2xl font-bold text-purple-600">{myInquiries.length}건</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* 사용자 정보 카드 */}
         {/* 사용자 정보 카드 */}
         <Card className="mb-6">
           <CardContent className="p-6">
@@ -234,24 +262,23 @@ const menuItems = [
             </div>
           </CardContent>
         </Card>
+        </div>
 
-        {/* 모달들 */}
-        <VehicleRegisterModal
-          open={vehicleModalOpen}
-          onClose={() => setVehicleModalOpen(false)}
-          onSubmit={(vehicleData) => {
-            console.log('Vehicle registered:', vehicleData);
-            // 실제로는 API 호출
-          }}
+        {/* ✅ 4. 최종 모달 렌더링 영역 */}
+        <MyVehicleListModal
+          open={isVehicleListModalOpen}
+          onClose={() => setIsVehicleListModalOpen(false)}
+          vehicles={myVehicles}
+          isLoading={isLoading}
+          onAddNew={handleAddNewVehicle}
+          onEdit={handleEditVehicle}
         />
 
-        <QuoteRequestModal
-          open={quoteRequestModalOpen}
-          onClose={() => setQuoteRequestModalOpen(false)}
-          onSubmit={(requestData) => {
-            console.log('Quote request submitted:', requestData);
-            // 실제로는 API 호출
-          }}
+        <VehicleRegisterModal
+          open={isRegisterModalOpen}
+          onClose={() => setIsRegisterModalOpen(false)}
+          vehicle={selectedVehicle}
+          onSubmit={handleVehicleFormSubmit}
         />
 
         <ProfileEditModal
@@ -259,10 +286,9 @@ const menuItems = [
           onClose={() => setProfileEditModalOpen(false)}
           onUpdate={(profileData) => {
             console.log('Profile updated:', profileData);
-            // 실제로는 API 호출
           }}
         />
-      </div>
+      
       </PageContainer>
     </ProtectedRoute>
   );

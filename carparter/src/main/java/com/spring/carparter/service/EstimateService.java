@@ -200,4 +200,7 @@ public class EstimateService {
         String message = "회원님이 보내신 견적이 수락되었습니다. (견적 ID: " + estimateId + ")";
         notificationService.sendNotificationToUser(carCenterId, message); // 카센터 ID도 사용자 ID처럼 취급하여 전송
     }
+    public int countEstimateByUserId(Integer requestId) {
+        return estimateRepository.countByQuoteRequest_RequestId(requestId).intValue();
+    }
 }

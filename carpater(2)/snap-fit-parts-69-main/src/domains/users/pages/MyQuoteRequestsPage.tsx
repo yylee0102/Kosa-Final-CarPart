@@ -1,19 +1,14 @@
-/**
- * 사용자 견적 요청 관리 페이지
- * - 내가 요청한 견적 조회
- * - 견적 요청 삭제
- * UserController의 견적 요청서 관리 API 기반
- */
-import React, { useState, useEffect } from "react";
-import PageContainer from "@/shared/components/layout/PageContainer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Calendar, Car, MapPin, Trash2, FileText, Plus, RefreshCw } from "lucide-react";
-import UserApiService from "@/services/user.api";
-import testImage from "@/assets/test.jpg"; // S3 연동 전 임시 이미지
-import { useNavigate } from "react-router-dom";
+// src/pages/users/MyQuoteRequestsPage.tsx (최종 개선 버전)
 
+import React, { useState, useEffect } from 'react';
+import PageContainer from '@/shared/components/layout/PageContainer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { Calendar, Car, MapPin, Trash2, FileText, Plus, RefreshCw } from 'lucide-react';
+import UserApiService from '@/services/user.api';
+import testImage from '@/assets/test.jpg'; // S3 연동 전 임시 이미지
+import { useNavigate } from 'react-router-dom';
 
 // 백엔드 DTO와 일치하는 타입 (기존과 동일)
 interface MyQuoteRequest {
@@ -32,7 +27,6 @@ interface Estimate {
   estimatedCost: number;
   details: string;
 }
-
 
 export const MyQuoteRequestsPage = () => {
   const { toast } = useToast();
@@ -210,5 +204,5 @@ export const MyQuoteRequestsPage = () => {
         </div>
       </div>
     </PageContainer>
-  );          
+  );
 };

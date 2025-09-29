@@ -1,6 +1,6 @@
 // ✅ 상단에 UserApiService와 DTO를 임포트합니다.
-import UserApiService, { QuoteRequestReqDTO } from "../../../services/user.api";
-import { useState } from "react";
+import UserApiService, { QuoteRequestReqDTO, UserCarResDTO } from "../../../services/user.api";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PageContainer from "@/shared/components/layout/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,20 +11,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Camera, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@radix-ui/react-select";
+import testImage from '@/assets/test.jpg'
 
-interface CarInfo {
-  carModel: string;
-  carNumber: string;
-  modelYear: string;
-}
-
+// ✅ [변경] EstimateRequest 인터페이스에서 직접 입력받던 carInfo 제거
 interface EstimateRequest {
-  description: string; // = QuoteRequest.requestDetails
-  carInfo: CarInfo;    // UI 입력값 (백엔드 연동 시 UserCar로 매핑)
-  location: string;    // = QuoteRequest.address
+  description: string;
+  location: string;
   images: File[];
   centerId?: string;
 }
+
 
 export default function EstimateCreatePage() {
   const navigate = useNavigate();
@@ -36,71 +33,111 @@ export default function EstimateCreatePage() {
 
   const [formData, setFormData] = useState<EstimateRequest>({
     description: "",
-    carInfo: {
-      carModel: "",
-      carNumber: "",
-      modelYear: ""
-    },
     location: "",
     images: [],
     centerId: centerInfo?.centerId
   });
 
+
+  // ✅ [추가] 차량 목록과 선택된 차량 ID를 관리할 State
+  const [userCars, setUserCars] = useState<UserCarResDTO[]>([]);
+  const [selectedCarId, setSelectedCarId] = useState<number | null>(null);
+
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (field: keyof EstimateRequest, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+  //...
+// ✅ [추가] 선택된 차량의 전체 상세 정보를 담을 State
+const [selectedCarDetails, setSelectedCarDetails] = useState<UserCarResDTO | null>(null);
+//...
 
-  const handleCarInfoChange = (field: keyof CarInfo, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      carInfo: {
-        ...prev.carInfo,
-        [field]: value
+  // ✅ [추가] 페이지 로드 시, 등록된 내 차량 목록을 API로 조회
+  useEffect(() => {
+    const fetchMyCars = async () => {
+      try {
+        const cars = await UserApiService.getMyVehicles();
+        setUserCars(cars);
+        if (cars.length === 1) { // 차량이 1대면 자동으로 선택
+          setSelectedCarId(cars[0].userCarId);
+        }
+      } catch (error) {
+        toast({ title: "차량 목록 조회에 실패했습니다.", variant: "destructive" });
       }
-    }));
-  };
+    };
+    fetchMyCars();
+  }, [toast]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+
+  // ✅ [추가] selectedCarId가 변경될 때마다 전체 차량 데이터에서
+  // 일치하는 정보를 찾아 selectedCarDetails state를 업데이트합니다.
+  useEffect(() => {
+    if (selectedCarId) {
+      const carDetails = userCars.find(car => car.userCarId === selectedCarId);
+      setSelectedCarDetails(carDetails || null);
+    } else {
+      setSelectedCarDetails(null);
+    }
+  }, [selectedCarId, userCars]);
+
+
+
+// ✅ 이렇게 원래대로 수정하세요.
+const handleInputChange = (field: keyof EstimateRequest, value: string) => {
+  setFormData(prev => ({
+    ...prev,
+    [field]: value
+  }));
+};
+
+
+
+  // ✅ 이 코드로 함수 전체를 교체하세요.
+const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 1. 사용자가 선택한 파일들을 'files' 배열로 만들기
+  const files = Array.from(e.target.files || []);
+
+  const MAX_SIZE_MB = 5;
+  const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
     
-    if (formData.images.length + files.length > 5) {
-      toast({
-        title: "이미지는 최대 5장까지 업로드 가능합니다",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // 파일 크기 체크 (5MB 제한)
-    const invalidFiles = files.filter(file => file.size > 5 * 1024 * 1024);
-    if (invalidFiles.length > 0) {
-      toast({
-        title: "파일 크기는 5MB 이하만 업로드 가능합니다",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...files]
-    }));
-
-    // 미리보기 생성
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(prev => [...prev, e.target?.result as string]);
-      };
-      reader.readAsDataURL(file);
+  // 2. 최대 개수 확인
+  if (formData.images.length + files.length > 5) {
+    toast({
+      title: "이미지는 최대 5장까지 업로드 가능합니다",
+      variant: "destructive"
     });
-  };
+    return;
+  }
+
+  // 3. 파일 크기 검사하여 유효한 파일만 필터링
+  const validFiles = files.filter(file => {
+    if (file.size > MAX_SIZE_BYTES) {
+      toast({
+        title: "파일 크기 초과",
+        description: `"${file.name}" 파일의 용량이 ${MAX_SIZE_MB}MB를 초과하여 추가할 수 없습니다.`,
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  });
+
+  if (validFiles.length === 0) return;
+
+  // 4. 유효한 파일들을 state에 추가
+  setFormData(prev => ({
+    ...prev,
+    images: [...prev.images, ...validFiles]
+  }));
+
+  // 5. 유효한 파일들만 사용하여 미리보기 생성
+  validFiles.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(prev => [...prev, e.target?.result as string]);
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
   const removeImage = (index: number) => {
     setFormData(prev => ({
@@ -111,18 +148,16 @@ export default function EstimateCreatePage() {
   };
 
   const validateForm = () => {
+    // ✅ [추가] 차량 선택 여부 검사
+    if (!selectedCarId) {
+      toast({ title: "견적을 요청할 차량을 선택해주세요.", variant: "destructive" });
+      return false;
+    }
     if (!formData.description.trim()) {
       toast({ title: "요청 상세 내용을 입력해주세요", variant: "destructive" });
       return false;
     }
-    if (!formData.carInfo.carModel.trim()) {
-      toast({ title: "차량 모델을 입력해주세요", variant: "destructive" });
-      return false;
-    }
-    if (!formData.carInfo.carNumber.trim()) {
-      toast({ title: "차량 번호를 입력해주세요", variant: "destructive" });
-      return false;
-    }
+
     if (!formData.location.trim()) {
       toast({ title: "주소를 입력해주세요", variant: "destructive" });
       return false;
@@ -140,21 +175,20 @@ export default function EstimateCreatePage() {
       //    - userCarId는 실제로는 사용자가 등록한 차량 목록에서 선택된 ID여야 합니다. (지금은 임시값 1 사용)
       //    - userId는 JWT 토큰에 담겨있으므로 프론트에서 보낼 필요가 없습니다.
       const requestDto: QuoteRequestReqDTO = {
-        userCarId: 1, // ❗️ 임시값: 실제로는 사용자의 차량 ID를 가져와야 합니다.
+        userCarId: selectedCarId!, // validateForm에서 null 체크를 했으므로 ! 사용
         requestDetails: formData.description,
         address: formData.location,
-        // 필요하다면 위도/경도 정보도 추가
       };
 
       // 2. 위에서 만든 API 서비스 함수를 호출합니다.
-      await UserApiService.createQuoteRequest(requestDto, formData.images);
-
+      // await UserApiService.createQuoteRequest(requestDto, formData.images);
+      await UserApiService.createQuoteRequest(requestDto);
       toast({
         title: "견적 요청이 등록되었습니다",
         description: "카센터들이 견적을 보내면 알림으로 안내드리겠습니다."
       });
 
-      navigate("/estimates");
+      navigate("/mypage/");
       
     } catch (error) {
       console.error("견적 요청 등록 실패:", error);
@@ -212,41 +246,54 @@ export default function EstimateCreatePage() {
 
           {/* 차량 정보 */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-on-surface">차량 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="carModel">차량 모델 *</Label>
-                  <Input
-                    id="carModel"
-                    placeholder="예: 현대 소나타"
-                    value={formData.carInfo.carModel}
-                    onChange={(e) => handleCarInfoChange("carModel", e.target.value)}
-                  />
-                </div>
+            {/* ✅ '차량 정보' Card의 CardContent를 이걸로 교체하세요. */}
+            <CardContent>
+              <Label htmlFor="userCar">차량 선택 *</Label>
+              {userCars.length > 0 ? (
+              <>
+                <Select
+                  // ✅ [수정된 코드] selectedCarId가 null일 경우 빈 문자열('')을 기본값으로 설정합니다.
+                  value={selectedCarId?.toString() || ''}
+                  onValueChange={(value) => setSelectedCarId(Number(value))}
+                  >
+                  <SelectTrigger id="userCar">
+                    <SelectValue placeholder="내 차량 목록에서 선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userCars.map((car) => (
+                      <SelectItem key={car.userCarId} value={car.userCarId.toString()}>
+                        {`${car.carModel} (${car.carNumber})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                <div>
-                  <Label htmlFor="carNumber">차량 번호 *</Label>
-                  <Input
-                    id="carNumber"
-                    placeholder="예: 12가3456"
-                    value={formData.carInfo.carNumber}
-                    onChange={(e) => handleCarInfoChange("carNumber", e.target.value)}
-                  />
+                {/* ✅ [추가] 차량이 선택되면 그 상세 정보를 보여주는 부분 */}
+                  {selectedCarDetails && (
+                    <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-semibold text-gray-600">모델명</span>
+                        <span>{selectedCarDetails.carModel}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="font-semibold text-gray-600">차량번호</span>
+                        <span>{selectedCarDetails.carNumber}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="font-semibold text-gray-600">연식</span>
+                        <span>{selectedCarDetails.modelYear}년</span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="mt-2 text-center border-2 border-dashed rounded-lg p-4">
+                    <p className="text-sm text-muted-foreground">등록된 차량이 없습니다.</p>
+                    <Button variant="link" onClick={() => navigate('/mypage/cars')}>
+                      차량 등록하러 가기
+                    </Button>
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="modelYear">연식</Label>
-                <Input
-                  id="modelYear"
-                  placeholder="예: 2020"
-                  value={formData.carInfo.modelYear}
-                  onChange={(e) => handleCarInfoChange("modelYear", e.target.value)}
-                />
-              </div>
+              )}
             </CardContent>
           </Card>
 

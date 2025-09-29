@@ -56,4 +56,8 @@ public interface QuoteRequestRepository extends JpaRepository<QuoteRequest, Inte
             "LEFT JOIN FETCH qr.requestImages img " +
             "ORDER BY qr.createdAt DESC")
     List<QuoteRequest> findAllWithDetails();
+
+
+    // ✅ 이 메서드 선언을 추가해주세요.
+    boolean existsByUser_UserId(String userId);
 }

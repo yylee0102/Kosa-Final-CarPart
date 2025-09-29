@@ -56,8 +56,11 @@ public class QuoteRequest {
     @Column(name = "longitude")
     private Double longitude;
 
+    // ...
+    @Builder.Default // ✅ 이 어노테이션을 반드시 추가해야 합니다.
     @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RequestImage> requestImages = new ArrayList<>();
+    private List<RequestImage> requestImages = new ArrayList<>(); // ✅ 이 부분을 추가하세요.
+// ...
 
     // ✅ [신규 추가] 연관관계 편의 메소드
     public void addRequestImage(RequestImage requestImage) {
