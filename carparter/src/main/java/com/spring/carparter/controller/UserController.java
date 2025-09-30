@@ -39,44 +39,37 @@ public class UserController {
 
     // =================== 1. 사용자 프로필 관리 ===================
 
-    @PostMapping("/join") // ✅ 회원가입 경로는 /profile 보다 /join 이 더 명확
+
+    @PostMapping("/join")
     public ResponseEntity<UserResDTO> signUp(@RequestBody UserReqDTO request) {
+        log.info("===== [API-IN] 사용자 회원가입 요청 =====");
         UserResDTO userResDTO = userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResDTO);
+    }
+
+    // ✅ [수정] 중복되던 /profile 경로를 하나로 정리했습니다.
+    @GetMapping("/profile")
+    public ResponseEntity<UserResDTO> getMyProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails.getUsername();
+        log.info("===== [API-IN] 내 프로필 조회 요청: 사용자 ID '{}' =====", userId);
+        UserResDTO user = userService.getUser(userId);
+        return ResponseEntity.ok(user);
     }
 
     @PutMapping("/profile")
     public ResponseEntity<UserResDTO> updateProfile(@RequestBody UserReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
+        log.info("===== [API-IN] 내 프로필 수정 요청: 사용자 ID '{}' =====", userId);
         UserResDTO userResDTO = userService.updateUser(userId, request);
         return ResponseEntity.ok(userResDTO);
     }
 
-    @PutMapping("/password")
-    public ResponseEntity<Void> resetPassword(@RequestBody UserReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        // ✅ 로직 수정: 핸드폰 인증이 성공했을 때 비밀번호를 변경하도록 수정
-        if (userService.isCorrectPhone(request)) {
-            userService.resetPassword(request, userId);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @DeleteMapping("/profile") // ✅ PathVariable 대신 인증 정보로 본인 계정 삭제
+    @DeleteMapping("/profile")
     public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
+        log.info("===== [API-IN] 회원 탈퇴 요청: 사용자 ID '{}' =====", userId);
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/profile")
-    public ResponseEntity<UserResDTO> getUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        UserResDTO user = userService.getUser(userId);
-
-        return ResponseEntity.ok(user);
     }
 
     // =================== 2. 고객센터 문의 관리 ===================
@@ -189,10 +182,25 @@ public class UserController {
     public ResponseEntity<Void> rejectEstimate(@PathVariable Integer estimateId,
                                                @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
-        estimateService.rejectEstimateByUser(userId, estimateId);
+        estimateService.rejectEstimate(userId, estimateId);
         return ResponseEntity.ok().build();
     }
 
+
+    /**
+     * ✅ [추가] 사용자가 특정 견적을 '수락'하는 API
+     * @param estimateId 수락할 견적서의 ID
+     * @param userDetails 현재 로그인한 사용자 정보
+     * @return 성공 응답
+     */
+    @PutMapping("/estimates/{estimateId}/accept")
+    public ResponseEntity<Void> acceptEstimate(@PathVariable Integer estimateId,
+                                               @AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails.getUsername();
+        log.info("===== [API-IN] 견적 수락 요청: 사용자 ID '{}', 견적서 ID '{}' =====", userId, estimateId);
+        estimateService.acceptEstimate(userId, estimateId);
+        return ResponseEntity.ok().build();
+    }
     // =================== 5. 리뷰 관리 ===================
 
     @PostMapping("/reviews")
@@ -222,20 +230,6 @@ public class UserController {
         return ResponseEntity.ok(res);
     }
 
-    // =================== 6. 수리 완료 내역 관리 ===================
-
-    @DeleteMapping("/completed-repairs/{id}")
-    public ResponseEntity<Void> deleteCompletedRepair(@PathVariable Integer id) {
-        completedRepairService.deleteCompletedRepair(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/my-completed-repairs") // ✅ 더 명확한 경로로 변경
-    public ResponseEntity<List<CompletedRepairResDTO>> getMyCompletedRepairList(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        List<CompletedRepairResDTO> res = completedRepairService.getCompletedRepairListByUserId(userId);
-        return ResponseEntity.ok(res);
-    }
 
     /// ============================= 7. 차량 등록
 

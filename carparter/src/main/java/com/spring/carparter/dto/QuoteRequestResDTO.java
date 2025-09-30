@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ public class QuoteRequestResDTO {
      * 엔티티를 DTO로 변환하는 private 생성자.
      * 정적 팩토리 메소드 'from'을 통해서만 호출됩니다.
      */
+
     private QuoteRequestResDTO(QuoteRequest entity, int estimateCount) {
         this.requestId = entity.getRequestId();
         this.requestDetails = entity.getRequestDetails();
@@ -51,6 +53,7 @@ public class QuoteRequestResDTO {
         this.images = entity.getRequestImages().stream()
                 .map(ImageDTO::from)
                 .collect(Collectors.toList());
+
     }
 
     /**

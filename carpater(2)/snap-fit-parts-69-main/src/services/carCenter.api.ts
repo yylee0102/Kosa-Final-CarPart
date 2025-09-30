@@ -18,8 +18,8 @@ export interface UsedPartReqDTO { partName: string; description: string; price: 
 export interface UsedPartResDTO { partId: number; centerId: string; partName: string; description: string; price: number; category: string; compatibleCarModel: string; createdAt: string; imageUrls: string[]; centerPhoneNumber: string; }
 export interface EstimateItemReqDTO { itemName: string; price: number; requiredHours: number; partType: string; }
 export interface EstimateItemResDTO { itemId: number; itemName: string; price: number; requiredHours: number; partType: string; }
-export interface EstimateReqDTO { requestId: number; estimatedCost: number; details: string; estimateItems: EstimateItemReqDTO[]; }
-export interface EstimateResDTO { estimateId: number; requestId: number; estimatedCost: number; details: string; createdAt: string; estimateItems: EstimateItemResDTO[]; status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'; customerName: string; carModel: string; carYear: number; }
+export interface EstimateReqDTO { requestId: number; estimatedCost: number; details: string; estimateItems: EstimateItemReqDTO[];  workDuration: string; validUntil: string; }
+export interface EstimateResDTO { estimateId: number; requestId: number; estimatedCost: number; details: string; createdAt: string; estimateItems: EstimateItemResDTO[]; status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'; customerName: string; carModel: string; carYear: number; workDuration: string;  validUntil: string;}
 export interface Review { reviewId: number; centerName: string; writerName: string; rating: number; content: string; createdAt: string; reply?: string; }
 export interface ReviewReplyReqDTO { reviewId: number; content: string; }
 export interface ReviewReplyResDTO { replyId: number; reviewId: number; centerName: string; content: string; createdAt: string; }
@@ -136,8 +136,7 @@ class CarCenterApiService extends BaseApiService {
   
   // ✅ [수정] 특정 카센터의 리뷰 목록 조회 API 경로를 실제 컨트롤러와 일치시킵니다.
   getReviewsByCenterId(centerId: string): Promise<Review[]> {
-    // 기존: return this.request('GET', `/reviews/center/${centerId}`);
-    // 변경:
+
     return this.request('GET', `/car-centers/${centerId}/reviews`);
   }
 
@@ -169,30 +168,48 @@ class CarCenterApiService extends BaseApiService {
   }
   searchParts(query: string): Promise<UsedPartResDTO[]> {
     if (!query.trim()) { return Promise.resolve([]); }
-    return this.request('GET', `/car-centers/parts/search?query=${encodeURIComponent(query)}`);
+    return this.request('GET', `/parts/search?query=${encodeURIComponent(query)}`);
   }
 
   // =================================================================
   //  6. 견적 요청/견적서 관리 API
   // =================================================================
-  getQuoteRequests(): Promise<QuoteRequestResDTO[]> {
-    return this.request('GET', `/car-centers/quote-requests`);
-  }
-  submitEstimate(data: EstimateReqDTO): Promise<EstimateResDTO> {
-    return this.request('POST', '/estimates/', data);
-  }
-  getMyEstimates(): Promise<EstimateResDTO[]> {
-    return this.request('GET', '/estimates/my-estimates');
-  }
-  getEstimateDetails(estimateId: number): Promise<EstimateResDTO> {
-    return this.request('GET', `/estimates/${estimateId}`);
-  }
-  updateEstimate(estimateId: number, data: EstimateReqDTO): Promise<EstimateResDTO> {
-    return this.request('PUT', `/estimates/${estimateId}`, data);
-  }
-  deleteEstimate(estimateId: number): Promise<void> {
-    return this.request('DELETE', `/estimates/${estimateId}`);
-  }
+ /** 모든 카센터가 볼 수 있는 전체 견적 요청 목록을 조회합니다. */
+  /** 모든 카센터가 볼 수 있는 전체 견적 요청 목록을 조회합니다. */
+getQuoteRequests(): Promise<QuoteRequestResDTO[]> {
+  // ✅ [수정] CarCenterController의 @GetMapping("/quote-requests")와 일치시킴
+  return this.request('GET', `/car-centers/quote-requests`);
+}
+
+/** 로그인한 카센터가 특정 견적 요청에 대한 견적서를 제출합니다. */
+submitEstimate(data: EstimateReqDTO): Promise<EstimateResDTO> {
+  // ✅ [수정] EstimateController의 @PostMapping("/")와 일치시킴 (기본 경로: /api/estimates)
+  return this.request('POST', '/estimates/', data);
+}
+
+/** 로그인한 카센터가 '자신이 보낸' 모든 견적서 목록을 조회합니다. */
+getMyEstimates(): Promise<EstimateResDTO[]> {
+  // ✅ [수정] EstimateController의 @GetMapping("/my-estimates")와 일치시킴
+  return this.request('GET', '/estimates/my-estimates');
+}
+
+/** 로그인한 카센터가 '자신의' 특정 견적서 상세 정보를 조회합니다. */
+getEstimateDetails(estimateId: number): Promise<EstimateResDTO> {
+  // ✅ [수정] EstimateController의 @GetMapping("/{estimateId}")와 일치시킴
+  return this.request('GET', `/estimates/${estimateId}`);
+}
+
+/** 로그인한 카센터가 '자신의' 견적서를 수정합니다. */
+updateEstimate(estimateId: number, data: EstimateReqDTO): Promise<EstimateResDTO> {
+  // ✅ [수정] EstimateController의 @PutMapping("/{estimateId}")와 일치시킴
+  return this.request('PUT', `/estimates/${estimateId}`, data);
+}
+
+/** 로그인한 카센터가 '자신의' 견적서를 삭제합니다. */
+deleteEstimate(estimateId: number): Promise<void> {
+  // ✅ [수정] EstimateController의 @DeleteMapping("/{estimateId}")와 일치시킴
+  return this.request('DELETE', `/estimates/${estimateId}`);
+}
 }
 
 export default new CarCenterApiService();

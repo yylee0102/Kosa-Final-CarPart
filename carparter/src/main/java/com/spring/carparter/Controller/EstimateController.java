@@ -140,5 +140,23 @@ public class EstimateController {
             log.error("견적서 삭제 중 서버 오류 발생", e);
             throw e;
         }
+
+    }
+
+    /**
+     * ✅ [신규 추가] 사용자가 특정 견적 요청에 대해 받은 모든 견적서 목록을 조회하는 API
+     */
+    @GetMapping("/request/{requestId}")
+    public ResponseEntity<List<EstimateResDTO>> getEstimatesForRequest(
+            @PathVariable Integer requestId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String userId = userDetails.getUsername();
+        log.info("===== [API-IN] 받은 견적 목록 조회 요청: 요청 ID '{}', 사용자 ID '{}' =====", requestId, userId);
+
+        // 서비스 레이어에 이 기능을 수행할 메소드가 필요합니다.
+        List<EstimateResDTO> estimates = estimateService.getEstimatesForRequest(requestId, userId);
+
+        return ResponseEntity.ok(estimates);
     }
 }

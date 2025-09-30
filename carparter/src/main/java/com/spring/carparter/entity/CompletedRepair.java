@@ -1,44 +1,50 @@
 package com.spring.carparter.entity;
 
-import com.spring.carparter.entity.CarCenter;
-import com.spring.carparter.entity.Estimate;
-import com.spring.carparter.entity.QuoteRequest;
-import com.spring.carparter.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import java.time.LocalDateTime;
 
-// CompletedRepair.java
 @Entity
 @Table(name = "completed_repairs")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Setter // Service에서 상태 변경을 위해 추가
 @Builder
-@EntityListeners(AuditingEntityListener.class)
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CompletedRepair {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "repair_id")
-    private Integer repairId;
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private String userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "center_id", nullable = false)
-    private CarCenter carCenter;
+    @Column(name = "user_name", nullable = false)
+    private String userName;
 
-    @Column
-    private String repairDetail;
+    @Column(name = "center_id", nullable = false)
+    private String carCenterId;
 
-    @CreatedDate
-    @Column(name = "completion_date", updatable = false)
-    private LocalDateTime completionDate;
+    @Column(name = "center_name", nullable = false)
+    private String carCenterName;
+
+    @Column(name = "original_request_id")
+    private Integer originalRequestId;
+
+    @Column(name = "original_estimate_id")
+    private Integer originalEstimateId;
+
+    @Column(nullable = false)
+    private Integer finalCost;
+
+    @Column(columnDefinition = "TEXT")
+    private String repairDetails;
+
+    private LocalDateTime completedAt;
+
+    @Enumerated(EnumType.STRING)
+    private RepairStatus status;
+
+    // 잘못된 빌더 코드는 여기서 제거합니다.
 }

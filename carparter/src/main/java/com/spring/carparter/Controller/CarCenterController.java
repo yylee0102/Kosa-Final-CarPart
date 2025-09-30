@@ -325,17 +325,17 @@ public class CarCenterController {
      * 모든 사용자가 접근할 수 있도록 별도의 Controller나 public 경로에 두는 것이 더 좋습니다.
      * 예시: GET /api/parts/search?query=헤드라이트
      */
-    @GetMapping("/parts/search") // '/api/car-centers/parts/search' 경로로 요청을 받습니다.
-    public ResponseEntity<?> searchPartsByName(@RequestParam("query") String query) {
-        try {
-            // UsedPartService에 이 기능을 수행할 새로운 메소드가 필요합니다.
-            List<UsedPartResDTO> results = usedPartService.searchPartsByName(query);
-            log.info("✅ Part search results for query '{}' (count: {}): {}", query, results.size(), results); // 로그 추가
-            return ResponseEntity.ok(results);
-        } catch (Exception e) {
-            return createErrorResponse("부품 검색 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "부품 검색 중 오류 발생. Query: " + query);
-        }
-    }
+//    @GetMapping("/parts/search") // '/api/car-centers/parts/search' 경로로 요청을 받습니다.
+//    public ResponseEntity<?> searchPartsByName(@RequestParam("query") String query) {
+//        try {
+//            // UsedPartService에 이 기능을 수행할 새로운 메소드가 필요합니다.
+//            List<UsedPartResDTO> results = usedPartService.searchPartsByName(query);
+//            log.info("✅ Part search results for query '{}' (count: {}): {}", query, results.size(), results); // 로그 추가
+//            return ResponseEntity.ok(results);
+//        } catch (Exception e) {
+//            return createErrorResponse("부품 검색 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "부품 검색 중 오류 발생. Query: " + query);
+//        }
+//    }
 
 
     @PutMapping(value = "/used-parts/{partId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

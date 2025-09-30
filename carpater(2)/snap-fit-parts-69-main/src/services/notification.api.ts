@@ -1,179 +1,87 @@
-// 알림 관련 API 서비스
-export interface NotificationData {
-  id: string;
-  type: "estimate" | "message" | "review" | "system";
-  title: string;
+// 백엔드의 응답 DTO와 일치하는 타입 정의
+export interface NotificationResDTO {
+  id: number;
   message: string;
   isRead: boolean;
-  createdAt: string;
-  userId: string;
+  url: string | null;
+  createTime: string;
 }
 
-export class NotificationApiService {
-  private baseUrl = "/api/notifications";
+// API 기본 URL
+const API_BASE_URL = '/api';
+
+/**
+ * 인증 토큰을 포함한 기본 헤더를 생성하는 헬퍼 함수
+ */
+const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem('authToken');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
+const notificationApi = {
+  /**
+   * 실시간 알림 구독 (EventSource 객체를 반환)
+   */
+  subscribe: (): EventSource => {
+     const token = localStorage.getItem('authToken');
+    if (!token) {
+        // 토큰이 없으면 연결 시도조차 하지 않도록 처리
+        throw new Error("로그인이 필요합니다.");
+    }
+    // SSE는 일반 fetch와 다르므로 EventSource API를 직접 사용합니다.
+    // 인증이 필요하다면 백엔드에서 URL 파라미터로 토큰을 받도록 수정해야 할 수 있습니다.
+    return new EventSource(`${API_BASE_URL}/notifications/subscribe?token=${token}`);
+  },
 
   /**
-   * SSE 연결을 통한 실시간 알림 구독
-   * 로그인한 사용자의 실시간 알림을 받기 위한 SSE 연결
+   * 현재 로그인한 사용자의 모든 알림 목록을 조회
    */
-  subscribeToNotifications(): EventSource {
-    // TODO: API 연결 - 실시간 알림 구독
-    // GET /api/notifications/subscribe (SSE)
-    const eventSource = new EventSource(`${this.baseUrl}/subscribe`, {
-      withCredentials: true
+  getMyNotifications: async (): Promise<NotificationResDTO[]> => {
+    const response = await fetch(`${API_BASE_URL}/notifications`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
     });
-
-    return eventSource;
-  }
+    if (!response.ok) {
+      throw new Error('알림 목록을 가져오는 데 실패했습니다.');
+    }
+    return response.json();
+  },
 
   /**
-   * 사용자의 모든 알림 조회
+   * 안 읽은 알림 개수 조회
    */
-  async getMyNotifications(): Promise<NotificationData[]> {
-    try {
-      // TODO: API 연결 - 내 알림 목록 조회
-      // GET /api/notifications/my
-      const response = await fetch(`${this.baseUrl}/my`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.getAuthToken()}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error("알림 조회 실패");
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("알림 조회 오류:", error);
-      // 시뮬레이션 데이터 반환
-      return [
-        {
-          id: "1",
-          type: "estimate",
-          title: "새로운 견적서 도착",
-          message: "서울 오토케어에서 견적서를 보냈습니다.",
-          isRead: false,
-          createdAt: "2024-01-15T10:30:00Z",
-          userId: "user123"
-        },
-        {
-          id: "2",
-          type: "review",
-          title: "새로운 리뷰",
-          message: "고객님이 리뷰를 남겨주셨습니다.",
-          isRead: true,
-          createdAt: "2024-01-14T15:20:00Z",
-          userId: "user123"
-        }
-      ];
+  getUnreadCount: async (): Promise<number> => {
+    const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error('안 읽은 알림 개수를 가져오는 데 실패했습니다.');
     }
-  }
+    // 백엔드가 숫자만 반환하므로 .json()이 아닌 .text()로 받고 숫자로 변환
+    const countText = await response.text();
+    return parseInt(countText, 10);
+  },
 
   /**
-   * 알림 읽음 처리
+   * 특정 알림을 '읽음' 상태로 변경
    */
-  async markAsRead(notificationId: string): Promise<void> {
-    try {
-      // TODO: API 연결 - 알림 읽음 처리
-      // PUT /api/notifications/{id}/read
-      const response = await fetch(`${this.baseUrl}/${notificationId}/read`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.getAuthToken()}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error("알림 읽음 처리 실패");
-      }
-    } catch (error) {
-      console.error("알림 읽음 처리 오류:", error);
-      // 에러 무시 (시뮬레이션)
+  markAsRead: async (notificationId: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error('알림을 읽음 처리하는 데 실패했습니다.');
     }
-  }
+  },
+};
 
-  /**
-   * 모든 알림 읽음 처리
-   */
-  async markAllAsRead(): Promise<void> {
-    try {
-      // TODO: API 연결 - 모든 알림 읽음 처리
-      // PUT /api/notifications/read-all
-      const response = await fetch(`${this.baseUrl}/read-all`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.getAuthToken()}`
-        }
-      });
+export default notificationApi;
 
-      if (!response.ok) {
-        throw new Error("모든 알림 읽음 처리 실패");
-      }
-    } catch (error) {
-      console.error("모든 알림 읽음 처리 오류:", error);
-      // 에러 무시 (시뮬레이션)
-    }
-  }
-
-  /**
-   * 알림 삭제
-   */
-  async deleteNotification(notificationId: string): Promise<void> {
-    try {
-      // TODO: API 연결 - 알림 삭제
-      // DELETE /api/notifications/{id}
-      const response = await fetch(`${this.baseUrl}/${notificationId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${this.getAuthToken()}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error("알림 삭제 실패");
-      }
-    } catch (error) {
-      console.error("알림 삭제 오류:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * 읽지 않은 알림 개수 조회
-   */
-  async getUnreadCount(): Promise<number> {
-    try {
-      // TODO: API 연결 - 읽지 않은 알림 개수
-      // GET /api/notifications/unread-count
-      const response = await fetch(`${this.baseUrl}/unread-count`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${this.getAuthToken()}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error("읽지 않은 알림 개수 조회 실패");
-      }
-
-      const data = await response.json();
-      return data.count;
-    } catch (error) {
-      console.error("읽지 않은 알림 개수 조회 오류:", error);
-      // 시뮬레이션 데이터 반환
-      return 3;
-    }
-  }
-
-  private getAuthToken(): string {
-    return localStorage.getItem("authToken") || "";
-  }
-}
-
-// 싱글톤 인스턴스 내보내기
-export default new NotificationApiService();
