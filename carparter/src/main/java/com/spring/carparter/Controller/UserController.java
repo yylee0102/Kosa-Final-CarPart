@@ -81,6 +81,19 @@ public class UserController {
 
     // =================== 2. 고객센터 문의 관리 ===================
 
+    // ▼▼▼▼▼ 이 메소드를 다른 /cs 경로 메소드들과 함께 추가하세요 ▼▼▼▼▼
+    /**
+     * ✅ [신규 추가] 내 문의 내역 전체를 조회하는 API
+     */
+    @GetMapping("/cs")
+    public ResponseEntity<List<CsInquiryResDTO>> getMyCsInquiries(@AuthenticationPrincipal UserDetails userDetails) {
+        String userId = userDetails.getUsername();
+        // CsInquiryService에 만든 메소드를 호출합니다.
+        List<CsInquiryResDTO> inquiries = csInquiryService.getInquiriesByUserId(userId);
+        return ResponseEntity.ok(inquiries);
+    }
+    // ▲▲▲▲▲ 여기까지 추가 ▲▲▲▲▲
+
     @PostMapping("/cs")
     public ResponseEntity<CsInquiryResDTO> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();

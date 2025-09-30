@@ -14,7 +14,7 @@
  * - 개인정보 수정, 차량 등록 등 필수 기능 제공
  */
 
-// 일반 사용자 마이페이지 (임시)
+// 일반 사용자 마이페이지 
 import { useEffect, useState } from "react";
 import { User, Settings, Car, FileText, MessageSquare, HelpCircle, PlusCircle } from "lucide-react";
 import PageContainer from "@/shared/components/layout/PageContainer";
@@ -28,14 +28,15 @@ import { MyVehicleListModal } from "@/domains/users/modals/MyVehicleListModal";
 import { VehicleRegisterModal } from "@/domains/users/modals/VehicleRegisterModal";
 import { QuoteRequestModal } from "@/domains/users/modals/QuoteRequestModal";
 import { ProfileEditModal } from "@/domains/users/modals/ProfileEditModal";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import UserApiService, { UserCarReqDTO, UserCarResDTO, QuoteRequestResDTO, ReviewResDTO, CsInquiryResDTO } from '@/services/user.api';
 
 
 export default function UserMyPage() {
   /// ✅ [수정] 상태 변수 정리 및 통합
-const { user } = useAuth();
-const navigate = useNavigate();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation(); // ✅ 이 줄을 추가하세요.
 
 /// --- 데이터 상태 ---
   const [myVehicles, setMyVehicles] = useState<UserCarResDTO[]>([]);
@@ -60,7 +61,7 @@ const [selectedVehicle, setSelectedVehicle] = useState<UserCarResDTO | undefined
 const fetchAllData = async () => {
   setIsLoading(true);
   try {
-    c// 여러 API를 동시에 호출합니다.
+    // 여러 API를 동시에 호출합니다.
     const [
       vehicles,
       quoteRequest,
@@ -93,6 +94,12 @@ useEffect(() => {
   fetchAllData(); // ✅ 수정한 함수를 호출
 }, []);
 
+
+
+
+
+
+
 // ✅ [추가] 모달 흐름을 제어하는 핸들러 함수들
 
 // '내 차량 관리' 메뉴 클릭 시 -> '차량 목록' 모달을 연다
@@ -114,6 +121,20 @@ const handleEditVehicle = (vehicle: UserCarResDTO) => {
   setIsRegisterModalOpen(true);     // 등록 모달을 연다
 };
 
+// ▼▼▼▼▼ 이 코드를 새로 추가하세요 ▼▼▼▼▼
+useEffect(() => {
+  // 1. 다른 페이지에서 'openCarModal: true' 라는 신호를 보냈는지 확인합니다.
+  if (location.state?.openCarModal) {
+    
+    // 2. 신호가 있다면, 차량 등록 모달을 여는 함수를 즉시 호출합니다.
+    handleAddNewVehicle();
+
+    // 3. 페이지 새로고침 시 모달이 다시 열리는 것을 방지하기 위해 state를 초기화합니다.
+    navigate(location.pathname, { replace: true, state: {} });
+  }
+  // location.state가 바뀔 때마다 이 코드가 실행되도록 설정합니다.
+}, [location, navigate]);
+// ▲▲▲▲▲ 여기까지 추가 ▲▲▲▲▲
  
 
 // '차량 등록/수정' 모달에서 최종 '저장' 버튼 클릭 시 (API 호출)
@@ -127,7 +148,7 @@ const handleVehicleFormSubmit = async (vehicleData: UserCarReqDTO) => { // vehic
       // toast({ title: "성공", description: "새로운 차량이 등록되었습니다." });
     }
     setIsRegisterModalOpen(false); // 등록 모달 닫기
-    fetchMyVehicles(); // 차량 목록 새로고침
+    fetchAllData(); // 차량 목록 새로고침
   } catch (error) {
      // toast({ title: "오류", description: "차량 등록/수정에 실패했습니다.", variant: "destructive" });
      console.error("Failed to submit vehicle form:", error);

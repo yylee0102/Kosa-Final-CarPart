@@ -33,4 +33,18 @@ public class CsInquiryResDTO {
         this.createdAt = entity.getCreatedAt();
     }
 
+
+
+    /**
+     * ✅ [신규 추가] CsInquiry 엔티티를 CsInquiryResDTO로 변환하는 static 메소드
+     * @param entity 변환할 CsInquiry 엔티티
+     * @return 변환된 CsInquiryResDTO 객체
+     */
+    public static CsInquiryResDTO from(CsInquiry entity) {
+        if (entity == null) return null;
+
+        // ✅ 이미 잘 만들어진 생성자를 호출하여 코드를 간결하게 유지합니다.
+        return new CsInquiryResDTO(entity);
+    }
+
 }

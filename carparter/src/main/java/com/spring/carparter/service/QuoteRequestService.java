@@ -253,10 +253,7 @@ public class QuoteRequestService {
     }
 
     /**
-     * 모든 견적 요청 목록을 조회하여 DTO 리스트로 변환하여 반환합니다.
-     */
-    public List<QuoteRequestResDTO> getAvailableQuoteRequests() {
-        List<QuoteRequest> quoteRequests = quoteRequestRepository.findAllWithDetails();
+z        List<QuoteRequest> quoteRequests = quoteRequestRepository.findAllWithDetails();
 
         return quoteRequests.stream()
                 .map(quoteRequest -> {
@@ -271,14 +268,16 @@ public class QuoteRequestService {
      */
     @Transactional(readOnly = true)
     public QuoteRequestResDTO getMyQuoteRequest(String userId) {
-        QuoteRequest quoteRequest = quoteRequestRepository.findByUser_UserId(userId)
+        // ✅ 수정한 Repository 메소드를 호출합니다.
+        QuoteRequest quoteRequest = quoteRequestRepository.findByUserIdWithDetails(userId)
                 .orElse(null); // 없으면 null을 반환
 
         if (quoteRequest == null) {
             return null;
         }
 
-        // DTO의 from() 메서드를 사용합니다. 견적 개수는 estimates 리스트의 크기로 계산합니다.
+        // JOIN FETCH로 모든 데이터를 미리 가져왔기 때문에 DTO 변환이 안전합니다.
         return QuoteRequestResDTO.from(quoteRequest, quoteRequest.getEstimates().size());
     }
+
 }

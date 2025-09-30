@@ -188,16 +188,27 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         description: "카센터들이 견적을 보내면 알림으로 안내드리겠습니다."
       });
 
-      navigate("/mypage/");
+      navigate("/user/mypage");
       
-    } catch (error) {
-      console.error("견적 요청 등록 실패:", error);
-      toast({
-        title: "견적 요청 등록에 실패했습니다",
-        description: "잠시 후 다시 시도해주세요.",
-        variant: "destructive"
-      });
-    } finally {
+      } catch (error) { // ✅ error 타입을 any로 지정하여 response 객체에 접근
+        console.error("견적 요청 등록 실패:", error);
+
+        // ✅ [수정] 백엔드에서 보낸 특정 에러 메시지를 확인하여 분기 처리
+        if (error.response?.data?.includes("이미 등록된 견적 요청서가 존재합니다")) {
+          toast({
+            title: "이미 견적서가 존재합니다.",
+            description: "이전에 요청한 견적을 마이페이지에서 확인해주세요.",
+            variant: "destructive"
+          });
+        } else {
+          // 그 외 모든 에러는 기존과 동일하게 처리
+          toast({
+            title: "견적 요청 등록에 실패했습니다",
+            description: "잠시 후 다시 시도해주세요.",
+            variant: "destructive"
+          });
+        } 
+      } finally {
       setIsSubmitting(false);
     }
   };
@@ -289,9 +300,11 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
               ) : (
                 <div className="mt-2 text-center border-2 border-dashed rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">등록된 차량이 없습니다.</p>
-                    <Button variant="link" onClick={() => navigate('/mypage/cars')}>
-                      차량 등록하러 가기
-                    </Button>
+                    // ✅ 수정 후
+                    // 마이페이지로 이동하면서 '자동차 모달을 열어줘' 라는 상태(state)를 함께 전달합니다.
+                <Button variant="link" onClick={() => navigate('/user/mypage', { state: { openCarModal: true } })}>
+                차량 등록하러 가기
+              </Button>
                 </div>
               )}
             </CardContent>

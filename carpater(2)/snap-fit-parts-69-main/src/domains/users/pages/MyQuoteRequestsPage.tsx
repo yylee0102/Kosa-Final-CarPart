@@ -68,7 +68,7 @@ export const MyQuoteRequestsPage = () => {
         <FileText className="h-16 w-16 text-muted-foreground mb-4" />
         <h3 className="text-xl font-semibold">현재 등록된 견적 요청서가 없습니다.</h3>
         <p className="text-muted-foreground mt-2 mb-6">새로운 견적을 요청하여 여러 카센터의 제안을 받아보세요.</p>
-        <Button onClick={() => navigate('/quotes/create')}> {/* TODO: 견적요청 생성 페이지 경로 확인 */}
+        <Button onClick={() => navigate('/estimates/create')}>
           <Plus className="h-4 w-4 mr-2" />
           견적 요청하기
         </Button>
@@ -98,7 +98,7 @@ export const MyQuoteRequestsPage = () => {
                 새로고침
               </Button>
               {!myRequest && (
-                  <Button onClick={() => navigate('/quotes/create')}> {/* TODO: 경로 확인 */}
+                  <Button onClick={() => navigate('/estimates/create')}> {/* TODO: 경로 확인 */}
                     <Plus className="h-4 w-4 mr-2" />
                     견적 요청
                   </Button>
@@ -123,7 +123,8 @@ export const MyQuoteRequestsPage = () => {
                       <Car className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                      <div className="text-2xl font-bold">{myRequest ? `${myRequest.estimates.length} 개` : '0 개'}</div>
+                  <div className="text-2xl font-bold">
+                    {myRequest?.estimates?.length ?? 0} 개</div>
                   </CardContent>
               </Card>
               <Card>
@@ -158,7 +159,7 @@ export const MyQuoteRequestsPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-4 text-muted-foreground">
-                    <div className="flex items-center gap-2"><Car className="h-4 w-4" /><span>{myRequest.car.carModel} ({myRequest.car.modelYear}년)</span></div>
+                    <div className="flex items-center gap-2"><Car className="h-4 w-4" /><span>{myRequest.car?.carModel ?? '차량 정보 없음'} ({myRequest.car?.modelYear ?? 'N/A'}년)</span></div>
                     <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /><span>{myRequest.address}</span></div>
                   </div>
                   <div className="text-sm border-t pt-4 mt-4">
@@ -178,26 +179,30 @@ export const MyQuoteRequestsPage = () => {
               {/* 하단: 받은 견적 목록 */}
               <Card>
                   <CardHeader>
-                      <CardTitle>받은 견적 목록 ({myRequest.estimates.length}개)</CardTitle>
+                      
+                      <CardTitle>받은 견적 목록 
+                        ({myRequest?.estimates?.length ?? 0}개)</CardTitle>
                       <CardDescription>카센터에서 보낸 견적 제안들입니다.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                  {myRequest.estimates.length === 0 ? (
-                      <p className="text-muted-foreground">아직 받은 견적이 없습니다.</p>
+                  {/* 👇 조건 부분을 이렇게 바꿔주세요 */}
+                  {(myRequest?.estimates?.length ?? 0) === 0 ? (
+                    <p className="text-muted-foreground">아직 받은 견적이 없습니다.</p>
                   ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                          {myRequest.estimates.map((estimate) => (
-                              <Card key={estimate.estimateId} className="cursor-pointer hover:border-primary">
-                              <CardHeader><CardTitle>{estimate.centerName}</CardTitle></CardHeader>
-                              <CardContent>
-                                  <p className="text-2xl font-bold text-primary mb-2">{estimate.estimatedCost.toLocaleString()}원</p>
-                                  <p className="text-sm text-muted-foreground">{estimate.details}</p>
-                              </CardContent>
-                              </Card>
-                          ))}
-                      </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {/* 👇 map 앞에도 ?. 를 붙여주세요 */}
+                      {myRequest.estimates?.map((estimate) => (
+                        <Card key={estimate.estimateId} className="cursor-pointer hover:border-primary">
+                          <CardHeader><CardTitle>{estimate.centerName}</CardTitle></CardHeader>
+                          <CardContent>
+                              <p className="text-2xl font-bold text-primary mb-2">{estimate.estimatedCost.toLocaleString()}원</p>
+                              <p className="text-sm text-muted-foreground">{estimate.details}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   )}
-                  </CardContent>
+                </CardContent>
               </Card>
             </>
           )}

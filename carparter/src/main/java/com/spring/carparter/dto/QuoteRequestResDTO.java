@@ -1,10 +1,10 @@
+// 파일 경로: com/spring/carparter/dto/QuoteRequestResDTO.java
+
 package com.spring.carparter.dto;
 
 import com.spring.carparter.entity.QuoteRequest;
 import com.spring.carparter.entity.RequestImage;
 import com.spring.carparter.entity.User;
-import com.spring.carparter.entity.UserCar;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,70 +13,83 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-@Builder
 @Setter
 public class QuoteRequestResDTO {
+
+    // ✅ 최종적으로 정리된 필드들
     private Integer requestId;
     private String requestDetails;
     private String address;
     private LocalDateTime createdAt;
-    private String customerName;
-    private String customerPhone;
-    private String carModel;
-    private Integer carYear;
-    private String preferredDate;
-    private String status;
-    private List<String> imageUrls;
-    private int estimateCount; // [추가] 견적 개수 필드
+    private int estimateCount;
+
+    // ✅ 작성자와 차량 정보를 담을 중첩 객체 필드
+    private final WriterDTO writer;
+    private final UserCarResDTO car; // UserCarResDTO를 그대로 사용
+    private final List<ImageDTO> images;
 
     /**
-     * ✅ QuoteRequest 엔티티를 QuoteRequestResDTO로 변환하는 정적 팩토리 메서드
+     * 엔티티를 DTO로 변환하는 private 생성자.
+     * 정적 팩토리 메소드 'from'을 통해서만 호출됩니다.
      */
-    // [수정] int estimateCount 파라미터를 추가하여 서비스 계층의 호출과 일치시켰습니다.
-    public static QuoteRequestResDTO from(QuoteRequest quoteRequest, int estimateCount) {
-        User user = quoteRequest.getUser();
-        UserCar car = quoteRequest.getUserCar();
+    private QuoteRequestResDTO(QuoteRequest entity, int estimateCount) {
+        this.requestId = entity.getRequestId();
+        this.requestDetails = entity.getRequestDetails();
+        this.address = entity.getAddress();
+        this.createdAt = entity.getCreatedAt();
+        this.estimateCount = estimateCount;
 
-        return QuoteRequestResDTO.builder()
-                .requestId(quoteRequest.getRequestId())
-                .requestDetails(quoteRequest.getRequestDetails())
-                .address(quoteRequest.getAddress())
-                .createdAt(quoteRequest.getCreatedAt())
-                .customerName(user.getName())
-                .customerPhone(user.getPhoneNumber())
-                .carModel(car.getCarModel())
-                .carYear(car.getModelYear())
-                .imageUrls(quoteRequest.getRequestImages().stream()
-                        .map(RequestImage::getImageUrl)
-                        .collect(Collectors.toList()))
-                .estimateCount(estimateCount) // [추가] 전달받은 견적 개수 매핑
-                .build();
+        // ▼▼▼▼▼ 핵심 수정 부분 ▼▼▼▼▼
+        // 1. WriterDTO 객체를 생성하여 writer 필드를 채웁니다.
+        this.writer = WriterDTO.from(entity.getUser());
+
+        // 2. UserCarResDTO의 from 메소드를 호출하여 car 필드를 채웁니다.
+        this.car = UserCarResDTO.from(entity.getUserCar());
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        // 3. 이미지 정보도 ImageDTO 리스트로 변환하여 채웁니다.
+        this.images = entity.getRequestImages().stream()
+                .map(ImageDTO::from)
+                .collect(Collectors.toList());
     }
 
-    // 아래 내부 클래스들은 현재 직접 사용되지는 않지만, 구조상 유지합니다.
-    @Getter
-    @Builder
-    private static class CarInfo {
-        private final Long userCarId;
+    /**
+     * 외부에서 DTO를 생성할 때 사용하는 정적 팩토리 메소드
+     */
+    public static QuoteRequestResDTO from(QuoteRequest entity, int estimateCount) {
+        return new QuoteRequestResDTO(entity, estimateCount);
+    }
 
-        static CarInfo from(UserCar userCar) {
-            return CarInfo.builder()
-                    .userCarId(userCar.getUserCarId())
-                    .build();
+
+    // =================== 중첩 DTO 클래스들 ===================
+
+    @Getter
+    private static class WriterDTO {
+        private final String userId;
+        private final String name;
+
+        private WriterDTO(User user) {
+            this.userId = user.getUserId();
+            this.name = user.getName();
+        }
+
+        public static WriterDTO from(User user) {
+            return new WriterDTO(user);
         }
     }
 
     @Getter
-    @Builder
-    private static class ImageInfo {
+    private static class ImageDTO {
         private final int imageId;
         private final String imageUrl;
 
-        static ImageInfo from(RequestImage image) {
-            return ImageInfo.builder()
-                    .imageId(image.getImageId())
-                    .imageUrl(image.getImageUrl())
-                    .build();
+        private ImageDTO(RequestImage image) {
+            this.imageId = image.getImageId();
+            this.imageUrl = image.getImageUrl();
+        }
+
+        public static ImageDTO from(RequestImage image) {
+            return new ImageDTO(image);
         }
     }
 }
