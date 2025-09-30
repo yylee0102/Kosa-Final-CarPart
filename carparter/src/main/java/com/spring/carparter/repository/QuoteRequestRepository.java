@@ -56,4 +56,19 @@ public interface QuoteRequestRepository extends JpaRepository<QuoteRequest, Inte
             "LEFT JOIN FETCH qr.requestImages img " +
             "ORDER BY qr.createdAt DESC")
     List<QuoteRequest> findAllWithDetails();
+
+
+    // ✅ 이 메서드 선언을 추가해주세요.
+    boolean existsByUser_UserId(String userId);
+
+    /**
+     * ✅ [수정 또는 추가] userId로 견적 요청을 조회할 때,
+     * user, userCar, estimates 정보를 한 번의 쿼리로 모두 가져옵니다.
+     */
+    @Query("SELECT qr FROM QuoteRequest qr " +
+            "JOIN FETCH qr.user " +
+            "JOIN FETCH qr.userCar " +
+            "LEFT JOIN FETCH qr.estimates " + // estimates는 없을 수도 있으니 LEFT JOIN
+            "WHERE qr.user.userId = :userId")
+    Optional<QuoteRequest> findByUserIdWithDetails(@Param("userId") String userId);
 }

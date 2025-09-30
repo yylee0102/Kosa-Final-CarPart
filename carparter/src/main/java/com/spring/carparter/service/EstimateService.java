@@ -224,4 +224,8 @@ public class EstimateService {
                 .map(EstimateResDTO::from)
                 .collect(Collectors.toList());
     }
+    public int countEstimateByUserId(Integer requestId) {
+        return estimateRepository.countByQuoteRequest_RequestId(requestId).intValue();
+    }
 }
+

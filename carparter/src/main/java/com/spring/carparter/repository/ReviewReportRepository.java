@@ -42,4 +42,5 @@ public interface ReviewReportRepository extends JpaRepository<ReviewReport, Inte
     """)
     Optional<ReviewReportResDTO> findResDTOById(@Param("reportId") Integer reportId);
 
+
 }
