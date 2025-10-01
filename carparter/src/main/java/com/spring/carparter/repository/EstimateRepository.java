@@ -5,6 +5,7 @@ import com.spring.carparter.entity.EstimateItem;
 import com.spring.carparter.entity.EstimateStatus;
 import com.spring.carparter.entity.QuoteRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -46,5 +47,27 @@ public interface EstimateRepository extends JpaRepository<Estimate, Integer> {
 
     boolean existsByQuoteRequest_RequestIdAndCarCenter_CenterId(Integer requestId, String centerId);
     List<Estimate> findByQuoteRequestAndStatus(QuoteRequest quoteRequest, EstimateStatus status);
+
+    /**
+            * ✅ [신규 추가] 선택된 견적서를 제외한 나머지의 상태를 변경하는 메서드
+     * @param status 변경할 목표 상태 (예: REJECTED)
+     * @param quoteRequestId 대상 견적 요청서 ID
+     * @param acceptedEstimateId 상태를 변경하지 않을, 수락된 견적서 ID
+     */
+    @Modifying // SELECT가 아닌 UPDATE, DELETE, INSERT 쿼리일 때 필요
+    @Query("UPDATE Estimate e SET e.status = :status WHERE e.quoteRequest.id = :quoteRequestId AND e.id != :acceptedEstimateId")
+    void updateStatusForOthers(@Param("status") EstimateStatus status,
+                               @Param("quoteRequestId") Integer quoteRequestId,
+                               @Param("acceptedEstimateId") Integer acceptedEstimateId);
+
+    /**
+     * ✅ [신규 추가] 차주가 볼 견적서 목록을 조회 (REJECTED 제외)
+     * @param quoteRequestId 대상 견적 요청서 ID
+     * @return REJECTED 상태가 아닌 모든 견적서 리스트
+     */
+    List<Estimate> findByQuoteRequestIdAndStatusNot(Integer quoteRequestId, EstimateStatus status);
+
+
+
 
 }

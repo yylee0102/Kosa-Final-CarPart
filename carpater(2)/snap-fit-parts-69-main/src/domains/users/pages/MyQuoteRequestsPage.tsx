@@ -9,6 +9,8 @@ import { Calendar, Car, MapPin, Trash2, FileText, Plus, RefreshCw } from 'lucide
 import UserApiService from '@/services/user.api';
 import testImage from '@/assets/test.jpg'; // S3 연동 전 임시 이미지
 import { useNavigate } from 'react-router-dom';
+import { EstimateDetailModal } from '@/domains/estimates/modals/EstimateDetailModal';
+import { ChatApiService } from '@/services/chat.api';
 
 // 백엔드 DTO와 일치하는 타입 (기존과 동일)
 interface MyQuoteRequest {
@@ -34,6 +36,11 @@ export const MyQuoteRequestsPage = () => {
   const [myRequest, setMyRequest] = useState<MyQuoteRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ▼▼▼ 이 두 줄을 추가하세요 ▼▼▼
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedEstimate, setSelectedEstimate] = useState<Estimate | null>(null);
+
+
   const loadMyRequest = async () => {
     setIsLoading(true);
     try {
@@ -51,6 +58,14 @@ export const MyQuoteRequestsPage = () => {
     loadMyRequest();
   }, []);
 
+    // ▼▼▼ 이 함수를 새로 추가하세요 ▼▼▼
+  const handleEstimateCardClick = (estimate: Estimate) => {
+    setSelectedEstimate(estimate); // 클릭된 견적서 정보를 state에 저장
+    setIsDetailModalOpen(true);   // 모달을 열도록 state 변경
+  };
+
+
+
   const handleDeleteQuoteRequest = async (quoteRequestId: number) => {
     try {
       await UserApiService.deleteQuoteRequest(quoteRequestId);
@@ -60,6 +75,27 @@ export const MyQuoteRequestsPage = () => {
        toast({ title: '오류', description: '삭제에 실패했습니다.', variant: 'destructive' });
     }
   };
+
+  // ▼▼▼ handleChatRequest 함수를 아래 코드로 교체하세요 ▼▼▼
+const handleChatRequest = async (centerId: string, centerName: string) => {
+    try {
+        // 1. 백엔드에 채팅방 생성/조회 요청을 보내고 실제 채팅방 정보를 받아옵니다.
+        const room = await ChatApiService.createOrGetChatRoom(centerId);
+
+        // 2. 받아온 실제 채팅방 정보를 가지고 채팅 페이지로 이동합니다.
+        navigate('/chat', {
+            state: {
+                roomId: room.roomId, // 이제 실제 DB에 있는 roomId를 전달합니다.
+                centerId: centerId,
+                centerName: centerName,
+            }
+        });
+        setIsDetailModalOpen(false); // 모달 닫기
+    } catch (error) {
+        console.error("채팅방 입장 실패:", error);
+        // TODO: 사용자에게 오류 토스트 메시지 표시
+    }
+};
 
   // 요청서가 없을 때의 화면 (AI 디자인 적용)
   const renderEmptyState = () => (
@@ -192,11 +228,19 @@ export const MyQuoteRequestsPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       {/* 👇 map 앞에도 ?. 를 붙여주세요 */}
                       {myRequest.estimates?.map((estimate) => (
-                        <Card key={estimate.estimateId} className="cursor-pointer hover:border-primary">
+                        <Card
+                            key={estimate.estimateId}
+                            className="group cursor-pointer hover:border-primary"
+                            // 👇 이 onClick 이벤트를 추가하세요.
+                            onClick={() => handleEstimateCardClick(estimate)}
+                          >
                           <CardHeader><CardTitle>{estimate.centerName}</CardTitle></CardHeader>
                           <CardContent>
-                              <p className="text-2xl font-bold text-primary mb-2">{estimate.estimatedCost.toLocaleString()}원</p>
-                              <p className="text-sm text-muted-foreground">{estimate.details}</p>
+                            <p className="text-2xl font-bold text-primary mb-2">{estimate.estimatedCost.toLocaleString()}원</p>
+                            {/* 상세 내용 p 태그에 line-clamp 관련 클래스를 추가합니다. */}
+                            <p className="text-sm text-muted-foreground line-clamp-3 group-hover:line-clamp-none">
+                              {estimate.details}
+                            </p>
                           </CardContent>
                         </Card>
                       ))}
@@ -208,6 +252,19 @@ export const MyQuoteRequestsPage = () => {
           )}
         </div>
       </div>
+      {/* ▼▼▼ 이 모달 코드를 페이지의 가장 마지막에 추가하세요 ▼▼▼ */}
+      <EstimateDetailModal
+        open={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        estimate={selectedEstimate}
+        centerName={selectedEstimate?.centerName || ''}
+        onConfirm={(estimateId) => {
+          console.log(`${estimateId}번 견적 확정!`);
+          // TODO: 실제 확정 API 호출 로직 구현
+          setIsDetailModalOpen(false);
+        }}
+        onChat={handleChatRequest}
+      />
     </PageContainer>
   );
 };

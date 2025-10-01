@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,8 @@ public class QuoteRequestResDTO {
     private final WriterDTO writer;
     private final UserCarResDTO car; // UserCarResDTO를 그대로 사용
     private final List<ImageDTO> images;
+    private final List<EstimateResDTO> estimates; // ✅ [핵심 추가] 견적서 목록 필드
+
 
     /**
      * 엔티티를 DTO로 변환하는 private 생성자.
@@ -40,6 +43,14 @@ public class QuoteRequestResDTO {
         this.address = entity.getAddress();
         this.createdAt = entity.getCreatedAt();
         this.estimateCount = estimateCount;
+        // ▼▼▼▼▼ 핵심 수정 부분 ▼▼▼▼▼
+        // QuoteRequest 엔티티에 포함된 Estimate 엔티티 목록을 EstimateResDTO 목록으로 변환합니다.
+        // getEstimates()가 null일 경우를 대비하여 안전하게 처리합니다.
+        this.estimates = (entity.getEstimates() == null) ? Collections.emptyList() :
+                entity.getEstimates().stream()
+                        .map(EstimateResDTO::from)
+                        .collect(Collectors.toList());
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         // ▼▼▼▼▼ 핵심 수정 부분 ▼▼▼▼▼
         // 1. WriterDTO 객체를 생성하여 writer 필드를 채웁니다.

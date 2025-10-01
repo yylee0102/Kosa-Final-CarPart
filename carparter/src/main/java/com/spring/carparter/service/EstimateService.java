@@ -1,5 +1,6 @@
 package com.spring.carparter.service;
 
+import com.spring.carparter.document.ChatMessageDocument;
 import com.spring.carparter.dto.EstimateReqDTO;
 import com.spring.carparter.dto.EstimateResDTO;
 import com.spring.carparter.entity.*;
@@ -23,6 +24,8 @@ public class EstimateService {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
     private  final CompletedRepairRepository completedRepairRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final ChatRoomRepository chatRoomRepository;
     // 1. 견적서 제출
     @Transactional
     public EstimateResDTO submitEstimate(String centerId, EstimateReqDTO requestDto) {
@@ -226,6 +229,61 @@ public class EstimateService {
     }
     public int countEstimateByUserId(Integer requestId) {
         return estimateRepository.countByQuoteRequest_RequestId(requestId).intValue();
+    }
+
+
+    /**
+     * ✅ [최종 버전] 사용자가 견적서를 '확정'하는 메서드 (채팅 삭제 기능만 수행)
+     */
+    @Transactional
+    public void confirmEstimate(String userId, Integer estimateId) {
+        // 1. 견적서 및 요청서 조회 (기존과 동일)
+        Estimate selectedEstimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 견적서입니다."));
+        QuoteRequest quoteRequest = selectedEstimate.getQuoteRequest();
+
+        // 2. 권한 확인 (기존과 동일)
+        if (!quoteRequest.getUser().getUserId().equals(userId)) {
+            throw new SecurityException("자신의 견적 요청에 대해서만 확정할 수 있습니다.");
+        }
+
+        // 3. 견적서 상태 변경 (기존과 동일)
+        selectedEstimate.setStatus(EstimateStatus.ACCEPTED);
+        estimateRepository.updateStatusForOthers(
+                EstimateStatus.REJECTED,
+                quoteRequest.getRequestId(),
+                selectedEstimate.getEstimateId()
+        );
+
+        // 4. ✅ [수정] 채팅 데이터 삭제 로직 (JPA + MongoDB 연동)
+        // 4-1. 먼저, 이 견적 요청과 관련된 모든 '채팅방' 정보를 JPA에서 조회합니다.
+        List<ChatRoom> chatRoomsToDelete = chatRoomRepository.findAllByQuoteRequest_Id(quoteRequest.getRequestId());
+
+        // 4-2. 각 채팅방에 속한 '채팅 메시지'들을 MongoDB에서 삭제합니다.
+        for (ChatRoom room : chatRoomsToDelete) {
+            chatMessageRepository.deleteByRoomId(room.getRoomId()); // room.getId()는 채팅방의 ID
+        }
+
+        // 4-3. 메시지 삭제가 완료된 후, '채팅방' 정보들을 JPA에서 삭제합니다.
+        chatRoomRepository.deleteAll(chatRoomsToDelete);
+    }
+
+    /**
+     * ✅ [신규 추가] 차주에게 보여줄 견적서 목록을 조회하는 서비스 메서드
+     * @param quoteRequestId 견적 요청서 ID
+     * @return REJECTED 상태를 제외한 견적서 DTO 리스트
+     */
+    public List<EstimateResDTO> getEstimatesForUser(Integer quoteRequestId) {
+        // Repository에서 REJECTED가 아닌 것만 조회
+        List<Estimate> estimates = estimateRepository.findByQuoteRequestIdAndStatusNot(
+                quoteRequestId,
+                EstimateStatus.REJECTED
+        );
+
+        // DTO로 변환하여 반환
+        return estimates.stream()
+                .map(EstimateResDTO::from)
+                .collect(Collectors.toList());
     }
 }
 

@@ -71,7 +71,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // 역할별 helper functions
   const isAdmin = user?.userType === "ADMIN" || user?.role === "ROLE_ADMIN";
-  const isCenter = user?.userType === "CAR_CENTER" || user?.role === "ROLE_CARCENTER";
+  const isCenter = user?.userType === "CAR_CENTER" || user?.role === "ROLE_CAR_CENTER";
   const isUser = user?.userType === "USER" || user?.role === "ROLE_USER";
 
   const value: AuthContextType = {

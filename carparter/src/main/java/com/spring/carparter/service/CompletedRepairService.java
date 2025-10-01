@@ -1,10 +1,7 @@
 package com.spring.carparter.service;
 
 import com.spring.carparter.dto.CompletedRepairResDTO;
-import com.spring.carparter.entity.CompletedRepair;
-import com.spring.carparter.entity.Estimate;
-import com.spring.carparter.entity.RepairStatus;
-import com.spring.carparter.entity.User;
+import com.spring.carparter.entity.*;
 import com.spring.carparter.exception.ResourceNotFoundException;
 import com.spring.carparter.repository.CompletedRepairRepository;
 import com.spring.carparter.repository.EstimateRepository;
@@ -123,5 +120,46 @@ public class CompletedRepairService {
         }
 
         return CompletedRepairResDTO.from(repair);
+    }
+    // 견적 요청서 삭제를 위해 추가
+
+    /**
+     * ✅ [신규 추가] 카센터가 수리를 완료 처리하는 메서드
+     * @param carCenterId 현재 로그인한 카센터 ID
+     * @param estimateId 완료 처리할, '수락된' 상태의 견적서 ID
+     */
+    @Transactional
+    public void makeCompleteRepair(String carCenterId, Integer estimateId) {
+        // 1. '수락된' 상태의 견적서를 조회합니다.
+        Estimate acceptedEstimate = estimateRepository.findById(estimateId)
+                .orElseThrow(() -> new ResourceNotFoundException("견적서를 찾을 수 없습니다."));
+
+        // 2. 권한 및 상태 검증
+        if (!acceptedEstimate.getCarCenter().getCenterId().equals(carCenterId)) {
+            throw new SecurityException("수리를 완료할 권한이 없습니다.");
+        }
+        if (acceptedEstimate.getStatus() != EstimateStatus.ACCEPTED) {
+            throw new IllegalStateException("수락된 상태의 견적만 완료 처리할 수 있습니다.");
+        }
+
+        // 3. '수리 내역(CompletedRepair)'을 생성합니다. (acceptEstimate에서 가져온 로직)
+        CompletedRepair newRepair = CompletedRepair.builder()
+                .userId(acceptedEstimate.getQuoteRequest().getUser().getUserId())
+                .userName(acceptedEstimate.getQuoteRequest().getUser().getName())
+                .carCenterId(acceptedEstimate.getCarCenter().getCenterId())
+                .carCenterName(acceptedEstimate.getCarCenter().getCenterName())
+                .originalRequestId(acceptedEstimate.getQuoteRequest().getRequestId())
+                .originalEstimateId(acceptedEstimate.getEstimateId())
+                .finalCost(acceptedEstimate.getEstimatedCost())
+                .repairDetails(acceptedEstimate.getQuoteRequest().getRequestDetails())
+                .completedAt(LocalDateTime.now()) // 완료 시점의 시간 기록
+                .status(RepairStatus.COMPLETED)   // 최종 상태는 'COMPLETED'
+                .build();
+
+        completedRepairRepository.save(newRepair);
+
+        // 4. 완료 처리 후, 기존의 견적 요청서와 관련 데이터들을 삭제합니다.
+        QuoteRequest quoteRequestToDelete = acceptedEstimate.getQuoteRequest();
+        quoteRequestRepository.delete(quoteRequestToDelete); // 연관된 Estimate들도 함께 삭제됩니다 (Cascade 설정에 따라)
     }
 }

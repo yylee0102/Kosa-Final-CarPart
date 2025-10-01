@@ -91,7 +91,7 @@ const handleInputChange = (field: keyof EstimateRequest, value: string) => {
 
 
 
-  // ✅ 이 코드로 함수 전체를 교체하세요.
+
 const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
   // 1. 사용자가 선택한 파일들을 'files' 배열로 만들기
   const files = Array.from(e.target.files || []);
