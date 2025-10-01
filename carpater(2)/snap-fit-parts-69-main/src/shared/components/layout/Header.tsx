@@ -119,6 +119,9 @@ export default function Header({ className }: HeaderProps) {
   }, [isLoggedIn]);
 
   const handleNotificationClick = async (notif: NotificationResDTO) => {
+      console.log("--- 알림 클릭됨 ---");
+  console.log("전체 알림 데이터:", notif);
+  console.log("이동할 URL:", notif.url);
     if (!notif.isRead) {
       try {
         await notificationApi.markAsRead(notif.id);
@@ -193,7 +196,7 @@ export default function Header({ className }: HeaderProps) {
                     <DropdownMenuLabel>알림</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {notifications.length > 0 ? (
-                      notifications.slice(0, 7).map((notif) => ( // 최신 7개만 보여주기
+                      notifications.slice(0, 7).map((notif) => ( // 최신 7개만 보여주기 (수정)
                         <DropdownMenuItem key={notif.id} onClick={() => handleNotificationClick(notif)} className={`cursor-pointer ${!notif.isRead ? "font-bold" : ""}`}>
                           <div className="flex flex-col">
                             <span>{notif.message}</span>

@@ -2,7 +2,6 @@ package com.spring.carparter.controller;
 
 import com.spring.carparter.dto.*;
 import com.spring.carparter.entity.CsInquiry;
-import com.spring.carparter.entity.QuoteRequest;
 import com.spring.carparter.entity.User;
 import com.spring.carparter.service.*;
 import lombok.RequiredArgsConstructor;
@@ -74,19 +73,6 @@ public class UserController {
 
     // =================== 2. 고객센터 문의 관리 ===================
 
-    // ▼▼▼▼▼ 이 메소드를 다른 /cs 경로 메소드들과 함께 추가하세요 ▼▼▼▼▼
-    /**
-     * ✅ [신규 추가] 내 문의 내역 전체를 조회하는 API
-     */
-    @GetMapping("/cs")
-    public ResponseEntity<List<CsInquiryResDTO>> getMyCsInquiries(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        // CsInquiryService에 만든 메소드를 호출합니다.
-        List<CsInquiryResDTO> inquiries = csInquiryService.getInquiriesByUserId(userId);
-        return ResponseEntity.ok(inquiries);
-    }
-    // ▲▲▲▲▲ 여기까지 추가 ▲▲▲▲▲
-
     @PostMapping("/cs")
     public ResponseEntity<CsInquiryResDTO> makeInquiry(@RequestBody CsInquiryReqDTO request, @AuthenticationPrincipal UserDetails userDetails) {
         String userId = userDetails.getUsername();
@@ -131,50 +117,43 @@ public class UserController {
      * @param userDetails 인증된 사용자 정보 (JWT 토큰에서 추출)
      * @return 생성된 견적 요청 정보 (이미지 URL 포함)
      */
-    // TODO: [나중에 S3 연동 시 복원] 이미지 업로드 기능
-// @PostMapping(value = "/quote-requests", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-// public ResponseEntity<QuoteRequestResDTO> createQuoteRequest(
-//         @RequestPart("request") QuoteRequestReqDTO request,
-//         @RequestPart(value = "images", required = false) List<MultipartFile> images,
-//         @AuthenticationPrincipal UserDetails userDetails) {
-//
-//     String userId = userDetails.getUsername();
-//     QuoteRequestResDTO newQuoteRequest = quoteRequestService.createQuoteRequestWithImages(userId, request, images);
-//     return ResponseEntity.status(HttpStatus.CREATED).body(newQuoteRequest);
-// }
-
-    /** [임시] 이미지 없는 견적 요청 생성 */
-    @PostMapping("/quote-requests")
+    @PostMapping(value = "/quote-requests", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<QuoteRequestResDTO> createQuoteRequest(
-            @RequestBody QuoteRequestReqDTO request,
+            @RequestPart("request") QuoteRequestReqDTO request,
+            @RequestPart("images") List<MultipartFile> images,
             @AuthenticationPrincipal UserDetails userDetails) {
+
+
+
+        // ✅ 2. 메소드 시작점에 로그 추가
+        log.info("========== UserController 진입 성공! ==========");
+        log.info("✅ 수신된 DTO 데이터: {}", request.toString());
+        log.info("✅ 수신된 이미지 개수: {} 개", images.size());
+        log.info("✅ 요청 사용자 ID: {}", userDetails.getUsername());
+        log.info("===========================================");
+
+
         String userId = userDetails.getUsername();
-        QuoteRequestResDTO newQuoteRequest = quoteRequestService.createQuoteRequest(userId, request);
-        // 아래에서 만들 새 서비스 메서드 호출
-        int count = estimateService.countEstimateByUserId(newQuoteRequest.getRequestId());
-        newQuoteRequest.setEstimateCount(count);
+        // ❗️ 중요: Service 레이어에 userId와 images를 함께 넘겨주는 새로운 메서드가 필요합니다.
+        QuoteRequestResDTO newQuoteRequest = quoteRequestService.createQuoteRequestWithImages(userId, request, images);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(newQuoteRequest);
     }
+
+
     @DeleteMapping("/quote-requests/{id}")
-    public ResponseEntity<?> deleteQuoteRequest(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteQuoteRequest(@PathVariable Integer id) {
         quoteRequestService.deleteQuoteRequest(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/my-quote-request") // ✅ 더 명확한 경로로 변경
-    public ResponseEntity<QuoteRequestResDTO> getMyQuoteRequest(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        QuoteRequestResDTO res = quoteRequestService.getMyQuoteRequest(userId);
-
-        // ✅ [수정] 서비스 결과가 null인지 확인
-        if (res == null) {
-            // 데이터가 없으면 204 No Content 응답을 보냄
-            return ResponseEntity.noContent().build();
-        }
-
-        // 데이터가 있을 때만 200 OK와 함께 body를 보냄
-        return ResponseEntity.ok(res);
-    }
+//    @GetMapping("/my-quote-request") // ✅ 더 명확한 경로로 변경
+//    public ResponseEntity<QuoteRequestResDTO> getMyQuoteRequest(@AuthenticationPrincipal UserDetails userDetails) {
+//        String userId = userDetails.getUsername();
+//        // ✅ 불필요한 User 객체 생성 대신 userId(String)를 직접 전달
+//        QuoteRequestResDTO res = quoteRequestService.getAvailableQuoteRequests(userId);
+//        return ResponseEntity.ok(res);
+//    }
 
     // =================== 4. 내가 받은 견적서 관리 ===================
 

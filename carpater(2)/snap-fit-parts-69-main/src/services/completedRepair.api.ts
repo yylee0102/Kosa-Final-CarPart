@@ -14,6 +14,8 @@ export interface CompletedRepairResDTO {
   status: 'IN_PROGRESS' | 'COMPLETED';
   createdAt: string;
   completedAt: string | null;
+  carModel: string;
+  licensePlate: string;
 }
 
 const API_BASE_URL = '/api';
