@@ -17,7 +17,7 @@ import WBDetailPage from "./domains/wb/pages/WBDetailPage";
 import CentersListPage from "./domains/centers/pages/CentersListPage";
 import CenterDetailPage from "./domains/centers/pages/CenterDetailPage";
 import SearchResultsPage from "./domains/search/pages/SearchResultsPage";
-import  EstimateCreatePage  from './domains/estimates/pages/EstimateCreatePage';
+import EstimateCreatePage from "./domains/estimates/pages/EstimateCreatePage";
 import EstimateDetailPage from "./domains/estimates/pages/EstimateDetailPage";
 import EstimateAIPage from "./domains/estimates/pages/EstimateAIPage";
 import EstimateRequestPage from "./domains/estimates/pages/EstimateRequestPage";
@@ -53,7 +53,7 @@ const App = () => (
         <Routes>
           {/* 홈페이지 */}
           <Route path="/" element={<HomePage />} />
-          
+
           {/* WB (중고부품) 관련 라우트 */}
           <Route path="/wb" element={<WBListPage />} />
           <Route path="/wb/:partId" element={<WBDetailPage />} />

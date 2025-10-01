@@ -104,9 +104,7 @@ export const RepairManagementPage = () => {
                       <Button variant="outline" size="sm" onClick={() => handleViewDetails(repair)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(repair.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      
                     </TableCell>
                   </TableRow>
                 ))}

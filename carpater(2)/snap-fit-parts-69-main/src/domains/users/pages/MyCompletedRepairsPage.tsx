@@ -118,7 +118,7 @@ export default function MyCompletedRepairsPage() {
   };
 
   return (
-    <ProtectedRoute allowedUserTypes={["USER"]} fallbackMessage="일반 사용자만 접근할 수 있는 페이지입니다.">
+    <ProtectedRoute allowedUserTypes={["개인"]} fallbackMessage="일반 사용자만 접근할 수 있는 페이지입니다.">
       <PageContainer>
       <div className="space-y-6">
         {/* 헤더 */}

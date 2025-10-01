@@ -139,23 +139,29 @@ export default function CenterMyPage() {
     }
   };
 
-  const handlePartSubmit = async (partData: PartCreateData) => {
-    try {
-        const reqData: UsedPartReqDTO = {
-            partName: partData.name,
-            description: partData.description,
-            price: partData.price,
-            category: partData.category,
-            compatibleCarModel: partData.compatibleModel,
-        };
-        await carCenterApi.createUsedPart(reqData, partData.images);
-        alert('중고 부품이 성공적으로 등록되었습니다.');
-        setPartCreateModalOpen(false);
-        fetchData();
-    } catch (e) {
-        alert(`부품 등록 중 오류가 발생했습니다: ${(e as Error).message}`);
-    }
-  };
+ const handlePartSubmit = async (partData: PartCreateData) => {
+  try {
+    // DTO 객체 (JSON 데이터) 준비
+    const reqData: UsedPartReqDTO = {
+      partName: partData.name,
+      description: partData.description,
+      price: partData.price,
+      category: partData.category,
+      compatibleCarModel: partData.compatibleModel,
+    };
+
+    // 준비된 JSON 데이터와 이미지 파일 배열을 API 함수에 그대로 전달
+    await carCenterApi.createUsedPart(reqData, partData.images);
+
+    alert('중고 부품이 성공적으로 등록되었습니다.');
+    setPartCreateModalOpen(false);
+    fetchData(); // 목록 새로고침
+  } catch (e) {
+    // 에러를 콘솔에도 출력하여 상세 원인을 파악하기 쉽게 합니다.
+    console.error("부품 등록 실패 상세 오류:", e);
+    alert(`부품 등록 중 오류가 발생했습니다: ${(e as Error).message}`);
+  }
+};
 
   const handleReservationCreate = async (newReservationData: ReservationReqDTO) => {
     try {
@@ -179,9 +185,18 @@ export default function CenterMyPage() {
     }
   };
   
-  const handlePartEdit = (part: UsedPartResDTO) => {
-      setSelectedPart(part);
-      setPartEditModalOpen(true);
+  const handlePartEdit = async (part: UsedPartResDTO) => {
+      try {
+    // 서버로부터 최신 부품 정보를 다시 불러옵니다.
+    const freshPartData = await carCenterApi.getUsedPartDetails(part.partId);
+    
+    // 최신 정보로 모달 상태를 업데이트하고 모달을 엽니다.
+    setSelectedPart(freshPartData);
+    setPartEditModalOpen(true);
+  } catch (error) {
+    console.error("Failed to fetch part details:", error);
+    alert("최신 부품 정보를 불러오는 데 실패했습니다.");
+  }
   };
 
   const handleInfoUpdate = async (updatedInfo: CarCenterUpdateRequest) => {

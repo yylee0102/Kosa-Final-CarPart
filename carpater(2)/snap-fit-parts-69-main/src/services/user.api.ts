@@ -10,20 +10,19 @@ export interface QuoteRequestReqDTO {
   longitude?: number;
 }
 
+// ✅ [수정] 백엔드 QuoteRequestResDTO.java 와 완전히 동일한 구조로 변경합니다.
 export interface QuoteRequestResDTO {
   requestId: number;
   requestDetails: string;
   address: string;
-  latitude: number;
-  longitude: number;
   createdAt: string;
+  // 중첩 객체 타입 정의
   writer: {
     userId: string;
     name: string;
   };
   car: {
     userCarId: number;
-    // ✅ 백엔드 DTO에 맞춰 carModel, modelYear도 추가해주는 것이 좋습니다.
     carModel: string;
     modelYear: number;
   };
@@ -31,12 +30,13 @@ export interface QuoteRequestResDTO {
     imageId: number;
     imageUrl: string;
   }[];
+  // 백엔드에서 보내주는 추가 필드들
   estimateCount: number;
-
-  // ✅ [추가] 이 부분이 빠져있습니다. 백엔드에서 보내주는 견적 목록을 추가해주세요.
-  estimates: Estimate[];
+  customerName: string;
+  customerPhone: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; // ✅ 타입을 구체적으로 명시
+  preferredDate: string;
 }
-
 export interface ReviewReqDTO {
   centerId: string;
   rating: number;
@@ -100,32 +100,21 @@ export interface UserCarReqDTO {
   modelYear: number;
 }
 
-// ✅ [추가] 백엔드의 EstimateResDTO에 맞춰 Estimate 타입을 정의합니다.
-export interface Estimate {
-  estimateId: number;
-  centerName: string;
-  estimatedCost: number;
-  details: string;
-}
-
 // ==================== 사용자 API 서비스 ====================
 class UserApiService {
 
-   private getAuthHeaders(): Record<string, string> {
-    const token = localStorage.getItem('authToken');
-    return {
-      // ✅ [수정] 토큰이 존재할 경우, 표준에 맞는 'Bearer ' 접두사를 추가합니다.
-      'Authorization': token ? `Bearer ${token}` : '',
-      'Content-Type': 'application/json',
-    };
+  private getAuthToken(): string {
+    return localStorage.getItem('authToken') || '';
   }
+
   
-  // FormData와 함께 사용할 헤더 (Content-Type 제외)
-  private getAuthHeadersForFormData(): Record<string, string> {
+
+
+  private getAuthHeaders(): Record<string, string> {
     const token = localStorage.getItem('authToken');
     return {
-        // ✅ [수정] 여기에도 동일하게 'Bearer ' 접두사를 추가합니다.
-        'Authorization': token ? `Bearer ${token}` : '',
+      'Authorization': token || '',
+      'Content-Type': 'application/json',
     };
   }
 
@@ -134,61 +123,54 @@ class UserApiService {
    * POST /api/users/quote-requests
    */
   /**
-  // 
-  
-  /** [임시] 이미지 없는 견적 요청 생성 API */
-async createQuoteRequest(request: QuoteRequestReqDTO): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/users/quote-requests`, {
+   * ✅ 신규 견적 요청 생성 API (이미지 포함)
+   * @param request - 견적 요청 정보 (JSON)
+   * @param images - 첨부할 이미지 파일 목록
+   */
+  async createQuoteRequest(request: QuoteRequestReqDTO, images: File[]): Promise<void> {
+    const formData = new FormData();
+
+    // 1. DTO 객체는 JSON 문자열로 변환하여 'request'라는 이름의 파트로 추가
+    formData.append(
+      'request',
+      new Blob([JSON.stringify(request)], { type: 'application/json' })
+    );
+
+    // 2. 이미지 파일들은 'images'라는 이름의 파트로 각각 추가
+    images.forEach(image => {
+      formData.append('images', image);
+    });
+
+    const response = await fetch(`${API_BASE_URL}/users/quote-requests`, { // ✅ 최종 엔드포인트
       method: 'POST',
-      // ✅ 'Content-Type': 'application/json' 이 포함된 헤더를 사용하는지 확인
-      headers: this.getAuthHeaders(), 
-      // ✅ FormData가 아닌, DTO 객체를 JSON 문자열로 변환해서 보내는지 확인
-      body: JSON.stringify(request),
+      headers: {
+        // FormData 사용 시 'Content-Type' 헤더는 브라우저가 자동 설정하므로 지정하지 않음
+        'Authorization': this.getAuthToken(),
+      },
+      body: formData,
     });
 
     if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error:", errorText);
-        throw new Error('견적 요청 생성에 실패했습니다.');
+      const errorText = await response.text();
+      console.error("API Error:", errorText);
+      throw new Error('견적 요청 생성에 실패했습니다.');
     }
   }
-
-
 
   /**
    * 내 견적 요청 목록 조회
    * GET /api/users/my-quote-requests
    */
-  async getMyQuoteRequest(): Promise<QuoteRequestResDTO> {
-    const response = await fetch(`${API_BASE_URL}/users/my-quote-request`, {
+  async getMyQuoteRequests(): Promise<QuoteRequestResDTO[]> {
+    const response = await fetch(`${API_BASE_URL}/users/my-quote-requests`, {
       headers: this.getAuthHeaders(),
     });
-
-    // ✅ [추가] 204 No Content 상태 코드를 먼저 확인
-    if (response.status === 204) {
-      return null; // 데이터가 없으면 null을 반환
-    }
 
     if (!response.ok) {
       throw new Error('견적 요청 목록 조회에 실패했습니다.');
     }
 
-    return response.json(); // 204가 아니면 JSON 파싱 시도
-  }
-
-  /**
-   * 내 견적 요청 삭제
-   * DELETE /api/users/quote-requests/{id}
-   */
-  async deleteQuoteRequest(quoteRequestId: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/users/quote-requests/${quoteRequestId}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('견적 요청 삭제에 실패했습니다.');
-    }
+    return response.json();
   }
 
   /**

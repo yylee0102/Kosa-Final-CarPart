@@ -1,5 +1,6 @@
 /**
  * 제출한 견적서 수정 모달 (UI 일관성 강화 최종본)
+ * - 총액 계산 시 수량(quantity)을 반영하도록 로직 수정
  */
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,7 +23,7 @@ interface EstimateEditModalProps {
 export const EstimateEditModal = ({ open, onClose, estimate, onUpdate }: EstimateEditModalProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [details, setDetails] = useState('');
   const [estimatedCost, setEstimatedCost] = useState(0);
   const [items, setItems] = useState<EstimateItemReqDTO[]>([]);
@@ -33,22 +34,33 @@ export const EstimateEditModal = ({ open, onClose, estimate, onUpdate }: Estimat
     if (estimate) {
       setDetails(estimate.details);
       setEstimatedCost(estimate.estimatedCost);
-      setItems(estimate.estimateItems || []);
+      // ✅ estimate.estimateItems는 EstimateItemResDTO[] 타입이므로 EstimateItemReqDTO[]로 맞춰줌
+      setItems(estimate.estimateItems.map(item => ({
+        itemName: item.itemName,
+        price: item.price,
+        requiredHours: item.requiredHours,
+        partType: item.partType,
+        quantity: item.quantity
+      })) || []);
       setWorkDuration(estimate.workDuration || '');
       setValidUntil(estimate.validUntil ? estimate.validUntil.split('T')[0] : '');
     }
   }, [estimate]);
 
+  // ✅ 총액 계산 시 수량(quantity)을 반영하도록 수정
   useEffect(() => {
-    const total = items.reduce((sum, currentItem) => sum + (currentItem.price || 0), 0);
+    const total = items.reduce((sum, currentItem) => 
+      sum + (currentItem.price || 0) * (currentItem.quantity || 1), 0);
     setEstimatedCost(total);
   }, [items]);
-  
-  const addItem = () => setItems([...items, { itemName: '', price: 0, requiredHours: 0, partType: '부품' }]);
+
+  const addItem = () => setItems([...items, { itemName: '', price: 0, requiredHours: 0, partType: '부품', quantity: 1 }]);
   const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
   const updateItem = (index: number, field: keyof EstimateItemReqDTO, value: string | number) => {
     const newItems = [...items];
-    (newItems[index] as any)[field] = value;
+    const itemToUpdate = { ...newItems[index] };
+    (itemToUpdate as any)[field] = value;
+    newItems[index] = itemToUpdate;
     setItems(newItems);
   };
 
@@ -68,7 +80,7 @@ export const EstimateEditModal = ({ open, onClose, estimate, onUpdate }: Estimat
       };
 
       await carCenterApi.updateEstimate(estimate.estimateId, updatePayload);
-      
+
       toast({ title: '수정 완료', description: '견적서가 성공적으로 수정되었습니다.' });
       onUpdate();
       onClose();
@@ -90,18 +102,19 @@ export const EstimateEditModal = ({ open, onClose, estimate, onUpdate }: Estimat
             <div className="flex justify-between items-center"><Label>세부 항목</Label><Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-4 w-4 mr-1" />항목 추가</Button></div>
             <div className="border rounded-lg">
               <Table>
-                <TableHeader><TableRow><TableHead className="w-2/5">항목명</TableHead><TableHead>구분</TableHead><TableHead>예상 시간(H)</TableHead><TableHead className="text-right">금액</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead className="w-2/5">항목명</TableHead><TableHead>구분</TableHead><TableHead>수량</TableHead><TableHead>예상 시간(H)</TableHead><TableHead className="text-right">금액</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
                 <TableBody>
                   {items.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground h-24">세부 항목이 없습니다.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground h-24">세부 항목이 없습니다.</TableCell></TableRow>
                   ) : (
                     items.map((item, index) => (
                       <TableRow key={index}>
                         <TableCell><Input value={item.itemName} onChange={e => updateItem(index, 'itemName', e.target.value)} /></TableCell>
                         <TableCell><Input value={item.partType} onChange={e => updateItem(index, 'partType', e.target.value)} /></TableCell>
-                        <TableCell><Input type="number" value={item.requiredHours} onChange={e => updateItem(index, 'requiredHours', Number(e.target.value))} className="text-right" /></TableCell>
-                        <TableCell><Input type="number" value={item.price} onChange={e => updateItem(index, 'price', Number(e.target.value))} className="text-right"/></TableCell>
-                        <TableCell><Button type="button" size="icon" variant="ghost" onClick={() => removeItem(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button></TableCell>
+                        <TableCell><Input type="number" min="1" value={item.quantity} onChange={e => updateItem(index, 'quantity', Number(e.target.value) || 1)} className="text-center" /></TableCell>
+                        <TableCell><Input type="number" min="0" value={item.requiredHours} onChange={e => updateItem(index, 'requiredHours', Number(e.target.value) || 0)} className="text-right" /></TableCell>
+                        <TableCell><Input type="number" min="0" value={item.price} onChange={e => updateItem(index, 'price', Number(e.target.value) || 0)} className="text-right" /></TableCell>
+                        <TableCell><Button type="button" size="icon" variant="ghost" onClick={() => removeItem(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button></TableCell>
                       </TableRow>
                     ))
                   )}
