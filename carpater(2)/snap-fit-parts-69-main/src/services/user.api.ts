@@ -300,6 +300,21 @@ class UserApiService {
     }
   }
 
+  async confirmEstimate(estimateId: number): Promise<void> {
+    // UserController에 @PutMapping("/estimates/{estimateId}/confirm") 엔드포인트가 있다고 가정
+    const response = await fetch(`${API_BASE_URL}/users/estimates/${estimateId}/confirm`, {
+      method: 'PUT', // 상태를 변경하므로 PUT 메서드 사용
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error:", errorText);
+      throw new Error('견적 확정에 실패했습니다.');
+    }
+  }
+
+
   /**
    * 내 CS 문의 목록 조회
    * GET /api/users/cs

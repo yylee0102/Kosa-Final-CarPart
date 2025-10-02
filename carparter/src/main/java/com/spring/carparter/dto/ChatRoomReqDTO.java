@@ -10,11 +10,8 @@ import lombok.Setter;
 @Setter
 public class ChatRoomReqDTO {
 
-    private Long centerId; // 채팅을 시작할 카센터의 ID
-
+    private String centerId; // 채팅을 시작할 카센터의 ID
     private String userId;
-
-    private String carcenterId;
     /**
      * DTO를 ChatRoom 엔티티로 변환하는 메서드.
      * User와 CarCenter 엔티티는 서비스 계층에서 ID를 이용해 조회 후 주입합니다.

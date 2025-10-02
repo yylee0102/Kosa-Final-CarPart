@@ -33,4 +33,7 @@ public interface CompletedRepairRepository extends JpaRepository<CompletedRepair
         """, nativeQuery = true)
     Optional<Integer> findRequestIdByRepairIdNative(@Param("repairId") Long repairId);
 
+
+
+
 }

@@ -20,10 +20,15 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  // ✅ 이 부분을 추가하여 'global is not defined' 오류를 해결합니다.
+
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
+    define: {
+    global: 'globalThis'
+  }
 }));

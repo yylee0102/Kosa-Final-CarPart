@@ -1,103 +1,70 @@
 package com.spring.carparter.dto;
 
 import com.spring.carparter.entity.QuoteRequest;
-import com.spring.carparter.entity.RequestImage;
-import com.spring.carparter.entity.User;
-import com.spring.carparter.entity.UserCar;
-import com.spring.carparter.service.S3Service; // S3Service를 사용하기 위해 임포트합니다.
+import com.spring.carparter.service.S3Service;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
 @Builder
 public class QuoteRequestResDTO {
-    private Integer requestId;
-    private String requestDetails;
-    private String address;
-    private LocalDateTime createdAt;
-    private String customerName;
-    private String customerPhone;
-    private String carModel;
-    private Integer carYear;
-    private String preferredDate;
-    private String status;
-    private List<String> imageUrls;
-    private int estimateCount;
+
+    // 주요 요청 정보
+    private final Integer requestId;
+    private final String requestDetails;
+    private final String address;
+    private final LocalDateTime createdAt;
+    private final int estimateCount;
+
+    // 더 나은 구조를 위한 중첩 객체
+    private final WriterDTO writer;
+    private final UserCarResDTO car;
+    private final List<ImageDTO> images;
+    private final List<EstimateResDTO> estimates;
 
     /**
-     * ✅ QuoteRequest 엔티티를 QuoteRequestResDTO로 변환하는 정적 팩토리 메서드
-     * S3Service를 파라미터로 받아 Pre-signed URL을 생성합니다.
+     * QuoteRequest 엔티티를 QuoteRequestResDTO로 변환하는 정적 팩토리 메서드
+     *
+     * @param quoteRequest 원본 엔티티
+     * @param estimateCount 관련된 견적의 개수
+     * @param s3Service S3 Pre-signed URL 생성을 위한 서비스
+     * @return 새로운 QuoteRequestResDTO 인스턴스
      */
     public static QuoteRequestResDTO from(QuoteRequest quoteRequest, int estimateCount, S3Service s3Service) {
-        User user = quoteRequest.getUser();
-        UserCar car = quoteRequest.getUserCar();
+        // quoteRequest가 null일 경우를 대비하여 null을 반환합니다.
+        if (quoteRequest == null) {
+            return null;
+        }
 
-        // 파라미터로 전달받은 s3Service를 사용하여 Pre-signed URL 리스트를 생성합니다.
-        List<String> presignedImageUrls = (quoteRequest.getRequestImages() == null)
-                ? new ArrayList<>()
-                : quoteRequest.getRequestImages().stream()
-                .map(image -> s3Service.createPresignedUrl(extractObjectKeyFromUrl(image.getImageUrl())))
-                .collect(Collectors.toList());
+        // Estimate 엔티티 목록을 EstimateResDTO 목록으로 변환합니다. null일 경우 빈 리스트를 반환합니다.
+        List<EstimateResDTO> estimateDTOs = quoteRequest.getEstimates() == null ? Collections.emptyList() :
+                quoteRequest.getEstimates().stream()
+                        .map(EstimateResDTO::from)
+                        .collect(Collectors.toList());
 
+        // RequestImage 엔티티 목록을 ImageDTO 목록으로 변환합니다. null일 경우 빈 리스트를 반환합니다.
+        // TODO: s3Service를 사용하여 이미지 URL을 Pre-signed URL로 변환하는 로직을 추가할 수 있습니다.
+        List<ImageDTO> imageDTOs = quoteRequest.getRequestImages() == null ? Collections.emptyList() :
+                quoteRequest.getRequestImages().stream()
+                        .map(ImageDTO::from) // ImageDTO에 'from' 메서드가 있다고 가정
+                        .collect(Collectors.toList());
+
+        // 빌더 패턴을 사용하여 DTO 객체를 생성하고 반환합니다.
         return QuoteRequestResDTO.builder()
                 .requestId(quoteRequest.getRequestId())
                 .requestDetails(quoteRequest.getRequestDetails())
                 .address(quoteRequest.getAddress())
                 .createdAt(quoteRequest.getCreatedAt())
-                .customerName(user.getName())
-                .customerPhone(user.getPhoneNumber())
-                .carModel(car.getCarModel())
-                .carYear(car.getModelYear())
-                .imageUrls(presignedImageUrls) // Pre-signed URL이 담긴 리스트를 반환합니다.
                 .estimateCount(estimateCount)
+                .writer(WriterDTO.from(quoteRequest.getUser()))       // 중첩된 writer DTO 생성
+                .car(UserCarResDTO.from(quoteRequest.getUserCar()))   // 중첩된 car DTO 생성
+                .estimates(estimateDTOs)
+                .images(imageDTOs)
                 .build();
-    }
-
-    /**
-     * 전체 S3 URL에서 객체 키(버킷 내 파일 경로)만 추출하는 헬퍼 메소드.
-     * @param fileUrl 전체 파일 URL
-     * @return S3 객체 키
-     */
-    private static String extractObjectKeyFromUrl(String fileUrl) {
-        try {
-            // 예: https://[bucket-name].s3.[region].amazonaws.com/[objectKey]
-            // .com/ 이후의 문자열(objectKey)을 반환합니다.
-            return fileUrl.substring(fileUrl.indexOf(".com/") + 5);
-        } catch (Exception e) {
-            // URL 형식이 예상과 다를 경우, 오류 방지를 위해 빈 문자열 반환
-            return "";
-        }
-    }
-
-    // 아래 내부 클래스들은 현재 직접 사용되지는 않지만, 구조상 유지합니다.
-    @Getter
-    @Builder
-    private static class CarInfo {
-        private final Long userCarId;
-
-        static CarInfo from(UserCar userCar) {
-            return CarInfo.builder()
-                    .userCarId(userCar.getUserCarId())
-                    .build();
-        }
-    }
-
-    @Getter
-    @Builder
-    private static class ImageInfo {
-        private final int imageId;
-        private final String imageUrl;
-
-        static ImageInfo from(RequestImage image) {
-            return ImageInfo.builder()
-                    .imageId(image.getImageId())
-                    .imageUrl(image.getImageUrl())
-                    .build();
-        }
     }
 }
