@@ -24,7 +24,7 @@ import java.util.Map;
 @RequestMapping("/api/car-centers")
 @CrossOrigin(origins = "http://localhost:8080")
 public class CarCenterController {
-    private  final  ReviewService reviewService;
+    private final ReviewService reviewService;
     private final CarCenterService carCenterService;
     private final ReservationService reservationService;
     private final ReviewReplyService reviewReplyService;
@@ -37,6 +37,7 @@ public class CarCenterController {
         log.error(logMessage, e);
         return ResponseEntity.status(status).body(Collections.singletonMap("error", message));
     }
+
     /**
      * ✅ [수정된 기능] '로그인한' 카센터가 받은 모든 고객의 견적 요청 목록을 조회합니다.
      */
@@ -58,9 +59,8 @@ public class CarCenterController {
 
     public ResponseEntity<?> getAllQuoteRequests() { // ⬅️ 이 메서드 이름은 URL과 관련있어 그대로 둬도 괜찮습니다.
         try {
-            // ✅ 수정 후: getAllQuoteRequests()
-            List<QuoteRequestResDTO> requests = quoteRequestService.getAllQuoteRequests();
-
+            // [수정!] 서비스의 변경된 메서드 이름을 호출합니다.
+            List<QuoteRequestResDTO> requests = quoteRequestService.getAvailableQuoteRequests();
             log.info("✅ Returning quote requests: {}", requests); // 로그 추가
 
             return ResponseEntity.ok(requests);
@@ -120,6 +120,7 @@ public class CarCenterController {
             return createErrorResponse("내 정보 수정 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "내 정보 수정 중 오류 발생. UserId: " + userDetails.getUsername());
         }
     }
+
     @GetMapping("/my-info")
     public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal UserDetails userDetails) {
         try {
@@ -133,6 +134,7 @@ public class CarCenterController {
             return createErrorResponse("내 정보 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "내 정보 조회 중 오류 발생. UserId: " + userDetails.getUsername());
         }
     }
+
     @DeleteMapping("/{centerId}")
     public ResponseEntity<?> deleteCarCenter(@PathVariable String centerId) {
         try {
@@ -219,6 +221,7 @@ public class CarCenterController {
             return createErrorResponse("리뷰 목록 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "리뷰 목록 조회 중 오류 발생. CenterId: " + centerId);
         }
     }
+
     /**
      * ✅ [추가된 기능] 내 카센터에 달린 모든 리뷰 목록을 조회합니다.
      */
@@ -320,6 +323,7 @@ public class CarCenterController {
             return createErrorResponse("중고 부품 상세 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "중고 부품 상세 조회 중 오류 발생. PartId: " + partId);
         }
     }
+
     /**
      * ✅ [신규 추가] 부품 이름으로 부품을 검색하는 API
      * 모든 사용자가 접근할 수 있도록 별도의 Controller나 public 경로에 두는 것이 더 좋습니다.
@@ -336,8 +340,6 @@ public class CarCenterController {
 //            return createErrorResponse("부품 검색 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "부품 검색 중 오류 발생. Query: " + query);
 //        }
 //    }
-
-
     @PutMapping(value = "/used-parts/{partId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateUsedPart(
             @PathVariable Integer partId,
@@ -367,6 +369,22 @@ public class CarCenterController {
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return createErrorResponse("중고 부품 삭제 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "중고 부품 삭제 중 오류 발생. PartId: " + partId + ", CenterId: " + userDetails.getUsername());
+        }
+    }
+
+    /**
+     * 홈페이지용 최신 중고 부품 목록 조회 API (공개)
+     * 예시: GET /api/car-centers/parts/recent?limit=3
+     */
+    @GetMapping("/parts/recent")
+    public ResponseEntity<?> getRecentUsedParts(
+            @RequestParam(defaultValue = "3") int limit) {
+        try {
+            List<UsedPartResDTO> recentParts = usedPartService.getRecentUsedParts(limit);
+            return ResponseEntity.ok(recentParts);
+        } catch (Exception e) {
+            // 컨트롤러 상단에 있는 createErrorResponse 헬퍼 메소드를 사용합니다.
+            return createErrorResponse("최신 부품 조회 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, e, "최신 부품 조회 중 오류 발생");
         }
     }
 }

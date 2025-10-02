@@ -15,7 +15,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 @Service
 @RequiredArgsConstructor
 public class UsedPartService {
@@ -23,9 +25,6 @@ public class UsedPartService {
     private final CarCenterRepository carCenterRepository;
     private final S3Service s3Service;
 
-    /**
-     * 신규 중고 부품을 등록합니다.
-     */
     @Transactional
     public UsedPartResDTO registerUsedPart(String centerID, UsedPartReqDTO req, List<MultipartFile> images) throws IOException {
         CarCenter carCenter = carCenterRepository.findById(centerID)
@@ -36,20 +35,24 @@ public class UsedPartService {
 
         if (images != null && !images.isEmpty()) {
             for (MultipartFile imageFile : images) {
-                String objectKey = "used-parts/" + UUID.randomUUID().toString() + "-" + imageFile.getOriginalFilename();
+                // [수정] 원본 파일 이름 대신 UUID와 확장자로 새로운 파일 키를 생성합니다.
+                String originalFilename = imageFile.getOriginalFilename();
+                String extension = "";
+                if (originalFilename != null && originalFilename.contains(".")) {
+                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
+                String objectKey = "used-parts/" + UUID.randomUUID().toString() + extension;
+
                 String imageUrl = s3Service.uploadFile(imageFile, objectKey);
                 usedPart.addImage(UsedPartImage.builder().imageUrl(imageUrl).build());
             }
         }
 
         UsedPart savedUsedPart = usedPartRepository.save(usedPart);
-        // DTO로 변환 시 s3Service를 전달하여 Pre-signed URL을 생성합니다.
         return UsedPartResDTO.from(savedUsedPart, s3Service);
     }
 
-    /**
-     * 기존 중고 부품 정보를 수정합니다.
-     */
+    // ✅ [수정] 기존 중고 부품 정보를 수정합니다.
     @Transactional
     public UsedPartResDTO updateUsedPart(Integer partId, String centerId, UsedPartReqDTO requestDto, List<MultipartFile> newImages) throws IOException {
         UsedPart usedPart = usedPartRepository.findByIdWithImages(partId)
@@ -66,12 +69,18 @@ public class UsedPartService {
             usedPart.getImages().clear();
 
             for (MultipartFile imageFile : newImages) {
-                String objectKey = "used-parts/" + UUID.randomUUID().toString() + "-" + imageFile.getOriginalFilename();
+                // [수정] 원본 파일 이름 대신 UUID와 확장자로 새로운 파일 키를 생성합니다.
+                String originalFilename = imageFile.getOriginalFilename();
+                String extension = "";
+                if (originalFilename != null && originalFilename.contains(".")) {
+                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
+                String objectKey = "used-parts/" + UUID.randomUUID().toString() + extension;
+
                 String imageUrl = s3Service.uploadFile(imageFile, objectKey);
                 usedPart.addImage(UsedPartImage.builder().imageUrl(imageUrl).build());
             }
         }
-        // DTO로 변환 시 s3Service를 전달하여 Pre-signed URL을 생성합니다.
         return UsedPartResDTO.from(usedPart, s3Service);
     }
 
@@ -119,6 +128,23 @@ public class UsedPartService {
     public List<UsedPartResDTO> searchPartsByName(String partName) {
         return usedPartRepository.findByPartNameContainingIgnoreCase(partName)
                 .stream()
+                .map(part -> UsedPartResDTO.from(part, s3Service))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * ✅ [신규 추가] 최신 중고 부품 목록을 개수 제한하여 조회합니다. (홈페이지용)
+     */
+    @Transactional(readOnly = true)
+    public List<UsedPartResDTO> getRecentUsedParts(int limit) {
+        // Pageable 객체를 생성하여 0번째 페이지부터 limit 개수만큼 요청
+        Pageable pageable = PageRequest.of(0, limit);
+
+        // 레포지토리 호출
+        Page<UsedPart> partPage = usedPartRepository.findAllByOrderByCreatedAtDesc(pageable);
+
+        // 결과를 DTO 리스트로 변환 (Pre-signed URL 생성 포함)
+        return partPage.getContent().stream()
                 .map(part -> UsedPartResDTO.from(part, s3Service))
                 .collect(Collectors.toList());
     }

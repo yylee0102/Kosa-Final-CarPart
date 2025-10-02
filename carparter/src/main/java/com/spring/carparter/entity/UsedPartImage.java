@@ -21,7 +21,7 @@ public class UsedPartImage {
     @JoinColumn(name = "part_id", nullable = false)
     private UsedPart usedPart;
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url", nullable = false,length = 1024)
     private String imageUrl;
 
     // == 연관관계 편의 메소드 == //

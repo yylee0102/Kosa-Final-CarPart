@@ -17,7 +17,9 @@ public class CompletedRepairResDTO {
     private String repairDetails;
     private LocalDateTime completedAt;
     private String status;
-
+    private String carModel;
+    private String licensePlate;
+    private LocalDateTime createdAt;
     /**
      * CompletedRepair 엔티티를 DTO로 변환하는 정적 팩토리 메소드
      */
@@ -30,6 +32,9 @@ public class CompletedRepairResDTO {
                 .repairDetails(entity.getRepairDetails())
                 .completedAt(entity.getCompletedAt())
                 .status(entity.getStatus() != null ? entity.getStatus().name() : null)
+                .carModel(entity.getCarModel())
+                .licensePlate(entity.getLicensePlate())
+                .createdAt(entity.getCreatedAt())
                 .build();
     }
 }

@@ -21,7 +21,7 @@ interface Vehicle {
   carModel: string;
   carYear: number;
   manufacturer: string;
-} 
+}
 
 interface QuoteRequestModalProps {
   open: boolean;

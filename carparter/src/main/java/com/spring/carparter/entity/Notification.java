@@ -2,6 +2,8 @@ package com.spring.carparter.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -9,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EnableScheduling
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

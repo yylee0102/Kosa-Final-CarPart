@@ -26,6 +26,7 @@ public class EstimateService {
     private  final CompletedRepairRepository completedRepairRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
+
     // 1. 견적서 제출
     @Transactional
     public EstimateResDTO submitEstimate(String centerId, EstimateReqDTO requestDto) {
@@ -48,7 +49,7 @@ public class EstimateService {
         User userToNotify = quoteRequest.getUser();
         if (userToNotify != null) {
             String message = "'" + carCenter.getCenterName() + "'에서 새로운 견적을 보냈습니다.";
-            String url = "/mypage/estimates/" + savedEstimate.getEstimateId(); // 고객이 이동할 경로
+            String url = "/estimates/" + savedEstimate.getEstimateId();
             notificationService.sendNotificationToUser(userToNotify, message, url);
         }
 
@@ -88,8 +89,7 @@ public class EstimateService {
         User userToNotify = estimate.getQuoteRequest().getUser();
         if (userToNotify != null) {
             String message = "'" + estimate.getCarCenter().getCenterName() + "'에서 견적을 취소했습니다.";
-            // ✅ [수정] url 인수 추가
-            String url = "/mypage/estimates/" + estimateId;
+            String url = "/user/quote-requests/" + estimate.getQuoteRequest().getRequestId();
             notificationService.sendNotificationToUser(userToNotify, message, url);
         }
 
@@ -106,14 +106,12 @@ public class EstimateService {
             throw new SecurityException("견적서를 수정할 권한이 없습니다.");
         }
 
-        // JPA의 변경 감지(Dirty Checking)를 활용하여 update
-        estimate.update(requestDto); // 엔티티에 update 메서드가 있다고 가정
+        estimate.update(requestDto);
 
         User userToNotify = estimate.getQuoteRequest().getUser();
         if (userToNotify != null) {
             String message = "'" + estimate.getCarCenter().getCenterName() + "'에서 견적을 수정했습니다.";
-            // ✅ [수정] url 인수 추가
-            String url = "/mypage/estimates/" + estimateId;
+            String url = "/estimates/" + estimateId;
             notificationService.sendNotificationToUser(userToNotify, message, url);
         }
 
@@ -135,17 +133,10 @@ public class EstimateService {
 
         estimate.setStatus(EstimateStatus.REJECTED);
 
-        // ▼▼▼▼▼ [수정된 알림 전송 로직] ▼▼▼▼▼
-        String carCenterId = estimate.getCarCenter().getCenterId();
+        CarCenter carCenterToNotify = estimate.getCarCenter();
         String message = "회원님이 보내신 견적이 거절되었습니다. (견적 ID: " + estimateId + ")";
         String url = "/center/estimates#sent";
-
-        // 1. 카센터 ID로 User 객체를 찾습니다.
-        userRepository.findById(carCenterId).ifPresent(carCenterUser -> {
-            // 2. 찾은 User 객체를 사용하여 알림을 보냅니다.
-            notificationService.sendNotificationToUser(carCenterUser, message, url);
-        });
-        // ▲▲▲▲▲ [수정된 알림 전송 로직] ▲▲▲▲▲
+        notificationService.sendNotificationToCarCenter(carCenterToNotify, message, url);
     }
 
     // 7. 사용자가 견적서 수락
@@ -156,7 +147,6 @@ public class EstimateService {
                 .orElseThrow(() -> new ResourceNotFoundException("수락할 견적서를 찾을 수 없습니다."));
         log.info(" -> 견적서 ID '{}' 조회 완료.", estimateId);
 
-        // 권한 및 상태 검증
         if (!acceptedEstimate.getQuoteRequest().getUser().getUserId().equals(userId)) {
             log.error("   ❌ 권한 없음: 사용자 '{}'가 다른 사람의 견적서 수락 시도.", userId);
             throw new SecurityException("견적서를 수락할 권한이 없습니다.");
@@ -169,20 +159,16 @@ public class EstimateService {
         log.info(" -> 견적서 상태를 ACCEPTED로 변경합니다...");
         acceptedEstimate.setStatus(EstimateStatus.ACCEPTED);
 
-        // ▼▼▼▼▼ [추가된 핵심 로직] ▼▼▼▼▼
         log.info(" -> 나머지 '대기중' 상태의 견적서들을 '거절됨'으로 변경합니다...");
         QuoteRequest quoteRequest = acceptedEstimate.getQuoteRequest();
         List<Estimate> otherEstimates = estimateRepository.findByQuoteRequestAndStatus(quoteRequest, EstimateStatus.PENDING);
 
         for (Estimate other : otherEstimates) {
-            // 방금 수락한 견적서는 제외
             if (!other.getEstimateId().equals(acceptedEstimate.getEstimateId())) {
                 other.setStatus(EstimateStatus.REJECTED);
                 log.info("   -> 견적서 ID '{}' 상태를 REJECTED로 변경.", other.getEstimateId());
             }
         }
-        // ▲▲▲▲▲ [추가된 핵심 로직] ▲▲▲▲▲
-
 
         log.info(" -> '수리 내역(CompletedRepair)' 생성을 시작합니다...");
         CompletedRepair newRepair = CompletedRepair.builder()
@@ -193,6 +179,8 @@ public class EstimateService {
                 .originalRequestId(acceptedEstimate.getQuoteRequest().getRequestId())
                 .originalEstimateId(acceptedEstimate.getEstimateId())
                 .finalCost(acceptedEstimate.getEstimatedCost())
+                .carModel(acceptedEstimate.getQuoteRequest().getUserCar().getCarModel())
+                .licensePlate(acceptedEstimate.getQuoteRequest().getUserCar().getCarNumber())
                 .repairDetails(acceptedEstimate.getQuoteRequest().getRequestDetails())
                 .status(RepairStatus.IN_PROGRESS)
                 .build();
@@ -201,17 +189,17 @@ public class EstimateService {
         log.info("   -> '수리 내역' 생성 및 저장 완료.");
 
         log.info(" -> 카센터에게 수락 알림을 전송합니다...");
-        notificationService.sendNotificationToCarCenter(acceptedEstimate.getCarCenter(), "회원님이 보내신 견적이 수락되었습니다. 수리를 진행해주세요.", "/center/repairs");
-
+        // ✅ [최종 수정] 사용자의 지적대로 수리 관리 탭으로 바로 가도록 URL 수정
+        notificationService.sendNotificationToCarCenter(acceptedEstimate.getCarCenter(), "회원님이 보내신 견적이 수락되었습니다. 수리를 진행해주세요.", "/center/estimates#repairs");
 
         log.info("===== [END] 견적서 수락 완료 =====");
     }
+
     /**
      * ✅ [신규 추가] 특정 견적 요청에 대한 모든 견적서 목록 조회 (사용자용)
      */
     @Transactional(readOnly = true)
     public List<EstimateResDTO> getEstimatesForRequest(Integer requestId, String userId) {
-        // 1. 견적 요청이 존재하는지, 그리고 요청한 사용자가 주인인지 먼저 확인
         QuoteRequest quoteRequest = quoteRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("견적 요청을 찾을 수 없습니다."));
 
@@ -219,14 +207,13 @@ public class EstimateService {
             throw new SecurityException("자신의 견적 요청에 대한 견적서만 조회할 수 있습니다.");
         }
 
-        // 2. 해당 견적 요청 ID를 가진 모든 견적서를 DB에서 조회
         List<Estimate> estimates = estimateRepository.findByQuoteRequest_RequestIdWithItems(requestId);
 
-        // 3. DTO로 변환하여 반환
         return estimates.stream()
                 .map(EstimateResDTO::from)
                 .collect(Collectors.toList());
     }
+
     public int countEstimateByUserId(Integer requestId) {
         return estimateRepository.countByQuoteRequest_RequestId(requestId).intValue();
     }
@@ -286,4 +273,3 @@ public class EstimateService {
                 .collect(Collectors.toList());
     }
 }
-

@@ -12,6 +12,7 @@ public class EstimateItemResDTO {
     private Integer price; // 항목 가격
     private Integer requiredHours; // 예상 소요 시간
     private String partType; // 부품 종류
+    private int quantity; // ✅ [추가]
 
     public static EstimateItemResDTO from(EstimateItem estimateItem) {
         return EstimateItemResDTO.builder()
@@ -20,6 +21,8 @@ public class EstimateItemResDTO {
                 .price(estimateItem.getPrice())
                 .requiredHours(estimateItem.getRequiredHours())
                 .partType(estimateItem.getPartType())
+                .quantity(estimateItem.getQuantity()) // ✅ [추가]
+
                 .build();
     }
 }
