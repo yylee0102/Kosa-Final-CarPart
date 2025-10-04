@@ -183,7 +183,7 @@ export default function CsInquiryManagementPage() {
   };
 
   return (
-    <ProtectedRoute allowedUserTypes={["관리자"]} fallbackMessage="관리자만 접근할 수 있는 페이지입니다.">
+    <ProtectedRoute allowedUserTypes={["ADMIN"]} fallbackMessage="관리자만 접근할 수 있는 페이지입니다.">
       <PageContainer>
         <div className="container mx-auto px-4 py-6 space-y-6">
           {/* 헤더 */}

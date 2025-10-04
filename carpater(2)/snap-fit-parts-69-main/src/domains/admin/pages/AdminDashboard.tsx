@@ -1,57 +1,75 @@
-/**
- * 관리자 대시보드
- * 
- * 이 페이지의 역할:
- * - 시스템 전체 통계 및 현황 모니터링
- * - 카센터 가입 승인 관리
- * - 공지사항 작성 및 관리
- * - 신고 접수 내역 처리
- * - 전체 서비스 운영 관리
- * 
- * 왜 필요한가:
- * - 플랫폼 전체의 건전한 운영을 위한 관리 도구
- * - 카센터 품질 관리를 통한 서비스 신뢰도 향상
- * - 사용자 안전과 만족을 위한 신고 처리 시스템
- * - 효율적인 공지사항 전달로 사용자 소통 강화
- */
-
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import PageContainer from "@/shared/components/layout/PageContainer";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminStats from "@/domains/admin/components/AdminStats";
 import AdminCenterApproval from "@/domains/admin/components/AdminCenterApproval";
-import AdminNoticeManagement from "@/domains/admin/components/AdminNoticeManagement";
 import AdminReportManagement from "@/domains/admin/components/AdminReportManagement";
 import ProtectedRoute from "@/shared/components/ProtectedRoute";
-import { BarChart3, Users, MessageSquare, AlertTriangle, Settings, HelpCircle } from "lucide-react";
+import { BarChart3, Users, MessageSquare, AlertTriangle, HelpCircle } from "lucide-react";
 import CsInquiryManagementPage from "@/domains/admin/pages/CsInquiryManagementPage";
 import ReviewReportManagementPage from "@/domains/admin/pages/ReviewReportManagementPage";
+import adminApiService from "@/services/admin.api"; // 👈 API 서비스 임포트
+import AdminNoticeManagement from "../components/AdminNoticeManagement";
+
+// API로부터 받아올 데이터의 타입을 정의합니다.
+interface DashboardStats {
+  users: { total: number; new: number; centers: number };
+  pendingCenters: { total: number; pending: number; approved: number };
+  notices: { total: number; active: number };
+  reports: { total: number; pending: number; resolved: number };
+  genderData: { male: number; female: number };
+  ageData: { [key: string]: number };
+}
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [dashboardStats, setDashboardStats] = useState({
-    users: { total: 12547, new: 234, centers: 89 },
-    pendingCenters: { total: 34, pending: 12, approved: 22 },
-    notices: { total: 15, active: 12 },
-    reports: { total: 23, pending: 7, resolved: 16 }
-  });
+  
+  // ✅ 1. 초기 상태를 null로 변경하고, 로딩 상태를 추가합니다.
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // ✅ 2. useEffect에서 실제 API를 호출하도록 수정합니다.
   useEffect(() => {
-    // TODO: API 연결 - 관리자 대시보드 데이터 조회
-    // GET /api/admin/stats
-    // GET /api/admin/dashboard-overview
-    fetchAdminData();
-  }, []);
+    // 'dashboard' 탭이 활성화될 때만 데이터를 불러옵니다.
+    if (activeTab === "dashboard") {
+      fetchAdminData();
+    }
+  }, [activeTab]);
 
   const fetchAdminData = async () => {
+    setIsLoading(true);
     try {
-      // 실제 API 연결 시 구현
-      console.log("관리자 대시보드 데이터 조회");
+      // Promise.all을 사용해 여러 API를 동시에 효율적으로 호출합니다.
+      const [
+        userCount,
+        centerCount,
+        pendingApprovalsCount,
+        reviewReportsCount,
+        genderStats,
+        ageStats,
+      ] = await Promise.all([
+        adminApiService.getUserCount(),
+        adminApiService.getCenterCount(),
+        adminApiService.getPendingApprovalsCount(),
+        adminApiService.getReviewReportsCount(),
+        adminApiService.getGenderStats(),
+        adminApiService.getAgeStats(),
+      ]);
+
+      // 받아온 실제 데이터로 state를 업데이트합니다.
+      setDashboardStats({
+        users: { total: userCount, new: 0, centers: centerCount },
+        pendingCenters: { total: pendingApprovalsCount, pending: pendingApprovalsCount, approved: 0 },
+        notices: { total: 0, active: 0 },
+        reports: { total: reviewReportsCount, pending: reviewReportsCount, resolved: 0 },
+        genderData: genderStats,
+        ageData: ageStats,
+      });
     } catch (error) {
-      console.error("관리자 데이터 조회 실패:", error);
+      console.error("관리자 대시보드 데이터 조회 실패:", error);
+      setDashboardStats(null); // 실패 시 데이터를 null로 설정
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,7 +77,6 @@ export default function AdminDashboard() {
     <ProtectedRoute allowedUserTypes={["ADMIN"]} fallbackMessage="관리자만 접근할 수 있는 페이지입니다.">
       <PageContainer>
         <div className="container mx-auto px-4 py-6">
-          {/* 탭 네비게이션 */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="dashboard" className="gap-2">
@@ -88,37 +105,40 @@ export default function AdminDashboard() {
               </TabsTrigger>
             </TabsList>
 
-          {/* 대시보드 탭 */}
-          <TabsContent value="dashboard">
-            <AdminStats stats={dashboardStats} />
-          </TabsContent>
+            {/* 대시보드 탭 */}
+            <TabsContent value="dashboard">
+              {/* ✅ 3. 로딩 및 에러 상태에 따라 다른 UI를 보여주도록 수정합니다. */}
+              {isLoading ? (
+                <div className="text-center py-20">
+                  <p>📊 대시보드 데이터를 불러오는 중입니다...</p>
+                </div>
+              ) : dashboardStats ? (
+                <AdminStats stats={dashboardStats} />
+              ) : (
+                <div className="text-center py-20 text-red-600">
+                  <p>❗️ 대시보드 데이터를 불러오는 데 실패했습니다.</p>
+                </div>
+              )}
+            </TabsContent>
 
-          {/* 카센터 승인 관리 탭 */}
-          <TabsContent value="centers">
-            <AdminCenterApproval />
-          </TabsContent>
-
-          {/* 공지사항 관리 탭 */}
-          <TabsContent value="notices">
-            <AdminNoticeManagement />
-          </TabsContent>
-
-          {/* 신고 관리 탭 */}
-          <TabsContent value="reports">
-            <AdminReportManagement />
-          </TabsContent>
-
-          {/* 1:1 문의 관리 탭 */}
-          <TabsContent value="cs">
-            <CsInquiryManagementPage />
-          </TabsContent>
-
-          {/* 리뷰 신고 관리 탭 */}
-          <TabsContent value="reviews">
-            <ReviewReportManagementPage />
-          </TabsContent>
-        </Tabs>
-      </div>
+            {/* ... (다른 탭들은 기존과 동일) ... */}
+            <TabsContent value="centers">
+              <AdminCenterApproval />
+            </TabsContent>
+            <TabsContent value="notices">
+              <AdminNoticeManagement />
+            </TabsContent>
+            <TabsContent value="reports">
+              <AdminReportManagement />
+            </TabsContent>
+            <TabsContent value="cs">
+              <CsInquiryManagementPage />
+            </TabsContent>
+            <TabsContent value="reviews">
+              <ReviewReportManagementPage />
+            </TabsContent>
+          </Tabs>
+        </div>
       </PageContainer>
     </ProtectedRoute>
   );

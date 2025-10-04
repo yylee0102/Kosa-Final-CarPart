@@ -244,7 +244,7 @@ public class EstimateService {
 
         // 4. ✅ [수정] 채팅 데이터 삭제 로직 (JPA + MongoDB 연동)
         // 4-1. 먼저, 이 견적 요청과 관련된 모든 '채팅방' 정보를 JPA에서 조회합니다.
-        List<ChatRoom> chatRoomsToDelete = chatRoomRepository.findAllByQuoteRequest_Id(quoteRequest.getRequestId());
+        List<ChatRoom> chatRoomsToDelete = chatRoomRepository.findAllByQuoteRequest_RequestId(quoteRequest.getRequestId());
 
         // 4-2. 각 채팅방에 속한 '채팅 메시지'들을 MongoDB에서 삭제합니다.
         for (ChatRoom room : chatRoomsToDelete) {
@@ -262,7 +262,7 @@ public class EstimateService {
      */
     public List<EstimateResDTO> getEstimatesForUser(Integer quoteRequestId) {
         // Repository에서 REJECTED가 아닌 것만 조회
-        List<Estimate> estimates = estimateRepository.findByQuoteRequestIdAndStatusNot(
+        List<Estimate> estimates = estimateRepository.findByQuoteRequest_RequestIdAndStatusNot(
                 quoteRequestId,
                 EstimateStatus.REJECTED
         );

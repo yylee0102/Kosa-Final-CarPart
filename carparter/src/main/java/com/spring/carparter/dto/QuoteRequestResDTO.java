@@ -4,12 +4,10 @@ import com.spring.carparter.entity.QuoteRequest;
 import com.spring.carparter.service.S3Service;
 import lombok.Builder;
 import lombok.Getter;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
 @Getter
 @Builder
 public class QuoteRequestResDTO {
@@ -22,9 +20,9 @@ public class QuoteRequestResDTO {
     private final int estimateCount;
 
     // 더 나은 구조를 위한 중첩 객체
-    private final WriterDTO writer;
+//    private final WriterDTO writer;
     private final UserCarResDTO car;
-    private final List<ImageDTO> images;
+//    private final List<ImageDTO> images;
     private final List<EstimateResDTO> estimates;
 
     /**
@@ -49,9 +47,9 @@ public class QuoteRequestResDTO {
 
         // RequestImage 엔티티 목록을 ImageDTO 목록으로 변환합니다. null일 경우 빈 리스트를 반환합니다.
         // TODO: s3Service를 사용하여 이미지 URL을 Pre-signed URL로 변환하는 로직을 추가할 수 있습니다.
-        List<ImageDTO> imageDTOs = quoteRequest.getRequestImages() == null ? Collections.emptyList() :
+//        List<ImageDTO> imageDTOs = quoteRequest.getRequestImages() == null ? Collections.emptyList() :
                 quoteRequest.getRequestImages().stream()
-                        .map(ImageDTO::from) // ImageDTO에 'from' 메서드가 있다고 가정
+//                        .map(ImageDTO::from) // ImageDTO에 'from' 메서드가 있다고 가정
                         .collect(Collectors.toList());
 
         // 빌더 패턴을 사용하여 DTO 객체를 생성하고 반환합니다.
@@ -61,10 +59,10 @@ public class QuoteRequestResDTO {
                 .address(quoteRequest.getAddress())
                 .createdAt(quoteRequest.getCreatedAt())
                 .estimateCount(estimateCount)
-                .writer(WriterDTO.from(quoteRequest.getUser()))       // 중첩된 writer DTO 생성
+//                .writer(WriterDTO.from(quoteRequest.getUser()))       // 중첩된 writer DTO 생성
                 .car(UserCarResDTO.from(quoteRequest.getUserCar()))   // 중첩된 car DTO 생성
                 .estimates(estimateDTOs)
-                .images(imageDTOs)
+//                .images(imageDTOs)
                 .build();
     }
 }
