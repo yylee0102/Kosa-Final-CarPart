@@ -37,6 +37,8 @@ public class EstimateItem {
     /** 옵션 (부품 종류: 중고, 정품 등) */
     @Column(name = "part_type")
     private String partType;
+    @Column(nullable = false)
+    private int quantity;
 
     // ⚠️ 무한 루프 방지를 위해 toString() 메서드에 estimate 필드를 제외해야 합니다.
     // Lombok의 @ToString(exclude = "estimate")를 사용하거나 직접 구현 시 제외.

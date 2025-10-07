@@ -1,33 +1,45 @@
-// src/pages/users/MyQuoteRequestsPage.tsx (최종 개선 버전)
-
+/**
+ * 사용자 견적 요청 관리 페이지
+ * - 내가 요청한 견적 조회
+ * - 받은 견적 상세 보기 (모달)
+ * - 견적 요청 삭제 및 채팅 연동
+ * - UserController 및 ChatController API 기반
+ */
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Car, MapPin, Trash2, FileText, Plus, RefreshCw } from 'lucide-react';
+
 import PageContainer from '@/shared/components/layout/PageContainer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Car, MapPin, Trash2, FileText, Plus, RefreshCw } from 'lucide-react';
 import UserApiService from '@/services/user.api';
-import testImage from '@/assets/test.jpg'; // S3 연동 전 임시 이미지
-import { useNavigate } from 'react-router-dom';
-import { EstimateDetailModal } from '@/domains/estimates/modals/EstimateDetailModal';
 import { ChatApiService } from '@/services/chat.api';
+import { EstimateDetailModal } from '@/domains/estimates/modals/EstimateDetailModal';
+import testImage from '@/assets/test.jpg'; // S3 연동 전 임시 이미지
 
-// 백엔드 DTO와 일치하는 타입 (기존과 동일)
-interface MyQuoteRequest {
-  requestId: number;
-  car: { carModel: string; modelYear: number; };
-  requestDetails: string;
-  address: string;
-  createdAt: string;
-  images: { imageUrl: string; }[];
-  estimates: Estimate[];
-}
-
+// API 응답에 맞춘 타입 정의
 interface Estimate {
   estimateId: number;
+  centerId: string; // 채팅 연동을 위해 centerId 추가
   centerName: string;
   estimatedCost: number;
   details: string;
+}
+
+interface UserCarInfo {
+  carModel: string;
+  modelYear: number;
+}
+
+interface MyQuoteRequest {
+  requestId: number;
+  requestDetails: string;
+  address: string;
+  createdAt: string;
+  images: string[];
+  car: UserCarInfo;
+  estimates: Estimate[];
 }
 
 export const MyQuoteRequestsPage = () => {
@@ -35,19 +47,18 @@ export const MyQuoteRequestsPage = () => {
   const navigate = useNavigate();
   const [myRequest, setMyRequest] = useState<MyQuoteRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // ▼▼▼ 이 두 줄을 추가하세요 ▼▼▼
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedEstimate, setSelectedEstimate] = useState<Estimate | null>(null);
-
 
   const loadMyRequest = async () => {
     setIsLoading(true);
     try {
-      const data = await UserApiService.getMyQuoteRequest();
+      // 실제 API를 호출하여 데이터를 가져옵니다.
+      const data = await UserApiService.getMyQuoteRequests();
       setMyRequest(data);
     } catch (error) {
       console.error("견적 요청 정보 로딩 실패:", error);
+      // 데이터가 없을 경우 null로 설정하여 "요청 없음" 상태를 표시합니다.
       setMyRequest(null);
     } finally {
       setIsLoading(false);
@@ -58,15 +69,15 @@ export const MyQuoteRequestsPage = () => {
     loadMyRequest();
   }, []);
 
-    // ▼▼▼ 이 함수를 새로 추가하세요 ▼▼▼
   const handleEstimateCardClick = (estimate: Estimate) => {
     setSelectedEstimate(estimate); // 클릭된 견적서 정보를 state에 저장
     setIsDetailModalOpen(true);   // 모달을 열도록 state 변경
   };
 
-
-
   const handleDeleteQuoteRequest = async (quoteRequestId: number) => {
+    if (!window.confirm('정말로 견적 요청을 삭제하시겠습니까? 받은 견적이 모두 사라집니다.')) {
+      return;
+    }
     try {
       await UserApiService.deleteQuoteRequest(quoteRequestId);
       setMyRequest(null);
@@ -76,8 +87,7 @@ export const MyQuoteRequestsPage = () => {
     }
   };
 
-  // ▼▼▼ handleChatRequest 함수를 아래 코드로 교체하세요 ▼▼▼
-const handleChatRequest = async (centerId: string, centerName: string) => {
+  const handleChatRequest = async (centerId: string, centerName: string) => {
     try {
         // 1. 백엔드에 채팅방 생성/조회 요청을 보내고 실제 채팅방 정보를 받아옵니다.
         const room = await ChatApiService.createOrGetChatRoom(centerId);
@@ -85,7 +95,7 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
         // 2. 받아온 실제 채팅방 정보를 가지고 채팅 페이지로 이동합니다.
         navigate('/chat', {
             state: {
-                roomId: room.roomId, // 이제 실제 DB에 있는 roomId를 전달합니다.
+                roomId: room.roomId, // 실제 DB에 있는 roomId를 전달
                 centerId: centerId,
                 centerName: centerName,
             }
@@ -93,11 +103,11 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
         setIsDetailModalOpen(false); // 모달 닫기
     } catch (error) {
         console.error("채팅방 입장 실패:", error);
-        // TODO: 사용자에게 오류 토스트 메시지 표시
+        toast({ title: '채팅방 입장에 실패했습니다.', variant: 'destructive' });
     }
-};
+  };
 
-  // 요청서가 없을 때의 화면 (AI 디자인 적용)
+  // 요청서가 없을 때의 화면
   const renderEmptyState = () => (
     <Card>
       <CardContent className="p-10 flex flex-col items-center justify-center text-center">
@@ -120,7 +130,7 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
     <PageContainer>
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-6">
-          {/* ==================== AI 디자인 헤더 적용 ==================== */}
+          {/* 헤더 */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">내 견적 요청</h1>
@@ -134,7 +144,7 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
                 새로고침
               </Button>
               {!myRequest && (
-                  <Button onClick={() => navigate('/estimates/create')}> {/* TODO: 경로 확인 */}
+                  <Button onClick={() => navigate('/estimates/create')}>
                     <Plus className="h-4 w-4 mr-2" />
                     견적 요청
                   </Button>
@@ -142,7 +152,7 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
             </div>
           </div>
           
-          {/* ==================== AI 디자인 통계 카드 적용 ==================== */}
+          {/* 통계 카드 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -176,7 +186,7 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
               </Card>
           </div>
 
-          {/* ==================== 메인 콘텐츠 (기존 로직 기반) ==================== */}
+          {/* 메인 콘텐츠 */}
           {!myRequest ? (
             renderEmptyState()
           ) : (
@@ -205,7 +215,7 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
                   {myRequest.images && myRequest.images.length > 0 && (
                     <div className="flex gap-2 pt-4">
                       {myRequest.images.map((img, idx) => (
-                        <img key={idx} src={testImage} alt={`차량사진 ${idx + 1} (임시)`} className="w-24 h-24 rounded object-cover" />
+                        <img key={idx} src={img || testImage} alt={`차량사진 ${idx + 1}`} className="w-24 h-24 rounded object-cover" />
                       ))}
                     </div>
                   )}
@@ -215,29 +225,23 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
               {/* 하단: 받은 견적 목록 */}
               <Card>
                   <CardHeader>
-                      
-                      <CardTitle>받은 견적 목록 
-                        ({myRequest?.estimates?.length ?? 0}개)</CardTitle>
+                      <CardTitle>받은 견적 목록 ({myRequest?.estimates?.length ?? 0}개)</CardTitle>
                       <CardDescription>카센터에서 보낸 견적 제안들입니다.</CardDescription>
                   </CardHeader>
                   <CardContent>
-                  {/* 👇 조건 부분을 이렇게 바꿔주세요 */}
                   {(myRequest?.estimates?.length ?? 0) === 0 ? (
                     <p className="text-muted-foreground">아직 받은 견적이 없습니다.</p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      {/* 👇 map 앞에도 ?. 를 붙여주세요 */}
                       {myRequest.estimates?.map((estimate) => (
                         <Card
                             key={estimate.estimateId}
                             className="group cursor-pointer hover:border-primary"
-                            // 👇 이 onClick 이벤트를 추가하세요.
                             onClick={() => handleEstimateCardClick(estimate)}
                           >
                           <CardHeader><CardTitle>{estimate.centerName}</CardTitle></CardHeader>
                           <CardContent>
                             <p className="text-2xl font-bold text-primary mb-2">{estimate.estimatedCost.toLocaleString()}원</p>
-                            {/* 상세 내용 p 태그에 line-clamp 관련 클래스를 추가합니다. */}
                             <p className="text-sm text-muted-foreground line-clamp-3 group-hover:line-clamp-none">
                               {estimate.details}
                             </p>
@@ -252,7 +256,8 @@ const handleChatRequest = async (centerId: string, centerName: string) => {
           )}
         </div>
       </div>
-      {/* ▼▼▼ 이 모달 코드를 페이지의 가장 마지막에 추가하세요 ▼▼▼ */}
+
+      {/* 견적 상세 정보 모달 */}
       <EstimateDetailModal
         open={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}

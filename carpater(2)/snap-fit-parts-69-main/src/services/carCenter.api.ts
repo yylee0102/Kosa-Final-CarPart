@@ -23,11 +23,32 @@ export interface ReservationReqDTO { customerName: string; customerPhone: string
 export interface ReservationResDTO { reservationId: number; centerId: string; customerName: string; customerPhone: string; carInfo: string; reservationDate: string; requestDetails?: string; }
 export interface UsedPartReqDTO { partName: string; description: string; price: number; category: string; compatibleCarModel: string; }
 export interface UsedPartResDTO { partId: number; centerId: string; partName: string; description: string; price: number; category: string; compatibleCarModel: string; createdAt: string; imageUrls: string[]; centerPhoneNumber: string; }
-export interface EstimateItemReqDTO { itemName: string; price: number; requiredHours: number; partType: string; }
-export interface EstimateItemResDTO { itemId: number; itemName: string; price: number; requiredHours: number; partType: string; }
-export interface EstimateReqDTO { requestId: number; estimatedCost: number; details: string; estimateItems: EstimateItemReqDTO[];  workDuration: string; validUntil: string; }
-export interface EstimateResDTO { estimateId: number; requestId: number; estimatedCost: number; details: string; createdAt: string; estimateItems: EstimateItemResDTO[]; status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'; customerName: string; carModel: string; carYear: number; workDuration: string;  validUntil: string;}
-export interface Review { reviewId: number; centerName: string; writerName: string; rating: number; content: string; createdAt: string; reply?: string; }
+// ✅ [최종 수정] 백엔드 DTO(EstimateItemReqDTO.java)와 정확히 일치시킵니다.
+export interface EstimateItemReqDTO { itemName: string; price: number; requiredHours: number; partType: string; quantity: number; }
+export interface EstimateItemResDTO {
+  itemId: number;
+  itemName: string;
+  price: number;
+  requiredHours: number;
+  partType: string;
+  quantity: number; }
+
+  export interface EstimateReqDTO { requestId: number; estimatedCost: number; details: string; estimateItems: EstimateItemReqDTO[];  workDuration: string; validUntil: string; }
+export interface EstimateResDTO {
+  estimateId: number;
+  requestId: number;
+  estimatedCost: number;
+  details: string;
+  createdAt: string; // <-- 서버에서 오는 ISO 형식의 문자열
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED';
+  estimateItems: EstimateItemResDTO[]; // <-- 타입을 명확하게 지정
+  customerName: string;
+  carModel: string;
+  carYear: number;
+  workDuration: string;
+  validUntil: string; // <-- 서버에서 오는 ISO 형식의 문자열
+}
+  export interface Review { reviewId: number; centerName: string; writerName: string; rating: number; content: string; createdAt: string; reply?: string; }
 export interface ReviewReplyReqDTO { reviewId: number; content: string; }
 export interface ReviewReplyResDTO { replyId: number; reviewId: number; centerName: string; content: string; createdAt: string; }
 export interface ReviewReportReqDTO { reviewId: number; reason: string; content: string; }
@@ -154,11 +175,18 @@ class CarCenterApiService extends BaseApiService {
     return this.request('GET', '/car-centers/me/used-parts');
   }
   createUsedPart(partData: UsedPartReqDTO, images: File[]): Promise<UsedPartResDTO> {
-    const formData = new FormData();
-    formData.append('request', new Blob([JSON.stringify(partData)], { type: "application/json" }));
+  const formData = new FormData();
+  
+  // 1. 키 이름을 'req'로 사용합니다.
+  formData.append('request', new Blob([JSON.stringify(partData)], { type: "application/json" }));
+  
+  // 2. 이미지가 있을 때만 추가하도록 안전장치를 추가합니다.
+  if (images && images.length > 0) {
     images.forEach((image) => formData.append('images', image));
-    return this.request('POST', '/car-centers/used-parts', formData, true);
   }
+  
+  return this.request('POST', '/car-centers/used-parts', formData, true);
+}
   // ✅ [누락된 기능 추가] 중고 부품 상세 정보 조회
   getUsedPartDetails(partId: number): Promise<UsedPartResDTO> {
     return this.request('GET', `/car-centers/used-parts/${partId}`);
@@ -177,6 +205,14 @@ class CarCenterApiService extends BaseApiService {
     if (!query.trim()) { return Promise.resolve([]); }
     return this.request('GET', `/parts/search?query=${encodeURIComponent(query)}`);
   }
+
+  // =================================================================
+//  ✅ [신규 추가] 홈페이지용 최신 중고 부품 조회 API
+// =================================================================
+getRecentUsedParts(limit: number): Promise<UsedPartResDTO[]> {
+  // 백엔드 CarCenterController에 추가한 GET /api/car-centers/parts/recent?limit=3 API를 호출합니다.
+  return this.request('GET', `/car-centers/parts/recent?limit=${limit}`);
+}
 
   // =================================================================
   //  6. 견적 요청/견적서 관리 API

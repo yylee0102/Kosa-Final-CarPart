@@ -5,7 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,5 +25,7 @@ public interface UsedPartRepository extends JpaRepository<UsedPart, Integer> {
     Optional<UsedPart> findByIdWithImages(@Param("partId") Integer partId);
 
     List<UsedPart> findByPartNameContainingIgnoreCase(String partName);
+    Page<UsedPart> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
 
 }

@@ -8,11 +8,13 @@ import com.spring.carparter.repository.CarCenterRepository;
 import com.spring.carparter.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -150,5 +152,23 @@ public class NotificationService {
                         () -> log.warn(" -> 읽음 처리할 알림을 찾지 못했습니다. 알림 ID: '{}'", notificationId)
                 );
         log.info("===== [END] 알림 읽음 처리 완료 =====");
+    }
+
+    /**
+     * 매일 새벽 4시에 실행되어, 24시간 이상 된 알림을 삭제합니다.
+     * cron = "초 분 시 일 월 요일"
+     * "0 0 4 * * *" -> 매일 새벽 4시 0분 0초
+     */
+    @Scheduled(cron = "0 0 4 * * *")
+    @Transactional // 삭제 작업이므로 트랜잭션 처리를 해줍니다.
+    public void cleanupOldNotifications() {
+        System.out.println("오래된 알림 삭제 작업을 시작합니다.");
+
+        // 현재 시간으로부터 24시간 전 시간을 계산
+        LocalDateTime cutoffTime = LocalDateTime.now().minusDays(1);
+
+        notificationRepository.deleteByCreateTimeBefore(cutoffTime);
+
+        System.out.println("오래된 알림 삭제 작업을 완료했습니다.");
     }
 }

@@ -11,78 +11,69 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-// ✅ API 서비스에서 DTO 타입을 직접 가져와서 사용합니다.
-import { UserCarReqDTO, UserCarResDTO } from '@/services/user.api';
 
-// interface Vehicle {
-//   vehicleId?: number;
-//   carNumber: string;
-//   carModel: string;
-//   carYear: number;
-//   manufacturer: string;
-//   fuelType: string;
-//   displacement?: string;
-// }
+interface Vehicle {
+  vehicleId?: number;
+  carNumber: string;
+  carModel: string;
+  carYear: number;
+  manufacturer: string;
+  fuelType: string;
+  displacement?: string;
+}
 
-// ✅ Props 인터페이스를 API DTO에 맞게 수정합니다.
 interface VehicleRegisterModalProps {
   open: boolean;
   onClose: () => void;
-  // 수정할 때는 UserCarResDTO를 받고, 신규 등록 시에는 undefined를 받습니다.
-  vehicle?: UserCarResDTO; 
-  // 제출 시 UserCarReqDTO 타입을 전달합니다.
-  onSubmit: (vehicleData: UserCarReqDTO) => void;
+  vehicle?: Vehicle;
+  onSubmit: (vehicleData: Vehicle) => void;
 }
 
 export const VehicleRegisterModal = ({ open, onClose, vehicle, onSubmit }: VehicleRegisterModalProps) => {
   const { toast } = useToast();
-  // ✅ [수정] formData의 타입을 API 요청 DTO인 UserCarReqDTO로 변경하고, 초기값도 맞춥니다.
-  const [formData, setFormData] = useState<UserCarReqDTO>({
-    carModel: '',
+  const [formData, setFormData] = useState<Vehicle>({
     carNumber: '',
-    modelYear: new Date().getFullYear(),
+    carModel: '',
+    carYear: new Date().getFullYear(),
+    manufacturer: '',
+    fuelType: '',
+    displacement: ''
   });
 
   useEffect(() => {
-    // 모달이 열릴 때마다 상태를 초기화
     if (vehicle) {
-      setFormData({
-          carModel: vehicle.carModel,
-          carNumber: vehicle.carNumber,
-          modelYear: vehicle.modelYear,
-        });
+      setFormData(vehicle);
     } else {
       setFormData({
-          carModel: '',
-          carNumber: '',
-          modelYear: new Date().getFullYear(),
-        });
+        carNumber: '',
+        carModel: '',
+        carYear: new Date().getFullYear(),
+        manufacturer: '',
+        fuelType: '',
+        displacement: ''
+      });
     }
   }, [vehicle, open]);
 
-  // ✅ [수정] handleInputChange의 field 타입을 UserCarReqDTO의 키로 제한
-  const handleInputChange = (field: keyof UserCarReqDTO, value: string | number) => {
+  const handleInputChange = (field: keyof Vehicle, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleSubmit = () => {
+    if (!formData.carNumber || !formData.carModel || !formData.manufacturer) {
+      toast({
+        title: '입력 오류',
+        description: '필수 항목을 모두 입력해주세요.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
-
-    const handleSubmit = () => {
-        // .trim()을 사용해 입력값 앞뒤의 공백을 제거하고 내용이 있는지 확인합니다.
-        if (!formData.carNumber.trim() || !formData.carModel.trim()) {  
-          // alert으로 사용자에게 알립니다.
-        alert('차량 번호와 모델명은 필수 입력 항목입니다.');
-        // return을 통해 함수 실행을 중단시켜 등록을 막습니다.
-        return; 
-      }
-      // 유효성 검사 통과 시에만 등록 진행
-    onSubmit(formData);
     // API 호출: POST /api/users/vehicles or PUT /api/users/vehicles/{id}
+    onSubmit(formData);
     toast({ title: vehicle ? '차량 정보가 수정되었습니다.' : '차량이 등록되었습니다.' });
     onClose();
   };
-
-    
 
   const manufacturers = [
     '현대', '기아', '제네시스', '쌍용', 'GM한국', '르노삼성',
@@ -141,9 +132,8 @@ export const VehicleRegisterModal = ({ open, onClose, vehicle, onSubmit }: Vehic
           </div>
 
           <div>
-            {/* ✅ [수정] carYear -> modelYear로 필드명과 상태 연결을 모두 변경 */}
-            <Label htmlFor="modelYear">연식</Label>
-            <Select value={formData.modelYear.toString()} onValueChange={(value) => handleInputChange('modelYear', parseInt(value))}>
+            <Label htmlFor="carYear">연식</Label>
+            <Select value={formData.carYear.toString()} onValueChange={(value) => handleInputChange('carYear', parseInt(value))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -155,6 +145,32 @@ export const VehicleRegisterModal = ({ open, onClose, vehicle, onSubmit }: Vehic
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="fuelType">연료 타입</Label>
+            <Select value={formData.fuelType} onValueChange={(value) => handleInputChange('fuelType', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="연료 타입을 선택하세요" />
+              </SelectTrigger>
+              <SelectContent>
+                {fuelTypes.map((fuelType) => (
+                  <SelectItem key={fuelType} value={fuelType}>
+                    {fuelType}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="displacement">배기량</Label>
+            <Input
+              id="displacement"
+              placeholder="예: 1600cc, 2000cc"
+              value={formData.displacement}
+              onChange={(e) => handleInputChange('displacement', e.target.value)}
+            />
           </div>
 
           <div className="flex gap-2">

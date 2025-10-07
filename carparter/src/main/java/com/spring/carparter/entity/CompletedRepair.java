@@ -2,6 +2,8 @@ package com.spring.carparter.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -45,6 +47,14 @@ public class CompletedRepair {
 
     @Enumerated(EnumType.STRING)
     private RepairStatus status;
+    @Column(name = "car_model") // DB 컬럼명 지정
+    private String carModel;
 
+    @Column(name = "license_plate") // DB 컬럼명 지정
+    private String licensePlate;
+
+    @CreationTimestamp // 엔티티 생성 시 자동으로 값을 채워줌
+    @Column(name = "created_at", updatable = false) // 생성 시간은 업데이트되지 않도록 설정
+    private LocalDateTime createdAt;
     // 잘못된 빌더 코드는 여기서 제거합니다.
 }
