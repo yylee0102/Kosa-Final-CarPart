@@ -59,7 +59,7 @@ public class CarCenterController {
     public ResponseEntity<?> getAllQuoteRequests() { // ⬅️ 이 메서드 이름은 URL과 관련있어 그대로 둬도 괜찮습니다.
         try {
             // ✅ 수정 후: getAllQuoteRequests()
-            List<QuoteRequestResDTO> requests = quoteRequestService.getAllQuoteRequests();
+            List<QuoteRequestResDTO> requests =  carCenterService.getAllQuoteRequestsForCenter();
 
             log.info("✅ Returning quote requests: {}", requests); // 로그 추가
 

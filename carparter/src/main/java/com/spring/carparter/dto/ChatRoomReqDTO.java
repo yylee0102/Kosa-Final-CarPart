@@ -9,21 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ChatRoomReqDTO {
-
-    private String centerId; // 채팅을 시작할 카센터의 ID
-    private String userId;
-    /**
-     * DTO를 ChatRoom 엔티티로 변환하는 메서드.
-     * User와 CarCenter 엔티티는 서비스 계층에서 ID를 이용해 조회 후 주입합니다.
-     *
-     * @param user      요청한 사용자 엔티티 (보통 Security Context에서 가져옴)
-     * @param carCenter 채팅 상대방인 카센터 엔티티
-     * @return ChatRoom 엔티티
-     */
-    public ChatRoom toEntity(User user, CarCenter carCenter) {
-        return ChatRoom.builder()
-                .user(user)
-                .carCenter(carCenter)
-                .build();
-    }
+    // 이제 견적서 ID 하나만 받으면 됩니다.
+    private Long estimateId; // 견적서의 ID (타입은 실제 Estimate 엔티티의 ID 타입과 일치시키세요)
 }

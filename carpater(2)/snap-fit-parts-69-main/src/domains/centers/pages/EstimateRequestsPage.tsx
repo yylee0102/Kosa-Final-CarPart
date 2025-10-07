@@ -51,8 +51,8 @@ export const EstimateRequestsPage = () => {
     return {
       quoteRequestId: dto.requestId,
       customerName: dto.customerName,
-      carModel: dto.carModel,
-      carYear: dto.carYear,
+      carModel: dto.userCar.carModel,
+      carYear: dto.userCar.modelYear,
       issueDescription: dto.requestDetails,
       location: dto.address,
       createdDate: new Date(dto.createdAt).toLocaleDateString(),
@@ -74,21 +74,36 @@ export const EstimateRequestsPage = () => {
   const handleEstimateSubmit = async (estimateDataFromModal: any) => {
     if (!selectedRequest) return;
     try {
+      // ✅ apiPayload를 DTO 정의에 맞게 올바르게 생성합니다.
       const apiPayload: EstimateReqDTO = {
         requestId: selectedRequest.quoteRequestId,
         estimatedCost: estimateDataFromModal.totalPrice,
         details: estimateDataFromModal.description,
+        
+        // [문제 3 수정] DTO에 필요한 workDuration, validUntil 필드를 추가합니다.
+        // 이 값들은 estimateDataFromModal 객체에 담겨있어야 합니다.
+        workDuration: estimateDataFromModal.workDuration,
+        validUntil: estimateDataFromModal.validUntil,
+        
+        // [문제 1, 2, 4 수정] estimateItems 배열을 올바른 필드와 문법으로 생성합니다.
         estimateItems: estimateDataFromModal.items.map((item: any): EstimateItemReqDTO => ({
           itemName: item.itemName,
-          price: item.partPrice + item.laborCost,
-          requiredHours: 0,
-          partType: "부품",
-        })),
+          price: item.partPrice + item.laborCost, // 부품비 + 공임비
+          requiredHours: 0, // DTO에 정의된 필수 필드 추가 (값은 임시로 0)
+          partType: "부품",    // DTO에 정의된 필수 필드 추가
+        })), // 올바른 괄호로 닫기
       };
+
+      // ✅ API 호출과 toast 메시지를 정상적인 문법으로 분리합니다.
       await carCenterApi.submitEstimate(apiPayload);
-      toast({ title: '견적서가 성공적으로 전송되었습니다.' });
+      
+      toast({ 
+        title: '견적서가 성공적으로 전송되었습니다.' 
+      });
+
       setEstimateModalOpen(false);
       loadQuoteRequests();
+
     } catch(error) {
       toast({ title: '견적서 전송에 실패했습니다.', variant: 'destructive'});
     }
@@ -121,7 +136,7 @@ export const EstimateRequestsPage = () => {
                           <span className="text-sm text-muted-foreground">#{request.requestId}</span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                          <div className="flex items-center gap-1"><Car className="h-4 w-4" /><span>{request.carModel} ({request.carYear}년)</span></div>
+                          <div className="flex items-center gap-1"><Car className="h-4 w-4" /><span>{request.userCar.carModel} ({request.userCar.modelYear}년)</span></div>
                           <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /><span>{request.address}</span></div>
                         </div>
                         <div className="text-sm text-muted-foreground">

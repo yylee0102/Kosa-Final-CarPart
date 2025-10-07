@@ -18,25 +18,12 @@ import java.util.Optional;
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> { // ChatRoom의 PK 타입을 Long으로 가정
 
-    // ▼▼▼ 이 부분을 @EntityGraph에서 @Query를 사용하도록 수정합니다. ▼▼▼
-    /**
-     * 특정 사용자의 모든 채팅방 목록을 User, CarCenter 정보와 함께 조회합니다. (JOIN FETCH 사용)
-     */
-    @Query("SELECT cr FROM ChatRoom cr " +
-            "JOIN FETCH cr.user " +
-            "JOIN FETCH cr.carCenter " +
-            "WHERE cr.user.userId = :userId")
-    List<ChatRoom> findAllByUser_UserId(@Param("userId") String userId);
+    // @Query 대신 @EntityGraph로 통일하는 예시
+    @EntityGraph(attributePaths = {"user", "carCenter"})
+    List<ChatRoom> findAllByUser_UserId(String userId);
 
-    /**
-     * 특정 카센터의 모든 채팅방 목록을 User, CarCenter 정보와 함께 조회합니다. (JOIN FETCH 사용)
-     */
-    @Query("SELECT cr FROM ChatRoom cr " +
-            "JOIN FETCH cr.user " +
-            "JOIN FETCH cr.carCenter " +
-            "WHERE cr.carCenter.centerId = :centerId")
-    List<ChatRoom> findAllByCarCenter_CenterId(@Param("centerId") String centerId);
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    @EntityGraph(attributePaths = {"user", "carCenter"})
+    List<ChatRoom> findAllByCarCenter_CenterId(String centerId);
 
     /**
      * 특정 사용자와 정비소, 그리고 견적 요청 건에 해당하는 채팅방이 있는지 조회합니다.
@@ -55,5 +42,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> { /
      * ✅ [신규 추가] 특정 견적 요청서(quoteRequestId)에 연결된 모든 채팅방을 조회합니다.
      * (주의: ChatRoom 엔티티에 QuoteRequest와의 연관관계 필드가 있어야 합니다.)
      */
-    List<ChatRoom> findAllByQuoteRequest_Id(Integer quoteRequestId);
+// ▼▼▼ N+1 문제 해결을 위해 @EntityGraph 추가 ▼▼▼
+    @EntityGraph(attributePaths = {"user", "carCenter"})
+    List<ChatRoom> findAllByQuoteRequest_RequestId(Integer requestId);
 }
