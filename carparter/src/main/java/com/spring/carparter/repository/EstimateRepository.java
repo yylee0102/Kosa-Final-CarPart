@@ -56,6 +56,7 @@ public interface EstimateRepository extends JpaRepository<Estimate, Integer> {
      */
     @Modifying // SELECT가 아닌 UPDATE, DELETE, INSERT 쿼리일 때 필요
     @Query("UPDATE Estimate e SET e.status = :status WHERE e.quoteRequest.requestId = :quoteRequestId AND e.estimateId != :acceptedEstimateId")
+
     void updateStatusForOthers(@Param("status") EstimateStatus status,
                                @Param("quoteRequestId") Integer quoteRequestId,
                                @Param("acceptedEstimateId") Integer acceptedEstimateId);
@@ -65,7 +66,9 @@ public interface EstimateRepository extends JpaRepository<Estimate, Integer> {
      * @param quoteRequestId 대상 견적 요청서 ID
      * @return REJECTED 상태가 아닌 모든 견적서 리스트
      */
+
     List<Estimate> findByQuoteRequestRequestIdAndStatusNot(Integer quoteRequestId, EstimateStatus status);
+
 
 
 

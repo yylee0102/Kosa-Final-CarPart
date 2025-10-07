@@ -49,4 +49,8 @@ public class ChatRoom {
     @LastModifiedDate // @CreatedDate에서 이 애너테이션으로 변경
     @Column(name = "updated_at") // 컬럼명도 updated_at 등으로 바꾸는 것을 권장
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "request_id") // 데이터베이스에 생성될 외래 키 컬럼 이름
+    private QuoteRequest quoteRequest;
 }

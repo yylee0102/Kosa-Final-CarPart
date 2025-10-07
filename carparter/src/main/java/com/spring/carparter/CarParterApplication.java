@@ -60,7 +60,7 @@ public class CarParterApplication implements ApplicationRunner, CommandLineRunne
 
     private final UserService userService;
     private final CsInquiryService csInquiryService;
-    private final QuoteRequestService quoteRequestService;
+//    private final QuoteRequestService quoteRequestService;
     private final ReviewService reviewService;
     private final CompletedRepairService completedRepairService;
 

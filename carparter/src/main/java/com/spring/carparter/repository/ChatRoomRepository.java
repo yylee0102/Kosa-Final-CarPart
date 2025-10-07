@@ -42,7 +42,9 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> { /
      * ✅ [신규 추가] 특정 견적 요청서(quoteRequestId)에 연결된 모든 채팅방을 조회합니다.
      * (주의: ChatRoom 엔티티에 QuoteRequest와의 연관관계 필드가 있어야 합니다.)
      */
+
 // ▼▼▼ N+1 문제 해결을 위해 @EntityGraph 추가 ▼▼▼
     @EntityGraph(attributePaths = {"user", "carCenter"})
     List<ChatRoom> findAllByQuoteRequest_RequestId(Integer requestId);
+
 }

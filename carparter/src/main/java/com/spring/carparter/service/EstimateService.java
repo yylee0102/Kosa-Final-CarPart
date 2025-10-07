@@ -262,7 +262,8 @@ public class EstimateService {
      */
     public List<EstimateResDTO> getEstimatesForUser(Integer quoteRequestId) {
         // Repository에서 REJECTED가 아닌 것만 조회
-        List<Estimate> estimates = estimateRepository.findByQuoteRequestRequestIdAndStatusNot(
+
+        List<Estimate> estimates = estimateRepository.findByQuoteRequest_RequestIdAndStatusNot(
                 quoteRequestId,
                 EstimateStatus.REJECTED
         );

@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import UserApiService from '@/services/user.api';
 import { ChatApiService } from '@/services/chat.api';
 import { EstimateDetailModal } from '@/domains/estimates/modals/EstimateDetailModal';
-import testImage from '@/assets/test.jpg'; // S3 연동 전 임시 이미지
+// import testImage from '@/assets/test.jpg'; // S3 연동 전 임시 이미지
 
 // API 응답에 맞춘 타입 정의
 interface Estimate {

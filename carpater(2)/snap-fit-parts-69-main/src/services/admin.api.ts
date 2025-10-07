@@ -146,7 +146,7 @@ class AdminApiService {
     });
   }
 
-  async getAgeStats(): Promise<any[]> {
+ async getAgeStats(): Promise<{ [key: string]: number }> { // ✅ 수정 후
     return http(api(`/admin/stats/age`), {
       headers: buildAuthHeaders(),
     });
