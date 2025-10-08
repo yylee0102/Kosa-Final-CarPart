@@ -1,221 +1,128 @@
 /**
- * 카센터 승인 상세 모달 (수정 완료)
- * - 카센터 등록 신청 내용 확인
- * - 승인 또는 반려 처리
- * - 반려 사유 입력
- * - admin.api.ts 서비스와 완벽하게 연동
+ * 1:1 문의 상세 및 답변 모달
+ * - 선택된 문의의 상세 내용 표시
+ * - 관리자 답변 작성 및 저장/수정
  */
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { Building, Phone, MapPin, FileText, Calendar, Check, X, Loader2 } from 'lucide-react';
-import adminApiService, { CarCenterApprovalResDTO } from '@/services/admin.api'; // ✅ API 서비스 import
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Send } from "lucide-react";
+import adminApiService, { CsInquiryResDTO } from "@/services/admin.api";
 
-// ✅ 상세 정보에만 있을 수 있는 추가 필드를 포함한 타입 정의 (ownerName, description 등)
-// CarCenterApprovalResDTO를 확장하여 사용
-interface CarCenterApprovalDetail extends CarCenterApprovalResDTO {
-  ownerName?: string;
-  description?: string;
-}
-
-interface CenterApprovalDetailModalProps {
+interface CsInquiryDetailModalProps {
   open: boolean;
   onClose: () => void;
-  approvalId: number | null;
-  onApprovalUpdate: () => void; // ✅ 부모 컴포넌트와 prop 이름 일치 (onUpdate -> onApprovalUpdate)
+  inquiryId: number | null;
+  onInquiryUpdate: () => void;
 }
 
-export const CenterApprovalDetailModal = ({ open, onClose, approvalId, onApprovalUpdate }: CenterApprovalDetailModalProps) => {
-  const { toast } = useToast();
-  const [approval, setApproval] = useState<CarCenterApprovalDetail | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [showRejectForm, setShowRejectForm] = useState(false);
-  
+export default function CsInquiryDetailModal({ open, onClose, inquiryId, onInquiryUpdate }: CsInquiryDetailModalProps) {
+  const [inquiry, setInquiry] = useState<CsInquiryResDTO | null>(null);
+  const [answerContent, setAnswerContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (approvalId && open) {
-      loadApprovalDetail(approvalId);
+    // inquiryId가 있고 모달이 열릴 때만 데이터를 불러옵니다.
+    // ※ 현재 API 구조상 전체 목록을 다시 불러와 필터링합니다.
+    //   만약 단일 문의 조회 API가 있다면 그것을 사용하는 것이 더 효율적입니다.
+    if (inquiryId && open) {
+      fetchInquiryDetail(inquiryId);
     }
-    if (!open) {
-      resetModalState();
-    }
-  }, [approvalId, open]);
+  }, [inquiryId, open]);
 
-  const resetModalState = () => {
-    setApproval(null);
-    setShowRejectForm(false);
-    setRejectionReason('');
-  };
-
-  // ✅ API 서비스 사용하여 상세 정보 조회
-  const loadApprovalDetail = async (id: number) => {
+  const fetchInquiryDetail = async (id: number) => {
     setIsLoading(true);
     try {
-      const data = await adminApiService.getApprovalDetail(id);
-      setApproval(data);
+      const inquiries = await adminApiService.getCsInquiries();
+      const targetInquiry = inquiries.find(item => item.inquiryId === id);
+      if (targetInquiry) {
+        setInquiry(targetInquiry);
+        setAnswerContent(targetInquiry.answerContent || "");
+      }
     } catch (error) {
-      toast({
-        title: '오류',
-        description: '상세 정보를 불러오는 데 실패했습니다.',
-        variant: 'destructive',
-      });
-      onClose();
+      toast({ title: "오류", description: "문의 내용을 불러오는 데 실패했습니다.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ✅ API 서비스 사용하여 승인 처리
-  const handleApprove = async () => {
-    if (!approval) return;
-    setIsSubmitting(true);
-    try {
-      await adminApiService.approveCenter(approval.approvalId);
-      toast({ title: '카센터가 승인되었습니다.' });
-      onApprovalUpdate(); // ✅ 부모와 일치하는 prop 함수 호출
-      onClose();
-    } catch (error) {
-      toast({
-        title: '승인 실패',
-        description: error instanceof Error ? error.message : "승인 처리에 실패했습니다.",
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // ✅ API 서비스 사용하여 반려 처리
-  const handleReject = async () => {
-    if (!approval || !rejectionReason.trim()) {
-      toast({
-        title: '반려 사유 필요',
-        description: '반려 사유를 입력해주세요.',
-        variant: 'destructive'
-      });
+  /**
+   * 답변 저장
+   */
+  const handleSaveAnswer = async () => {
+    if (!inquiry || !answerContent.trim()) {
+      toast({ title: "입력 오류", description: "답변 내용을 입력해주세요.", variant: "destructive" });
       return;
     }
-    setIsSubmitting(true);
+
+    setIsSaving(true);
     try {
-      await adminApiService.rejectCenter(approval.approvalId, rejectionReason);
-      toast({ title: '카센터 신청이 반려되었습니다.' });
-      onApprovalUpdate(); // ✅ 부모와 일치하는 prop 함수 호출
-      onClose();
+      await adminApiService.answerInquiry(inquiry.inquiryId, answerContent.trim());
+      toast({ title: "답변 저장 완료", description: "답변이 성공적으로 등록되었습니다." });
+      onInquiryUpdate(); // 부모 컴포넌트의 목록 새로고침
+      onClose();         // 모달 닫기
     } catch (error) {
-       toast({
-        title: '반려 실패',
-        description: error instanceof Error ? error.message : "반려 처리에 실패했습니다.",
-        variant: 'destructive',
-      });
+      toast({ title: "저장 실패", description: "답변 저장 중 오류가 발생했습니다.", variant: "destructive" });
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
-
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'APPROVED': return 'bg-green-100 text-green-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status?: string) => {
-    switch (status) {
-      case 'PENDING': return '승인 대기';
-      case 'APPROVED': return '승인 완료';
-      case 'REJECTED': return '반려';
-      default: return status || '알 수 없음';
-    }
+  
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleString('ko-KR');
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>카센터 승인 관리</DialogTitle>
+          <DialogTitle>1:1 문의 상세 및 답변</DialogTitle>
         </DialogHeader>
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">정보를 불러오는 중...</span>
-          </div>
-        ) : approval ? (
-          <div className="space-y-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center mb-3">
-                <span className="font-medium">신청 #{approval.approvalId}</span>
-                <Badge className={getStatusColor(approval.status)}>
-                  {getStatusText(approval.status)}
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-2"><Building className="h-4 w-4" /><span>{approval.centerName}</span></div>
-                <div className="flex items-center gap-2"><Phone className="h-4 w-4" /><span>{approval.phoneNumber ?? '-'}</span></div>
-                <div className="flex items-center gap-2"><FileText className="h-4 w-4" /><span>{approval.businessNumber ?? '-'}</span></div>
-                <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /><span>{new Date(approval.requestedAt).toLocaleString('ko-KR')}</span></div>
-              </div>
+          <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin" /></div>
+        ) : inquiry ? (
+          <div className="space-y-4">
+            <div>
+              <Label>문의 제목</Label>
+              <p className="font-semibold">{inquiry.title}</p>
             </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <div><Label className="text-base font-medium">카센터 아이디</Label><p className="mt-1 p-3 bg-gray-50 rounded border">{approval.centerId}</p></div>
-              {approval.ownerName && <div><Label className="text-base font-medium">사업자명</Label><p className="mt-1 p-3 bg-gray-50 rounded border">{approval.ownerName}</p></div>}
-              <div><Label className="text-base font-medium">이메일</Label><p className="mt-1 p-3 bg-gray-50 rounded border">{approval.email ?? '-'}</p></div>
-              <div><Label className="text-base font-medium">주소</Label><p className="mt-1 p-3 bg-gray-50 rounded border flex items-center gap-2"><MapPin className="h-4 w-4" />{approval.address ?? '-'}</p></div>
-              {approval.description && (
-                <div><Label className="text-base font-medium">카센터 소개</Label><p className="mt-1 p-3 bg-gray-50 rounded border whitespace-pre-wrap">{approval.description}</p></div>
-              )}
+            <div>
+              <Label>작성자 / 작성일</Label>
+              <p className="text-sm text-muted-foreground">{inquiry.userName} / {formatDate(inquiry.createdAt)}</p>
             </div>
-
-            {showRejectForm && (
-              <div>
-                <Label htmlFor="rejectionReason" className="text-base font-medium text-red-600">반려 사유 *</Label>
-                <Textarea id="rejectionReason" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="반려 사유를 구체적으로 작성해주세요" rows={4} />
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2">
-              {approval.status === 'PENDING' && !showRejectForm && (
-                <>
-                  <Button onClick={handleApprove} className="bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
-                    승인
-                  </Button>
-                  <Button variant="destructive" onClick={() => setShowRejectForm(true)} disabled={isSubmitting}>
-                    <X className="h-4 w-4 mr-2" />
-                    반려
-                  </Button>
-                </>
-              )}
-              
-              {showRejectForm && (
-                <>
-                  <Button onClick={handleReject} variant="destructive" disabled={isSubmitting}>
-                     {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <X className="h-4 w-4 mr-2" />}
-                    반려 처리
-                  </Button>
-                  <Button variant="outline" onClick={() => { setShowRejectForm(false); setRejectionReason(''); }} disabled={isSubmitting}>
-                    취소
-                  </Button>
-                </>
-              )}
-              
-              <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-                닫기
-              </Button>
+            <div>
+              <Label>문의 내용</Label>
+              <div className="p-3 bg-muted rounded-md border text-sm whitespace-pre-wrap">{inquiry.questionContent}</div>
+            </div>
+            <div>
+              <Label htmlFor="answerContent">답변 작성</Label>
+              <Textarea
+                id="answerContent"
+                value={answerContent}
+                onChange={(e) => setAnswerContent(e.target.value)}
+                placeholder="답변을 입력하세요..."
+                rows={6}
+                disabled={isSaving}
+              />
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div>문의 내용을 불러오지 못했습니다.</div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isSaving}>취소</Button>
+          <Button onClick={handleSaveAnswer} disabled={isLoading || isSaving}>
+            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+            {inquiry?.status === 'ANSWERED' ? '답변 수정' : '답변 등록'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default CenterApprovalDetailModal;
+}

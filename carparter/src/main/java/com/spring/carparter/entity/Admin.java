@@ -1,7 +1,7 @@
 package com.spring.carparter.entity;
 
-// package com.example.model;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // 👈 1. 임포트 추가 (이미 있다면 생략)
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,6 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "admin")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // 👈 2. 이 어노테이션을 클래스에 추가
 public class Admin {
 
     /** 관리자 고유 아이디 (PK) */
@@ -31,5 +32,7 @@ public class Admin {
 
     /** 이 관리자가 작성한 공지사항 목록 */
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    @Builder.Default
     private List<Announcement> announcements = new ArrayList<>();
 }
