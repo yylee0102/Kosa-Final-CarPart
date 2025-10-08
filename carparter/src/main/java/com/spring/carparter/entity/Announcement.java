@@ -1,9 +1,9 @@
 package com.spring.carparter.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties; // 👈 1. 이 줄을 임포트합니다.
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "announcements")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-@EntityListeners(AuditingEntityListener.class) // 리스너 추가
+@EntityListeners(AuditingEntityListener.class)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // 👈 2. 이 어노테이션을 클래스에 추가합니다.
 public class Announcement {
 
     /** 공지사항 고유 ID (PK) */
@@ -39,5 +40,4 @@ public class Announcement {
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
 }

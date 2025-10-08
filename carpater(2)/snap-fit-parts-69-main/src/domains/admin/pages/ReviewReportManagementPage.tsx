@@ -1,12 +1,10 @@
 /**
  * 신고된 리뷰 관리 페이지
- * 
- * 이 페이지의 역할:
+ * * 이 페이지의 역할:
  * - 사용자들이나 카센터가 신고한 리뷰 목록 조회 및 관리
  * - 신고 상세 내용 확인 및 검토
  * - 신고 처리 완료 (삭제) 기능
- * 
- * 왜 필요한가:
+ * * 왜 필요한가:
  * - 부적절한 콘텐츠 관리를 통한 플랫폼 건전성 유지
  * - 공정한 리뷰 환경 조성으로 서비스 신뢰도 향상
  * - 체계적인 신고 처리 시스템 구축
@@ -54,53 +52,10 @@ export default function ReviewReportManagementPage() {
   const fetchReports = async () => {
     setIsLoading(true);
     try {
-      // TODO: 실제 API 연결 시 사용
-      // const data = await adminApiService.getAllReviewReports();
-      // setReports(data);
+      // ✅ 실제 API 연결로 변경
+      const data = await adminApiService.getReviewReports();
+      setReports(data);
       
-      // 개발용 임시 데이터
-      const tempReports: ReviewReportResDTO[] = [
-        {
-          reportId: 1,
-          reviewId: 101,
-          reviewContent: "서비스가 정말 최악이었습니다. 기사님도 불친절하고 가격도 터무니없이 비쌉니다.",
-          reviewRating: 1,
-          reviewCreatedAt: "2025-09-08T09:00:00Z",
-          reportingCenterId: "center001",
-          reportingCenterName: "홍길동 카센터",
-          reason: "부적절한 언어 사용",
-          content: "리뷰에 욕설과 비방이 포함되어 있습니다. 해당 내용은 다른 사용자들에게 불쾌감을 줄 수 있어 신고합니다.",
-          status: 'PENDING',
-          createdAt: "2025-09-08T10:00:00Z"
-        },
-        {
-          reportId: 2,
-          reviewId: 102,
-          reviewContent: "여기 정말 별로예요. 다른 곳 이용하세요. 시간만 낭비했네요.",
-          reviewRating: 1,
-          reviewCreatedAt: "2025-09-07T08:00:00Z",
-          reportingCenterId: "center002",
-          reportingCenterName: "김영희 카센터",
-          reason: "허위 리뷰 의심",
-          content: "해당 리뷰는 실제 서비스를 이용하지 않고 작성된 것으로 보입니다. 경쟁업체의 악의적 리뷰로 판단됩니다.",
-          status: 'PENDING',
-          createdAt: "2025-09-07T10:00:00Z"
-        },
-        {
-          reportId: 3,
-          reviewId: 103,
-          reviewContent: "좋은 서비스였습니다. 추천합니다. 다음에도 이용할게요.",
-          reviewRating: 5,
-          reviewCreatedAt: "2025-09-06T07:00:00Z",
-          reportingCenterId: "center003",
-          reportingCenterName: "이민수 카센터",
-          reason: "스팸성 리뷰",
-          content: "동일한 내용의 리뷰를 여러 카센터에 반복적으로 작성하고 있습니다.",
-          status: 'PENDING',
-          createdAt: "2025-09-06T10:00:00Z"
-        }
-      ];
-      setReports(tempReports);
     } catch (error) {
       console.error("신고 목록 조회 실패:", error);
       toast({
@@ -117,8 +72,8 @@ export default function ReviewReportManagementPage() {
    * 신고 상세 보기
    */
   const handleViewDetail = (reportId: number) => {
-      console.log('상세보기 클릭! 전달된 approvalId:', approvalId);
-
+    // ✅ console.log 변수 수정
+    console.log('상세보기 클릭! 전달된 reportId:', reportId);
     setSelectedReportId(reportId);
     setShowDetailModal(true);
   };
@@ -133,10 +88,8 @@ export default function ReviewReportManagementPage() {
     }
 
     try {
-      // TODO: 실제 API 연결 시 사용
-      // await adminApiService.deleteReviewReport(reportId);
+      await adminApiService.deleteReviewReport(reportId);
       
-      // 로컬 상태에서 해당 신고 제거
       setReports(prev => prev.filter(report => report.reportId !== reportId));
       
       toast({
