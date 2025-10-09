@@ -4,6 +4,7 @@ import com.spring.carparter.document.ChatMessageDocument;
 import com.spring.carparter.dto.EstimateReqDTO;
 import com.spring.carparter.dto.EstimateResDTO;
 import com.spring.carparter.entity.*;
+import com.spring.carparter.entity.type.QuoteStatus;
 import com.spring.carparter.exception.ResourceNotFoundException;
 import com.spring.carparter.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -142,6 +143,8 @@ public class EstimateService {
     // 7. 사용자가 견적서 수락
     @Transactional
     public void acceptEstimate(String userId, Integer estimateId) {
+
+        // 1. 확정할 견적서를 찾습니다.
         log.info("===== [START] 견적서 수락: 사용자 ID '{}', 견적서 ID '{}' =====", userId, estimateId);
         Estimate acceptedEstimate = estimateRepository.findById(estimateId)
                 .orElseThrow(() -> new ResourceNotFoundException("수락할 견적서를 찾을 수 없습니다."));
@@ -159,8 +162,33 @@ public class EstimateService {
         log.info(" -> 견적서 상태를 ACCEPTED로 변경합니다...");
         acceptedEstimate.setStatus(EstimateStatus.ACCEPTED);
 
+        // ▼▼▼ 이 코드를 추가하여 acceptedEstimate의 변경사항을 DB에 즉시 반영(flush)합니다. ▼▼▼
+        estimateRepository.saveAndFlush(acceptedEstimate);
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
         log.info(" -> 나머지 '대기중' 상태의 견적서들을 '거절됨'으로 변경합니다...");
-        QuoteRequest quoteRequest = acceptedEstimate.getQuoteRequest();
+        // ▼▼▼▼▼ 이 부분을 아래와 같이 수정하세요. ▼▼▼▼▼
+        // 이 문제를 해결하려면, EstimateService의 acceptEstimate 메소드에게 "메모장 보지 말고,
+        // 무조건 서류 캐비닛에 가서 최신 서류를 다시 가져와!"라고 명확하게 지시해야 합니다.
+
+        // 1. 먼저 부모 요청서의 ID를 가져옵니다.
+        Integer quoteRequestId = acceptedEstimate.getQuoteRequest().getRequestId();
+
+        // 2. ID를 사용해 DB에서 최신 버전의 QuoteRequest를 '다시' 조회합니다.
+        //    이렇게 하면 캐시가 아닌 DB의 실제 데이터를 가져옵니다.
+        QuoteRequest quoteRequest = quoteRequestRepository.findById(quoteRequestId)
+                .orElseThrow(() -> new ResourceNotFoundException("부모 견적 요청을 찾을 수 없습니다."));
+
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        // 2. 부모 견적 요청서가 이미 마감되었는지 확인 (마감 기능)
+        if (quoteRequest.getStatus() == QuoteStatus.COMPLETED) {
+            throw new IllegalStateException("이미 처리가 완료된 견적 요청입니다.");
+        }
+
+        // 3. 부모 견적 요청서의 상태를 'COMPLETED'로 변경하여 마감 처리합니다.
+        quoteRequest.setStatus(QuoteStatus.COMPLETED);
+
         List<Estimate> otherEstimates = estimateRepository.findByQuoteRequestAndStatus(quoteRequest, EstimateStatus.PENDING);
 
         for (Estimate other : otherEstimates) {
@@ -244,7 +272,7 @@ public class EstimateService {
 
         // 4. ✅ [수정] 채팅 데이터 삭제 로직 (JPA + MongoDB 연동)
         // 4-1. 먼저, 이 견적 요청과 관련된 모든 '채팅방' 정보를 JPA에서 조회합니다.
-        List<ChatRoom> chatRoomsToDelete = chatRoomRepository.findAllByQuoteRequest_Id(quoteRequest.getRequestId());
+        List<ChatRoom> chatRoomsToDelete = chatRoomRepository.findAllByQuoteRequest_RequestId(quoteRequest.getRequestId());
 
         // 4-2. 각 채팅방에 속한 '채팅 메시지'들을 MongoDB에서 삭제합니다.
         for (ChatRoom room : chatRoomsToDelete) {
@@ -262,7 +290,8 @@ public class EstimateService {
      */
     public List<EstimateResDTO> getEstimatesForUser(Integer quoteRequestId) {
         // Repository에서 REJECTED가 아닌 것만 조회
-        List<Estimate> estimates = estimateRepository.findByQuoteRequestIdAndStatusNot(
+
+        List<Estimate> estimates = estimateRepository.findByQuoteRequestRequestIdAndStatusNot(
                 quoteRequestId,
                 EstimateStatus.REJECTED
         );

@@ -57,4 +57,8 @@ public class CompletedRepair {
     @Column(name = "created_at", updatable = false) // 생성 시간은 업데이트되지 않도록 설정
     private LocalDateTime createdAt;
     // 잘못된 빌더 코드는 여기서 제거합니다.
+
+    // ▼▼▼ 이 코드를 추가하세요 ▼▼▼
+    @OneToOne(mappedBy = "completedRepair", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Review review;
 }

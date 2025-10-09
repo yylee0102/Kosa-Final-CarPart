@@ -18,17 +18,8 @@ public class CompletedRepairController {
 
     private final CompletedRepairService completedRepairService;
 
-    /**
-     * (사용자용) 내 수리 완료 내역 목록 조회
-     * GET /api/users/my-completed-repairs
-     */
-    @GetMapping("/api/users/my-completed-repairs")
-    public ResponseEntity<List<CompletedRepairResDTO>> getMyCompletedRepairsForUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        log.info("===== [API-IN] 사용자 수리 내역 조회 요청: 사용자 ID '{}' =====", userId);
-        List<CompletedRepairResDTO> repairs = completedRepairService.getCompletedRepairListByUserId(userId);
-        return ResponseEntity.ok(repairs);
-    }
+
+
 
     /**
      * (카센터용) 우리 카센터의 수리 완료 내역 목록 조회

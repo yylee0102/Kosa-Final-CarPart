@@ -38,4 +38,8 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     List<Review> findAllByUser_UserId(String userId);
 
 
+    // ▼▼▼ 이 메소드를 추가하세요 ▼▼▼
+    boolean existsByCompletedRepair_Id(Long repairId);
+
+
 }

@@ -59,8 +59,10 @@ public class CarCenterController {
 
     public ResponseEntity<?> getAllQuoteRequests() { // ⬅️ 이 메서드 이름은 URL과 관련있어 그대로 둬도 괜찮습니다.
         try {
-            // [수정!] 서비스의 변경된 메서드 이름을 호출합니다.
-            List<QuoteRequestResDTO> requests = quoteRequestService.getAvailableQuoteRequests();
+            // ✅ 수정 후: getAllQuoteRequests()
+            List<QuoteRequestResDTO> requests =  quoteRequestService.getAvailableQuoteRequests();
+
+
             log.info("✅ Returning quote requests: {}", requests); // 로그 추가
 
             return ResponseEntity.ok(requests);

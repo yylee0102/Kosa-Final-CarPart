@@ -108,13 +108,11 @@ public class AdminController {
     //    서비스 시그니처가 CsInquiry 전체를 받으므로 그대로 Body 매핑합니다.
     @PutMapping("/cs/{inquiryId}/answer")
     public ResponseEntity<Void> answerInquiry(@PathVariable Integer inquiryId,
-                                              @RequestBody CsInquiry csInquiry) {
-        // 안전하게 ID 동기화
-        csInquiry.setInquiryId(inquiryId);
-        adminService.answerInquiry(csInquiry);
+                                              @RequestBody Map<String, String> payload) { // 👈 Map 형태로 받도록 변경
+        String answerContent = payload.get("answerContent"); // Map에서 답변 내용만 추출
+        adminService.answerInquiry(inquiryId, answerContent); // 👈 서비스 메소드 호출 방식 변경 (다음 단계에서 수정)
         return ResponseEntity.noContent().build();
     }
-
     // 15) 공지사항 - 등록
     @PostMapping("/announcements")
     public ResponseEntity<Void> addAnnouncement(@RequestBody Announcement announcement) {

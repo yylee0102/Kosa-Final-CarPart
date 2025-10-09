@@ -1,5 +1,6 @@
 package com.spring.carparter.entity;
 
+import com.spring.carparter.entity.type.QuoteStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
@@ -71,5 +72,10 @@ public class QuoteRequest {
 //    @OneToMany(mappedBy = "quoteRequest", cascade = CascadeType.ALL, orphanRemoval = true)
 //    @BatchSize(size = 10) // N+1 문제를 방지하기 위한 배치 사이즈 설정 (선택적이지만 권장)
 //    private List<Estimate> estimates = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private QuoteStatus status;
+
 
 }

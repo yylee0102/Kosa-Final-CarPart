@@ -159,18 +159,19 @@ public class AdminService {
         );
     }
 
+    // AdminService.java
+
     /**
      * 13. 문의에 대한 답변 / 수정
      * */
     @Transactional
-    public void answerInquiry(CsInquiry csInquiry){
-        CsInquiry fcsInquiry = csInquiryRepository.findById(csInquiry.getInquiryId()).orElseThrow(
-                () -> new RuntimeException(csInquiry + "찾지 못함")
+    public void answerInquiry(Integer inquiryId, String answerContent){ // 👈 ID와 답변 내용만 직접 받도록 변경
+        CsInquiry fcsInquiry = csInquiryRepository.findById(inquiryId).orElseThrow(
+                () -> new RuntimeException(inquiryId + "번 문의를 찾지 못했습니다.")
         );
-        fcsInquiry.setAnswerContent(csInquiry.getAnswerContent());
+        fcsInquiry.setAnswerContent(answerContent); // 받아온 내용으로 설정
         fcsInquiry.setAnsweredAt(LocalDateTime.now());
     }
-
     /**
      * 14. 공지사항 등록
      * */
