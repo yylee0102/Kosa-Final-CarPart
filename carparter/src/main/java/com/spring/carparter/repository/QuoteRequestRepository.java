@@ -1,6 +1,7 @@
 package com.spring.carparter.repository;
 
 import com.spring.carparter.entity.QuoteRequest;
+import com.spring.carparter.entity.type.QuoteStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,7 +24,7 @@ public interface QuoteRequestRepository extends JpaRepository<QuoteRequest, Inte
     // List<QuoteRequest> findAllWithDetails();
 
     //특정 사용자가 작성한 모든 견적 요청 목록을 User, UserCar 정보와 함께 조회합니다.
-    @Query("SELECT qr FROM QuoteRequest qr JOIN FETCH qr.user u JOIN FETCH qr.userCar uc WHERE u.id = :userId ORDER BY qr.createdAt DESC")
+    @Query("SELECT qr FROM QuoteRequest qr JOIN FETCH qr.user u JOIN FETCH qr.userCar uc WHERE u.userId = :userId ORDER BY qr.createdAt DESC")
     List<QuoteRequest> findUserRequestsWithDetails(@Param("userId") String userId);
 
     /**
@@ -56,4 +57,35 @@ public interface QuoteRequestRepository extends JpaRepository<QuoteRequest, Inte
             "LEFT JOIN FETCH qr.requestImages img " +
             "ORDER BY qr.createdAt DESC")
     List<QuoteRequest> findAllWithDetails();
+
+
+    // ✅ 이 메서드 선언을 추가해주세요.
+    boolean existsByUser_UserId(String userId);
+
+    /**
+     * ✅ [수정 또는 추가] userId로 견적 요청을 조회할 때,
+     * user, userCar, estimates 정보를 한 번의 쿼리로 모두 가져옵니다.
+     */
+    @Query("SELECT qr FROM QuoteRequest qr " +
+            "JOIN FETCH qr.user " +
+            "JOIN FETCH qr.userCar " +
+            "LEFT JOIN FETCH qr.estimates " +
+            "WHERE qr.user.userId = :userId")
+    Optional<QuoteRequest> findByUserIdWithDetails(@Param("userId") String userId);
+
+
+
+
+    /**
+     * [신규 추가] 특정 상태(Status)의 모든 견적 요청을 관련 정보와 함께 조회합니다.
+     * 카센터의 '견적 요청 관리' 페이지를 위한 핵심 메소드입니다.
+     */
+    @Query("SELECT DISTINCT qr FROM QuoteRequest qr " +
+            "JOIN FETCH qr.user u " +
+            "JOIN FETCH qr.userCar uc " +
+            "LEFT JOIN FETCH qr.requestImages img " +
+            // "LEFT JOIN FETCH qr.estimates est " +
+            "WHERE qr.status = :status " + // ⬅️ 상태(status)를 기준으로 필터링하는 조건
+            "ORDER BY qr.createdAt DESC")
+    List<QuoteRequest> findByStatusWithDetails(@Param("status") QuoteStatus status);
 }

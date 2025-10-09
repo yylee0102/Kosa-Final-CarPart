@@ -2,8 +2,9 @@ package com.spring.carparter.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional; // readOnly=true를 위해 필요
 import org.springframework.stereotype.Service;
 
 import com.spring.carparter.dto.CsInquiryReqDTO;
@@ -87,4 +88,20 @@ public class CsInquiryService {
         // 6. 결과 DTO로 변환하여 반환
         return new CsInquiryResDTO(updatedInquiry);
     }
+
+    // ▼▼▼▼▼ 이 메소드를 클래스 내부에 추가하세요 ▼▼▼▼▼
+    /**
+     * 특정 사용자의 모든 문의 내역을 조회하는 메소드
+     */
+    @Transactional(readOnly = true)
+    public List<CsInquiryResDTO> getInquiriesByUserId(String userId) {
+        // Repository를 사용해 해당 사용자의 문의 엔티티 목록을 DB에서 조회
+        List<CsInquiry> inquiries = csInquiryRepository.findAllByUserUserIdOrderByCreatedAtDesc(userId);
+
+        // 조회된 엔티티 목록을 DTO 목록으로 변환하여 반환
+        return inquiries.stream()
+                .map(CsInquiryResDTO::new) // 생성자를 사용하여 DTO로 변환
+                .collect(Collectors.toList());
+    }
+    // ▲▲▲▲▲ 여기까지 추가 ▲▲▲▲▲
 }

@@ -3,6 +3,7 @@ package com.spring.carparter.service;
 import com.spring.carparter.dto.CarCenterReqDTO;
 import com.spring.carparter.dto.CarCenterResDTO;
 import com.spring.carparter.dto.Coordinates;
+import com.spring.carparter.dto.QuoteRequestResDTO;
 import com.spring.carparter.entity.CarCenter;
 import com.spring.carparter.entity.CarCenterApproval;
 import com.spring.carparter.exception.DuplicateException;
@@ -29,7 +30,7 @@ public class CarCenterService {
     private final GeocodingService geocodingService;
     private final CarCenterApprovalRepository carCenterApprovalRepository;
     private final PasswordEncoder passwordEncoder; // ✅ 1. PasswordEncoder 의존성 주입
-
+    private final QuoteRequestService quoteRequestService;
 
 
     public List<CarCenterResDTO> searchCenters(String keyword, String category, String district, String sort) {
@@ -195,4 +196,18 @@ public class CarCenterService {
         }
         carCenterRepository.deleteById(centerId);
     }
+
+
+    /**
+     * 카센터가 볼 수 있는 모든 견적 요청 목록을 상세 DTO로 조회합니다.
+     */
+    @Transactional(readOnly = true)
+    public List<QuoteRequestResDTO> getAllQuoteRequestsForCenter() {
+        // QuoteRequestService의 기존 메소드를 호출하되,
+        // 반환 타입이 상세 정보를 포함한 QuoteRequestResDTO인지 확인해야 합니다.
+        // 만약 서비스에 상세 DTO를 반환하는 메소드가 없다면 새로 만들어야 합니다.
+        return quoteRequestService.getAllQuoteRequests();
+    }
+
+
 }

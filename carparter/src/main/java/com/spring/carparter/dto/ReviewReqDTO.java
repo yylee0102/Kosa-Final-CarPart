@@ -16,7 +16,8 @@ public class ReviewReqDTO {
 
     private String centerId; // 리뷰를 남길 정비소 ID
     private Integer rating;  // 평점
-    private String content;  // 내용
+    private String content;
+    private Long repairId; // 내용
 
     // DTO를 Review 엔티티로 변환하는 메서드 (Service에서 사용)
     public Review toEntity(CarCenter carCenter, User user) {

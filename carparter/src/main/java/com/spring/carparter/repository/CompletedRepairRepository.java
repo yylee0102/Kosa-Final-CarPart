@@ -29,11 +29,15 @@ public interface CompletedRepairRepository extends JpaRepository<CompletedRepair
     @Query(value = """
         SELECT cr.original_request_id
         FROM completed_repairs cr
-        WHERE cr.id = :repairId
+        WHERE cr.repair_id = :repairId
         """, nativeQuery = true)
     Optional<Integer> findRequestIdByRepairIdNative(@Param("repairId") Long repairId);
 
-
-
-
+    // findRequestIdByRepairIdNative 메소드는 이제 필요 없거나, 이름을 findOriginalRequestIdByRepairId로 바꾸는 것이 좋습니다.
+        @Query(value = "SELECT cr.original_request_id FROM completed_repairs cr WHERE cr.repair_id = :repairId", nativeQuery = true)
+        Optional<Integer> findOriginalRequestIdByRepairId(@Param("repairId") Long repairId);
 }
+
+
+
+

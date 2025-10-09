@@ -101,7 +101,7 @@ public class CompletedRepairService {
         log.info(" -> 사용자 '{}'에게 리뷰 요청 알림 전송을 시작합니다.", repair.getUserId());
         userRepository.findById(repair.getUserId()).ifPresent(userToNotify -> {
             String message = "'" + repair.getCarCenterName() + "'에서의 수리가 완료되었습니다. 소중한 리뷰를 남겨주세요!";
-            String url = "/mypage/reviews/new?repairId=" + repair.getId();
+            String url = "/mypage/reviews/new?repairId=" + repair.getRepairId();
             notificationService.sendNotificationToUser(userToNotify, message, url);
         });
 

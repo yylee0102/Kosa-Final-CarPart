@@ -4,8 +4,11 @@ package com.spring.carparter.controller;
 
 import com.spring.carparter.dto.ChatRoomReqDTO;
 import com.spring.carparter.dto.ChatRoomResDTO;
+import com.spring.carparter.dto.EstimateResDTO;
 import com.spring.carparter.entity.ChatRoom;
+import com.spring.carparter.entity.Estimate;
 import com.spring.carparter.service.ChatRoomService;
+import com.spring.carparter.service.EstimateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,6 +27,7 @@ import java.util.List;
 public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
+    private final EstimateService estimateService;
 
     // ▼▼▼ 이 메소드를 새로 추가하세요 ▼▼▼
     /**
@@ -39,7 +43,8 @@ public class ChatRoomController {
 
         String userId = userDetails.getUsername();
         // ✅ DTO에서 ID를 가져오는 메소드를 'getCenterId()'로 변경합니다.
-        String centerId = reqDTO.getCenterId();
+        EstimateResDTO estimate = estimateService.getEstimateDetails(reqDTO.getEstimateId().intValue());
+        String centerId = estimate.getCenterId();
 
         ChatRoom room = chatRoomService.findOrCreateRoom(userId, centerId);
 
