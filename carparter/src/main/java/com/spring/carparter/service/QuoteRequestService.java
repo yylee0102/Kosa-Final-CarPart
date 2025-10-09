@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QuoteRequestService {
 
     private final QuoteRequestRepository quoteRequestRepository;

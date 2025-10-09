@@ -14,6 +14,7 @@ import { ChatApiService } from '@/services/chat.api';
 import { EstimateDetailModal } from '@/domains/estimates/modals/EstimateDetailModal';
 
 
+
 // 2. 페이지 내부에 있던 중복 타입 정의를 모두 삭제합니다.
 
 export const MyQuoteRequestsPage = () => {

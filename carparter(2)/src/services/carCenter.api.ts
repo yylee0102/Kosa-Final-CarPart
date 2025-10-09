@@ -8,7 +8,14 @@
 // =================================================================
 //  API 타입 정의 (Interfaces)
 // =================================================================
-export interface QuoteRequestResDTO { requestId: number; requestDetails: string; address: string; createdAt: string; customerName: string; customerPhone: string; carModel: string; carYear: number; preferredDate: string; status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; imageUrls: string[]; }
+export interface UserCarInfo {
+    userCarId: number;
+    carModel: string;
+    modelYear: number;
+    carNumber: string; // 필요한 다른 정보도 추가
+}
+export interface QuoteRequestResDTO { requestId: number; requestDetails: string; address: string; createdAt: string; customerName: string; customerPhone: string; userCar: UserCarInfo;
+ preferredDate: string; status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; imageUrls: string[]; }
 export interface CarCenterRegisterRequest { centerId: string; password: string; centerName: string; address: string; phoneNumber: string; businessRegistrationNumber: string; openingHours: string; description?: string; }
 export interface CarCenterUpdateRequest { centerName?: string; address?: string; phoneNumber?: string; openingHours?: string; description?: string; }
 export interface CarCenterResponse { id?: string; centerId: string; centerName: string; businessRegistrationNumber: string; address: string; phoneNumber: string; status: 'PENDING' | 'ACTIVE'; description?: string; openingHours?: string; latitude?: number; longitude?: number; }

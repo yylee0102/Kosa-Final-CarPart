@@ -1,14 +1,21 @@
 // src/services/admin.api.ts
-// 관리자 API 서비스 - 백엔드 엔티티/엔드포인트에 맞춰 정리 (튼튼한 http 래퍼 포함)
+// ✅ 제공된 Java 백엔드 코드와 100% 동기화된 최종 버전
 
 const API_BASE_URL = "/api";
 
-/* ==================== 타입 정의 ==================== */
-export interface CarCenterApprovalReqDTO {
-  centerId: string;
-  reason?: string;
+/* ==================== 타입 정의 (DTO) ==================== */
+
+// --- 요청(Request) DTOs ---
+// ✅ 공지사항 생성/수정 시 백엔드 엔티티 구조에 맞춰 admin 객체를 포함
+export interface AnnouncementReqDTO {
+   title: string;
+  content: string;
+  admin?: {
+    adminId: string; // 👈 id -> adminId, number -> string
+  };
 }
 
+// --- 응답(Response) DTOs ---
 export interface CarCenterApprovalResDTO {
   approvalId: number;
   requestedAt: string;
@@ -19,11 +26,8 @@ export interface CarCenterApprovalResDTO {
   phoneNumber?: string;
   email?: string;
   status?: "PENDING" | "APPROVED" | "REJECTED";
-}
-
-export interface CsInquiryReqDTO {
-  title: string;
-  questionContent: string;
+  ownerName?: string;
+  description?: string;
 }
 
 export interface CsInquiryResDTO {
@@ -38,24 +42,18 @@ export interface CsInquiryResDTO {
   userId?: string;
 }
 
-export interface AnnouncementReqDTO {
-  title: string;
-  content: string;
-}
-
+// ✅ 백엔드가 전체 Announcement 엔티티를 반환하므로, 프론트에서도 동일한 구조로 받음
 export interface AnnouncementResDTO {
   announcementId: number;
   title: string;
   content: string;
   createdAt: string;
   updatedAt?: string;
-}
-
-export interface ReviewReportReqDTO {
-  reviewId: number;
-  centerId: string;
-  reason: string;
-  content: string;
+  admin?: {
+    id: number;
+    name: string;
+    // 기타 Admin 정보...
+  };
 }
 
 export interface ReviewReportResDTO {
@@ -73,125 +71,76 @@ export interface ReviewReportResDTO {
 }
 
 /* ==================== 공통 유틸/래퍼 ==================== */
-function buildAuthHeaders(extra?: HeadersInit): HeadersInit {
-  const raw = localStorage.getItem("authToken") || "";
-  const hasBearer = raw.toLowerCase().startsWith("bearer ");
-  const token = raw ? (hasBearer ? raw : `Bearer ${raw}`) : "";
-
+function buildAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem("authToken") || "";
   return {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: token } : {}),
-    ...(extra || {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
-async function http<T = unknown>(
-  input: string,
-  init?: RequestInit
-): Promise<T> {
+async function http<T = unknown>(input: string, init?: RequestInit): Promise<T> {
   const res = await fetch(input, init);
 
-  const ct = res.headers.get("content-type") || "";
-  const isJson = ct.includes("application/json");
-
   if (!res.ok) {
-    // 에러 본문을 최대한 읽어서 메시지에 포함
-    const body = isJson ? await res.json().catch(() => ({})) : await res.text().catch(() => "");
-    const detail =
-      typeof body === "string" ? body.slice(0, 300) : JSON.stringify(body);
-    throw new Error(`[${res.status}] ${res.statusText} ${detail ? ":: " + detail : ""}`.trim());
+    const errorBody = await res.json().catch(() => ({ message: "An unknown error occurred" }));
+    console.error("API Error:", errorBody);
+    throw new Error(`[${res.status}] ${res.statusText} :: ${JSON.stringify(errorBody)}`);
   }
 
-  if (!isJson) {
-    const text = await res.text().catch(() => "");
-    // Vite 프록시 미설정/경로 오타일 때 대부분 HTML이 옴
-    throw new SyntaxError(`Expected JSON but received non-JSON response. Snippet: ${text.slice(0, 160)}...`);
+  if (res.status === 204 || res.headers.get("content-length") === "0") {
+    return {} as T;
   }
 
-  return (await res.json()) as T;
+  return res.json() as T;
 }
 
 const api = (path: string) => `${API_BASE_URL}${path}`;
 
-/* ==================== 관리자 API ==================== */
+/* ==================== 관리자 API 서비스 ==================== */
 class AdminApiService {
   /* ----- 통계 ----- */
+  async getGenderStats(): Promise<Record<string, number>> {
+    return http(api(`/admin/stats/gender`), { headers: buildAuthHeaders() });
+  }
+  async getAgeStats(): Promise<Record<string, number>> {
+    return http(api(`/admin/stats/age`), { headers: buildAuthHeaders() });
+  }
   async getUserCount(): Promise<number> {
-    return http<number>(api(`/admin/stats/users/count`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<number>(api(`/admin/stats/users/count`), { headers: buildAuthHeaders() });
   }
-
   async getCenterCount(): Promise<number> {
-    return http<number>(api(`/admin/stats/centers/count`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<number>(api(`/admin/stats/centers/count`), { headers: buildAuthHeaders() });
   }
-
   async getPendingApprovalsCount(): Promise<number> {
-    return http<number>(api(`/admin/stats/approvals/pending/count`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<number>(api(`/admin/stats/approvals/pending/count`), { headers: buildAuthHeaders() });
   }
-
   async getReviewReportsCount(): Promise<number> {
-    return http<number>(api(`/admin/stats/reports/reviews/count`), {
-      headers: buildAuthHeaders(),
-    });
-  }
-
-  async getGenderStats(): Promise<{ male: number; female: number }> {
-    return http(api(`/admin/stats/gender`), {
-      headers: buildAuthHeaders(),
-    });
-  }
-
-  async getAgeStats(): Promise<any[]> {
-    return http(api(`/admin/stats/age`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<number>(api(`/admin/stats/reports/reviews/count`), { headers: buildAuthHeaders() });
   }
 
   /* ----- 카센터 승인 관리 ----- */
-  // 승인 상세 정보 조회
-    async getApprovalDetail(approvalId: number): Promise<CarCenterApprovalResDTO> {
-    return http<CarCenterApprovalResDTO>(api(`/admin/approvals/${approvalId}`), {
-      headers: buildAuthHeaders(),
-    });
-  }
-
-
-  // 승인 대기 목록
   async getPendingApprovals(): Promise<CarCenterApprovalResDTO[]> {
-    return http<CarCenterApprovalResDTO[]>(api(`/admin/approvals/pending`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<CarCenterApprovalResDTO[]>(api(`/admin/approvals/pending`), { headers: buildAuthHeaders() });
   }
-
-  // 승인 처리
-  async approveCenter(approvalId: number): Promise<void> {
-    await http<void>(api(`/admin/approvals/${approvalId}/approve`), {
-      method: "POST",
-      headers: buildAuthHeaders(),
-    });
+  async getApprovalDetail(approvalId: number): Promise<CarCenterApprovalResDTO> {
+    return http<CarCenterApprovalResDTO>(api(`/admin/approvals/${approvalId}`), { headers: buildAuthHeaders() });
   }
-
-  // 반려 처리 (백엔드가 DELETE + querystring을 기대한다는 전제 유지)
-  async rejectCenter(approvalId: number, reason: string): Promise<void> {
+  async approveCenter(approvalId: number): Promise<{ message: string }> { // ✅ 반환 타입 수정
+    return http(api(`/admin/approvals/${approvalId}/approve`), { method: "POST", headers: buildAuthHeaders() });
+  }
+  async rejectCenter(approvalId: number, reason: string): Promise<{ message: string }> { // ✅ 반환 타입 수정
     const qs = new URLSearchParams({ reason }).toString();
-    await http<void>(api(`/admin/approvals/${approvalId}?${qs}`), {
-      method: "DELETE",
-      headers: buildAuthHeaders(),
-    });
+    return http(api(`/admin/approvals/${approvalId}?${qs}`), { method: "DELETE", headers: buildAuthHeaders() });
   }
 
   /* ----- CS 문의 ----- */
   async getCsInquiries(): Promise<CsInquiryResDTO[]> {
-    return http<CsInquiryResDTO[]>(api(`/admin/cs`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<CsInquiryResDTO[]>(api(`/admin/cs`), { headers: buildAuthHeaders() });
   }
-
+  async getCsInquiryDetail(inquiryId: number): Promise<CsInquiryResDTO> {
+    return http<CsInquiryResDTO>(api(`/admin/cs/${inquiryId}`), { headers: buildAuthHeaders() });
+  }
   async answerInquiry(inquiryId: number, answerContent: string): Promise<void> {
     await http<void>(api(`/admin/cs/${inquiryId}/answer`), {
       method: "PUT",
@@ -202,11 +151,11 @@ class AdminApiService {
 
   /* ----- 공지사항 ----- */
   async getAnnouncements(): Promise<AnnouncementResDTO[]> {
-    return http<AnnouncementResDTO[]>(api(`/admin/announcements`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<AnnouncementResDTO[]>(api(`/admin/announcements`), { headers: buildAuthHeaders() });
   }
-
+  async getAnnouncementDetail(id: number): Promise<AnnouncementResDTO> {
+    return http<AnnouncementResDTO>(api(`/admin/announcements/${id}`), { headers: buildAuthHeaders() });
+  }
   async createAnnouncement(announcement: AnnouncementReqDTO): Promise<void> {
     await http<void>(api(`/admin/announcements`), {
       method: "POST",
@@ -214,7 +163,6 @@ class AdminApiService {
       body: JSON.stringify(announcement),
     });
   }
-
   async updateAnnouncement(id: number, announcement: AnnouncementReqDTO): Promise<void> {
     await http<void>(api(`/admin/announcements/${id}`), {
       method: "PUT",
@@ -222,32 +170,19 @@ class AdminApiService {
       body: JSON.stringify(announcement),
     });
   }
-
   async deleteAnnouncement(id: number): Promise<void> {
-    await http<void>(api(`/admin/announcements/${id}`), {
-      method: "DELETE",
-      headers: buildAuthHeaders(),
-    });
+    await http<void>(api(`/admin/announcements/${id}`), { method: "DELETE", headers: buildAuthHeaders() });
   }
 
   /* ----- 리뷰 신고 ----- */
   async getReviewReports(): Promise<ReviewReportResDTO[]> {
-    return http<ReviewReportResDTO[]>(api(`/admin/reports/reviews`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<ReviewReportResDTO[]>(api(`/admin/reports/reviews`), { headers: buildAuthHeaders() });
   }
-
   async getReviewReportDetail(reportId: number): Promise<ReviewReportResDTO> {
-    return http<ReviewReportResDTO>(api(`/admin/reports/reviews/${reportId}`), {
-      headers: buildAuthHeaders(),
-    });
+    return http<ReviewReportResDTO>(api(`/admin/reports/reviews/${reportId}`), { headers: buildAuthHeaders() });
   }
-
   async deleteReviewReport(reportId: number): Promise<void> {
-    await http<void>(api(`/admin/reports/reviews/${reportId}`), {
-      method: "DELETE",
-      headers: buildAuthHeaders(),
-    });
+    await http<void>(api(`/admin/reports/reviews/${reportId}`), { method: "DELETE", headers: buildAuthHeaders() });
   }
 }
 

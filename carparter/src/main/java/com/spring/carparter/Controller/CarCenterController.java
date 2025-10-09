@@ -63,6 +63,7 @@ public class CarCenterController {
             List<QuoteRequestResDTO> requests =  quoteRequestService.getAvailableQuoteRequests();
 
 
+
             log.info("✅ Returning quote requests: {}", requests); // 로그 추가
 
             return ResponseEntity.ok(requests);

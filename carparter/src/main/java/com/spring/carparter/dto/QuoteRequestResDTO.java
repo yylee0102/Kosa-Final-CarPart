@@ -3,6 +3,7 @@ package com.spring.carparter.dto;
 import com.spring.carparter.entity.QuoteRequest;
 import com.spring.carparter.entity.RequestImage;
 import lombok.Getter;
+
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,8 @@ public class QuoteRequestResDTO {
     private final String customerPhone;
     private final UserCarResDTO userCar;       // ⬅️ 필드 이름 변경 (car -> userCar)
     private final List<String> imageUrls;   // ⬅️ 필드 이름 및 타입 변경 (images -> imageUrls)
+
+
     private final List<EstimateResDTO> estimates;
 
 
@@ -61,10 +64,12 @@ public class QuoteRequestResDTO {
                         .collect(Collectors.toList());
     }
 
+
     /**
      * 외부에서 DTO를 생성할 때 사용하는 정적 팩토리 메소드
      */
     public static QuoteRequestResDTO from(QuoteRequest entity, int estimateCount) {
         return new QuoteRequestResDTO(entity, estimateCount);
+
     }
 }

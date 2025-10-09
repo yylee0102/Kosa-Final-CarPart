@@ -1,57 +1,68 @@
-/**
- * 관리자 대시보드
- * 
- * 이 페이지의 역할:
- * - 시스템 전체 통계 및 현황 모니터링
- * - 카센터 가입 승인 관리
- * - 공지사항 작성 및 관리
- * - 신고 접수 내역 처리
- * - 전체 서비스 운영 관리
- * 
- * 왜 필요한가:
- * - 플랫폼 전체의 건전한 운영을 위한 관리 도구
- * - 카센터 품질 관리를 통한 서비스 신뢰도 향상
- * - 사용자 안전과 만족을 위한 신고 처리 시스템
- * - 효율적인 공지사항 전달로 사용자 소통 강화
- */
-
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import PageContainer from "@/shared/components/layout/PageContainer";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminStats from "@/domains/admin/components/AdminStats";
 import AdminCenterApproval from "@/domains/admin/components/AdminCenterApproval";
-import AdminNoticeManagement from "@/domains/admin/components/AdminNoticeManagement";
-import AdminReportManagement from "@/domains/admin/components/AdminReportManagement";
 import ProtectedRoute from "@/shared/components/ProtectedRoute";
-import { BarChart3, Users, MessageSquare, AlertTriangle, Settings, HelpCircle } from "lucide-react";
+import { BarChart3, Users, MessageSquare, AlertTriangle, HelpCircle } from "lucide-react";
 import CsInquiryManagementPage from "@/domains/admin/pages/CsInquiryManagementPage";
 import ReviewReportManagementPage from "@/domains/admin/pages/ReviewReportManagementPage";
+import adminApiService from "@/services/admin.api";
+import AdminNoticeManagement from "../components/AdminNoticeManagement";
+
+// ✅ API 서비스의 변경된 타입에 맞춰 인터페이스를 수정합니다.
+interface DashboardStats {
+  users: { total: number; new: number; centers: number };
+  pendingCenters: { total: number; pending: number; approved: number };
+  notices: { total: number; active: number };
+  reports: { total: number; pending: number; resolved: number };
+  genderData: Record<string, number>; // 👈 '{ male: number; female: number; }' 에서 변경
+  ageData: Record<string, number>;    // 👈 [key: string] 문법을 Record로 변경하여 통일
+}
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [dashboardStats, setDashboardStats] = useState({
-    users: { total: 12547, new: 234, centers: 89 },
-    pendingCenters: { total: 34, pending: 12, approved: 22 },
-    notices: { total: 15, active: 12 },
-    reports: { total: 23, pending: 7, resolved: 16 }
-  });
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: API 연결 - 관리자 대시보드 데이터 조회
-    // GET /api/admin/stats
-    // GET /api/admin/dashboard-overview
-    fetchAdminData();
-  }, []);
+    if (activeTab === "dashboard") {
+      fetchAdminData();
+    }
+  }, [activeTab]);
 
   const fetchAdminData = async () => {
+    setIsLoading(true);
     try {
-      // 실제 API 연결 시 구현
-      console.log("관리자 대시보드 데이터 조회");
+      const [
+        userCount,
+        centerCount,
+        pendingApprovalsCount,
+        reviewReportsCount,
+        genderStats,
+        ageStats,
+      ] = await Promise.all([
+        adminApiService.getUserCount(),
+        adminApiService.getCenterCount(),
+        adminApiService.getPendingApprovalsCount(),
+        adminApiService.getReviewReportsCount(),
+        adminApiService.getGenderStats(),
+        adminApiService.getAgeStats(),
+      ]);
+
+      setDashboardStats({
+        users: { total: userCount, new: 0, centers: centerCount },
+        pendingCenters: { total: pendingApprovalsCount, pending: pendingApprovalsCount, approved: 0 },
+        notices: { total: 0, active: 0 }, // 실제 공지사항 카운트 API가 있다면 연결 필요
+        reports: { total: reviewReportsCount, pending: reviewReportsCount, resolved: 0 },
+        genderData: genderStats, // API 응답을 그대로 전달
+        ageData: ageStats,
+      });
     } catch (error) {
-      console.error("관리자 데이터 조회 실패:", error);
+      console.error("관리자 대시보드 데이터 조회 실패:", error);
+      setDashboardStats(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,9 +70,8 @@ export default function AdminDashboard() {
     <ProtectedRoute allowedUserTypes={["ADMIN"]} fallbackMessage="관리자만 접근할 수 있는 페이지입니다.">
       <PageContainer>
         <div className="container mx-auto px-4 py-6">
-          {/* 탭 네비게이션 */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-5"> {/* ✅ 리뷰 신고 탭이 중복되어 5개로 수정 */}
               <TabsTrigger value="dashboard" className="gap-2">
                 <BarChart3 className="h-4 w-4" />
                 대시보드
@@ -76,49 +86,39 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger value="reports" className="gap-2">
                 <AlertTriangle className="h-4 w-4" />
-                신고관리
+                리뷰 신고
               </TabsTrigger>
               <TabsTrigger value="cs" className="gap-2">
                 <HelpCircle className="h-4 w-4" />
                 1:1 문의
               </TabsTrigger>
-              <TabsTrigger value="reviews" className="gap-2">
-                <MessageSquare className="h-4 w-4" />
-                리뷰 신고
-              </TabsTrigger>
             </TabsList>
 
-          {/* 대시보드 탭 */}
-          <TabsContent value="dashboard">
-            <AdminStats stats={dashboardStats} />
-          </TabsContent>
+            <TabsContent value="dashboard">
+              {isLoading ? (
+                <div className="text-center py-20"><p>📊 대시보드 데이터를 불러오는 중입니다...</p></div>
+              ) : dashboardStats ? (
+                <AdminStats stats={dashboardStats} />
+              ) : (
+                <div className="text-center py-20 text-red-600"><p>❗️ 대시보드 데이터를 불러오는 데 실패했습니다.</p></div>
+              )}
+            </TabsContent>
 
-          {/* 카센터 승인 관리 탭 */}
-          <TabsContent value="centers">
-            <AdminCenterApproval />
-          </TabsContent>
-
-          {/* 공지사항 관리 탭 */}
-          <TabsContent value="notices">
-            <AdminNoticeManagement />
-          </TabsContent>
-
-          {/* 신고 관리 탭 */}
-          <TabsContent value="reports">
-            <AdminReportManagement />
-          </TabsContent>
-
-          {/* 1:1 문의 관리 탭 */}
-          <TabsContent value="cs">
-            <CsInquiryManagementPage />
-          </TabsContent>
-
-          {/* 리뷰 신고 관리 탭 */}
-          <TabsContent value="reviews">
-            <ReviewReportManagementPage />
-          </TabsContent>
-        </Tabs>
-      </div>
+            <TabsContent value="centers">
+              <AdminCenterApproval />
+            </TabsContent>
+            <TabsContent value="notices">
+              <AdminNoticeManagement />
+            </TabsContent>
+            {/* ✅ AdminReportManagement이 분리되었으므로 ReviewReportManagementPage를 직접 사용 */}
+            <TabsContent value="reports">
+              <ReviewReportManagementPage />
+            </TabsContent>
+            <TabsContent value="cs">
+              <CsInquiryManagementPage />
+            </TabsContent>
+          </Tabs>
+        </div>
       </PageContainer>
     </ProtectedRoute>
   );
