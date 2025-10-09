@@ -177,6 +177,18 @@ public class AdminService {
      * */
     @Transactional
     public void addAnnouncement(Announcement announcement){
+        // 1. 프론트엔드에서 보낸 Announcement 객체 안의 '임시' Admin 객체를 가져옵니다.
+        Admin transientAdmin = announcement.getAdmin();
+
+        // 2. '임시' Admin 객체에서 id를 꺼내, 데이터베이스에서 '실제' Admin 엔티티를 조회합니다.
+        //    .getId()를 .getAdminId()로 수정합니다.
+        Admin managedAdmin = adminRepository.findById(transientAdmin.getAdminId()) // 👈 이 부분 수정
+                .orElseThrow(() -> new RuntimeException("ID에 해당하는 관리자를 찾을 수 없습니다: " + transientAdmin.getAdminId()));
+
+        // 3. 프론트에서 받은 Announcement 객체의 '임시' Admin을 '실제' Admin으로 교체합니다.
+        announcement.setAdmin(managedAdmin);
+
+        // 4. 이제 모든 관계가 완벽해진 Announcement 객체를 데이터베이스에 저장합니다.
         announcementRepository.save(announcement);
     }
 
