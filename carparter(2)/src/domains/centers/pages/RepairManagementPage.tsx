@@ -96,7 +96,7 @@ export const RepairManagementPage = () => {
               </TableHeader>
               <TableBody>
                 {inProgressRepairs.map(repair => (
-                  <TableRow key={repair.id}>
+                  <TableRow key={repair.repairId}>
                     <TableCell>{repair.userName}</TableCell>
                     <TableCell className="truncate max-w-xs">{repair.repairDetails}</TableCell>
                     <TableCell>{repair.finalCost.toLocaleString()}원</TableCell>
@@ -104,7 +104,7 @@ export const RepairManagementPage = () => {
                       <Button variant="outline" size="sm" onClick={() => handleViewDetails(repair)}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(repair.id)}>
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(repair.repairId)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>

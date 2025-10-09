@@ -17,7 +17,8 @@ public class CompletedRepair {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "repair_id") // ⬅️ DB 컬럼명 명시
+    private Long repairId; // ⬅️ 필드 이름 변경 (id -> repairId)
 
     @Column(name = "user_id", nullable = false)
     private String userId;

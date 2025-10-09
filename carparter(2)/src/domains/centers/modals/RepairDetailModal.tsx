@@ -29,7 +29,7 @@ export const RepairDetailModal = ({ open, onClose, repair, onMarkAsComplete }: P
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>수리 내역 상세 정보 (#{repair.id})</DialogTitle>
+          <DialogTitle>수리 내역 상세 정보 (#{repair.repairId})</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="flex justify-between items-center">
@@ -56,7 +56,7 @@ export const RepairDetailModal = ({ open, onClose, repair, onMarkAsComplete }: P
           {/* 버튼 영역 */}
           <div className="flex gap-2 pt-4 border-t">
             {repair.status === 'IN_PROGRESS' && (
-              <Button onClick={() => onMarkAsComplete(repair.id)} className="flex-1">
+              <Button onClick={() => onMarkAsComplete(repair.repairId)} className="flex-1">
                 수리 완료 처리
               </Button>
             )}

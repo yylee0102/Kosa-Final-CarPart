@@ -39,7 +39,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
 
     // ▼▼▼ 이 메소드를 추가하세요 ▼▼▼
-    boolean existsByCompletedRepair_Id(Long repairId);
+    boolean existsByCompletedRepair_RepairId(Long repairId);
 
 
 }

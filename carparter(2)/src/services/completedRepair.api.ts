@@ -2,7 +2,7 @@
 
 // DTO 타입 정의는 동일하게 유지합니다.
 export interface CompletedRepairResDTO {
-  id: number;
+  repairId: number;
   userId: string;
   userName: string;
   carCenterId: string;

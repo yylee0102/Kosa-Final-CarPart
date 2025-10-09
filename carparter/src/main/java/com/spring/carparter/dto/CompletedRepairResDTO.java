@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class CompletedRepairResDTO {
 
-    private Long id;
+    private Long repairId;
     private String userName;
     private String carCenterName;
     private String carCenterId;
@@ -27,7 +27,7 @@ public class CompletedRepairResDTO {
      */
     public static CompletedRepairResDTO from(CompletedRepair entity) {
         return CompletedRepairResDTO.builder()
-                .id(entity.getId())
+                .repairId(entity.getRepairId())
                 .userName(entity.getUserName())
                 .carCenterName(entity.getCarCenterName())
                 .carCenterId(entity.getCarCenterId())

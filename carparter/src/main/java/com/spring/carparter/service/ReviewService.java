@@ -29,7 +29,7 @@ public class ReviewService {
     public ReviewResDTO createReview(ReviewReqDTO reqDto,String userId) {
 
         // ▼▼▼ [핵심] 기존 리뷰가 있는지 확인하는 로직 추가 ▼▼▼
-        if (reqDto.getRepairId() != null && reviewRepository.existsByCompletedRepair_Id(reqDto.getRepairId())) {
+        if (reqDto.getRepairId() != null && reviewRepository.existsByCompletedRepair_RepairId(reqDto.getRepairId())) {
             throw new IllegalStateException("이미 이 수리 내역에 대한 리뷰가 작성되었습니다.");
         }
 

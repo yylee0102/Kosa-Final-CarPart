@@ -319,24 +319,14 @@ async createQuoteRequest(request: QuoteRequestReqDTO): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error('완료된 수리 내역 조회에 실패했습니다.');
-    }
-    // 1. 서버로부터 받은 원본 데이터를 임시로 저장합니다.
-  const rawData: any[] = await response.json();
-
-  // 2. map 함수를 사용해 각 항목의 'id'를 'repairId'로 이름을 바꿔서 새로운 배열을 만듭니다.
-  const formattedData = rawData.map(item => {
-    return {
-      ...item, // ⬅️ id를 제외한 나머지 모든 속성은 그대로 복사
-      repairId: item.id // ⬅️ repairId라는 새로운 속성에 id 값을 할당
-    };
-  });
-
-  return formattedData; // ⬅️ 최종적으로 변환된 데이터를 반환
-
-    // return response.json();
+    throw new Error('완료된 수리 내역 조회에 실패했습니다.');
   }
 
+  // 백엔드와 프론트엔드의 약속이 완벽하게 지켜졌으므로, 변환 없이 바로 반환합니다.
+  return response.json(); 
+}
+
+  
 
   /**
    * ✅ [신규 추가] 내 차량 목록 조회
