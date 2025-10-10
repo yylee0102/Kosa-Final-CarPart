@@ -1,20 +1,44 @@
 /**
  * 카센터 견적 요청 관리 페이지 (최종 수정본)
  * - [수정] 부모 탭 컨테이너에 포함될 수 있도록 불필요한 헤더 및 레이아웃 제거
+ * - [수정] 백엔드 DTO 구조 변경에 따라 request.userCar.carModel, request.userCar.modelYear로 접근 방식 수정
+ * - [수정] QuoteRequestDetailModal에 필요한 customerPhone, status 속성 추가
+ * - [수정] TypeScript 타입 오류 및 import 구문 수정
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // [수정 1] 올바른 import 구문
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Car, Calendar, MapPin, Eye, Edit, User, Info } from 'lucide-react';
 import { EstimateCreateModal } from '@/domains/centers/modals/EstimateCreateModal';
 import { QuoteRequestDetailModal } from '@/domains/centers/modals/QuoteRequestDetailModal';
-import carCenterApi, { QuoteRequestResDTO, EstimateReqDTO, EstimateItemReqDTO } from '@/services/carCenter.api';
+import carCenterApi, { EstimateReqDTO, EstimateItemReqDTO } from '@/services/carCenter.api';
+
+// [수정 2] status에 대한 구체적인 타입 정의
+type QuoteStatus = "PENDING" |  "COMPLETED" ; // 필요한 상태 값들
+
+// API 응답 DTO 타입 (컴포넌트 내에서 구체화)
+interface QuoteRequestResDTO {
+  requestId: number;
+  customerName: string;
+  customerPhone: string;
+  status: QuoteStatus; // 타입을 string 대신 QuoteStatus로 지정
+  userCar: {
+    carModel: string;
+    modelYear: number;
+  };
+  requestDetails: string;
+  address: string;
+  createdAt: string; // ISO 8601 형식의 날짜 문자열
+  imageUrls?: string[];
+}
 
 // 모달에 props로 넘겨주기 위한 UI 전용 타입
 interface MappedQuoteRequest {
   quoteRequestId: number;
   customerName: string;
+  customerPhone: string;
+  status: QuoteStatus; // 타입을 string 대신 QuoteStatus로 지정
   carModel: string;
   carYear: number;
   issueDescription: string;
@@ -26,10 +50,12 @@ interface MappedQuoteRequest {
 export const EstimateRequestsPage = () => {
   const { toast } = useToast();
   const [quoteRequests, setQuoteRequests] = useState<QuoteRequestResDTO[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<MappedQuoteRequest | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // [개선] 객체 대신 ID로 상태 관리
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
   const [estimateModalOpen, setEstimateModalOpen] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadQuoteRequests();
@@ -47,35 +73,42 @@ export const EstimateRequestsPage = () => {
     }
   };
   
-  const mapDtoToModalProps = (dto: QuoteRequestResDTO): MappedQuoteRequest => {
-    return {
-      quoteRequestId: dto.requestId,
-      customerName: dto.customerName,
-      carModel: dto.carModel,
-      carYear: dto.carYear,
-      issueDescription: dto.requestDetails,
-      location: dto.address,
-      createdDate: new Date(dto.createdAt).toLocaleDateString(),
-      images: dto.imageUrls,
-    };
-  };
+  const mapDtoToModalProps = (dto: QuoteRequestResDTO): MappedQuoteRequest => ({
+    quoteRequestId: dto.requestId,
+    customerName: dto.customerName,
+    customerPhone: dto.customerPhone,
+    status: dto.status,
+    carModel: dto.userCar.carModel,
+    carYear: dto.userCar.modelYear,
+    issueDescription: dto.requestDetails,
+    location: dto.address,
+    createdDate: new Date(dto.createdAt).toLocaleDateString(),
+    images: dto.imageUrls,
+  });
 
-  const handleCreateEstimate = (requestDto: QuoteRequestResDTO) => {
-    setSelectedRequest(mapDtoToModalProps(requestDto));
-    setDetailModalOpen(false);
-    setEstimateModalOpen(true);
-  };
+  const selectedRequestObject = selectedRequestId
+    ? quoteRequests.find(req => req.requestId === selectedRequestId)
+    : null;
 
-  const handleViewDetail = (requestDto: QuoteRequestResDTO) => {
-    setSelectedRequest(mapDtoToModalProps(requestDto));
-    setDetailModalOpen(true);
+  const selectedRequestProps = selectedRequestObject
+    ? mapDtoToModalProps(selectedRequestObject)
+    : null;
+    
+  const handleOpenModal = (requestId: number, type: 'detail' | 'estimate') => {
+    setSelectedRequestId(requestId);
+    if (type === 'detail') {
+      setDetailModalOpen(true);
+    } else {
+      setDetailModalOpen(false);
+      setEstimateModalOpen(true);
+    }
   };
 
   const handleEstimateSubmit = async (estimateDataFromModal: any) => {
-    if (!selectedRequest) return;
+    if (!selectedRequestProps) return;
     try {
       const apiPayload: EstimateReqDTO = {
-        requestId: selectedRequest.quoteRequestId,
+        requestId: selectedRequestProps.quoteRequestId,
         estimatedCost: estimateDataFromModal.totalPrice,
         details: estimateDataFromModal.description,
         estimateItems: estimateDataFromModal.items.map((item: any): EstimateItemReqDTO => ({
@@ -84,17 +117,19 @@ export const EstimateRequestsPage = () => {
           requiredHours: 0,
           partType: "부품",
         })),
+        workDuration: estimateDataFromModal.workDuration || "1~2일",
+        validUntil: estimateDataFromModal.validUntil || "",
       };
       await carCenterApi.submitEstimate(apiPayload);
       toast({ title: '견적서가 성공적으로 전송되었습니다.' });
       setEstimateModalOpen(false);
+      setSelectedRequestId(null);
       loadQuoteRequests();
     } catch(error) {
       toast({ title: '견적서 전송에 실패했습니다.', variant: 'destructive'});
     }
   };
-
-  // ✅ [수정] ProtectedRoute, PageContainer 및 헤더 <div>를 제거합니다.
+  
   return (
     <>
       <div className="space-y-6">
@@ -121,7 +156,7 @@ export const EstimateRequestsPage = () => {
                           <span className="text-sm text-muted-foreground">#{request.requestId}</span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                          <div className="flex items-center gap-1"><Car className="h-4 w-4" /><span>{request.carModel} ({request.carYear}년)</span></div>
+                          <div className="flex items-center gap-1"><Car className="h-4 w-4" /><span>{request.userCar.carModel} ({request.userCar.modelYear}년)</span></div>
                           <div className="flex items-center gap-1"><MapPin className="h-4 w-4" /><span>{request.address}</span></div>
                         </div>
                         <div className="text-sm text-muted-foreground">
@@ -131,8 +166,8 @@ export const EstimateRequestsPage = () => {
                         <p className="text-sm pt-2 border-t mt-2">{request.requestDetails}</p>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewDetail(request)}><Eye className="h-4 w-4 mr-1" />상세보기</Button>
-                        <Button size="sm" onClick={() => handleCreateEstimate(request)}><Edit className="h-4 w-4 mr-1" />견적 작성</Button>
+                        <Button variant="outline" size="sm" onClick={() => handleOpenModal(request.requestId, 'detail')}><Eye className="h-4 w-4 mr-1" />상세보기</Button>
+                        <Button size="sm" onClick={() => handleOpenModal(request.requestId, 'estimate')}><Edit className="h-4 w-4 mr-1" />견적 작성</Button>
                       </div>
                     </div>
                   </div>
@@ -144,8 +179,23 @@ export const EstimateRequestsPage = () => {
       </div>
       
       {/* 모달들 */}
-      <QuoteRequestDetailModal open={detailModalOpen} onClose={() => setDetailModalOpen(false)} quoteRequest={selectedRequest as any} onCreateEstimate={() => { /* ... */ }} />
-      <EstimateCreateModal open={estimateModalOpen} onClose={() => setEstimateModalOpen(false)} quoteRequest={selectedRequest} onSubmit={handleEstimateSubmit} />
+      <QuoteRequestDetailModal 
+        open={detailModalOpen} 
+        onClose={() => setDetailModalOpen(false)} 
+        quoteRequest={selectedRequestProps}
+        onCreateEstimate={() => {
+          if (selectedRequestProps) {
+            setDetailModalOpen(false);
+            setEstimateModalOpen(true);
+          }
+        }} 
+      />
+      <EstimateCreateModal 
+        open={estimateModalOpen} 
+        onClose={() => setEstimateModalOpen(false)} 
+        quoteRequest={selectedRequestProps} 
+        onSubmit={handleEstimateSubmit} 
+      />
     </>
   );
 };

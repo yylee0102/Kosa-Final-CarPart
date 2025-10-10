@@ -50,7 +50,7 @@ public class EstimateService {
         User userToNotify = quoteRequest.getUser();
         if (userToNotify != null) {
             String message = "'" + carCenter.getCenterName() + "'에서 새로운 견적을 보냈습니다.";
-            String url = "/estimates/" + savedEstimate.getEstimateId();
+            String url = "/user/completed-repairs/" + savedEstimate.getEstimateId();
             notificationService.sendNotificationToUser(userToNotify, message, url);
         }
 

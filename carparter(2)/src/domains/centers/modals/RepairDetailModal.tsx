@@ -40,7 +40,7 @@ export const RepairDetailModal = ({ open, onClose, repair, onMarkAsComplete }: P
           {/* 고객 및 차량 정보 */}
           <div className="p-4 bg-muted/50 rounded-lg space-y-3">
              <div className="flex items-center gap-3"><User className="h-4 w-4 text-muted-foreground" /><strong>고객명:</strong><span>{repair.userName}</span></div>
-             <div className="flex items-center gap-3"><Car className="h-4 w-4 text-muted-foreground" /><strong>차량:</strong><span>(차량 정보 필드 추가 필요)</span></div>
+              <div className="flex items-center gap-3"><Car className="h-4 w-4 text-muted-foreground" /><strong>차량:</strong><span>{repair.carModel} ({repair.licensePlate})</span></div>
           </div>
           
           {/* 수리 정보 */}

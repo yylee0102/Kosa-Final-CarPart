@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .httpBasic((httpBasic) -> httpBasic.disable())
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/api/notifications/**").authenticated()
                         .anyRequest().permitAll())
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);

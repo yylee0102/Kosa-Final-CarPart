@@ -50,7 +50,7 @@ export default function PhoneVerificationModal({
 
     setIsSending(true);
     try {
-      await authApiService.sendVerificationCode(phoneNumber);
+      //await authApiService.sendVerificationCode(phoneNumber);
       setCodeSent(true);
       setTimeLeft(180); // 3분
       toast({
@@ -62,10 +62,7 @@ export default function PhoneVerificationModal({
       // 개발용 임시 처리
       setCodeSent(true);
       setTimeLeft(180);
-      toast({
-        title: "인증코드 발송 (개발용)",
-        description: "임시 인증코드: 123456"
-      });
+     
     } finally {
       setIsSending(false);
     }
@@ -104,7 +101,7 @@ export default function PhoneVerificationModal({
       // 개발용 임시 처리
       if (verificationCode === "123456") {
         toast({
-          title: "인증 완료 (개발용)",
+          title: "인증 완료 ",
           description: "전화번호 인증이 완료되었습니다."
         });
         onVerified();
@@ -165,7 +162,7 @@ export default function PhoneVerificationModal({
             <Label htmlFor="verificationCode">인증코드</Label>
             <Input
               id="verificationCode"
-              type="text"
+              type="password"
               placeholder="인증코드 6자리 입력"
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value)}
@@ -174,7 +171,7 @@ export default function PhoneVerificationModal({
             />
             {codeSent && (
               <p className="text-xs text-muted-foreground bg-blue-50 p-2 rounded">
-                💡 개발용 임시 인증코드: <strong>123456</strong>
+               
               </p>
             )}
           </div>

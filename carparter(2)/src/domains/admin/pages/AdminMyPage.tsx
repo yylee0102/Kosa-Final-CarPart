@@ -1,121 +1,129 @@
+/**
+ * 관리자 대시보드 페이지 (수정본)
+ * - [수정] 아직 구현되지 않은 공지사항 통계 관련 로직 제거
+ * - [수정] 탭을 옮길 때마다 통계 데이터를 반복적으로 불러오는 비효율적인 로직 개선
+ * - [수정] 컴포넌트 import 경로를 일관성 있게 별칭(alias)으로 변경
+ */
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Shield, Users, Building, FileText, AlertTriangle, HelpCircle } from "lucide-react";
 import PageContainer from "@/shared/components/layout/PageContainer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/shared/contexts/AuthContext";
-import adminApiService from "@/services/admin.api";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminStats from "@/domains/admin/components/AdminStats";
+import AdminCenterApproval from "@/domains/admin/components/AdminCenterApproval";
+import ProtectedRoute from "@/shared/components/ProtectedRoute";
+import { BarChart3, Users, MessageSquare, AlertTriangle, HelpCircle } from "lucide-react";
+import CsInquiryManagementPage from "@/domains/admin/pages/CsInquiryManagementPage";
+import ReviewReportManagementPage from "@/domains/admin/pages/ReviewReportManagementPage";
+import adminApiService from "@/services/admin.api";
+// ✅ [수정] import 경로를 별칭으로 통일
+import AdminNoticeManagement from "@/domains/admin/components/AdminNoticeManagement";
 
-// ✅ API 서비스의 변경된 타입에 맞춰 인터페이스를 수정합니다.
 interface DashboardStats {
-  users: { total: number; new: number; centers: number; };
-  pendingCenters: { total: number; pending: number; approved: number; };
-  notices: { total: number; active: number; };
-  reports: { total: number; pending: number; resolved: number; };
-  genderData: Record<string, number>; // 👈 타입 오류 수정
-  ageData: Record<string, number>;    // 👈 타입 오류 수정
+  users: { total: number; new: number; centers: number };
+  pendingCenters: { total: number; pending: number; approved: number };
+  // notices: { total: number; active: number }; // ✅ [수정] 공지사항 통계 제거
+  reports: { total: number; pending: number; resolved: number };
+  genderData: Record<string, number>;
+  ageData: Record<string, number>;
 }
 
-export default function AdminMyPage() {
-  const { user } = useAuth();
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ 실제 존재하는 페이지에 맞게 메뉴 아이템을 정리합니다.
-  const menuItems = [
-    { icon: Building, label: "카센터 승인 관리", href: "/admin/approvals" },
-    { icon: FileText, label: "공지사항 관리", href: "/admin/notices" },
-    { icon: AlertTriangle, label: "리뷰 신고 관리", href: "/admin/reports" },
-    { icon: HelpCircle, label: "1:1 문의 관리", href: "/admin/cs" },
-  ];
+  // ✅ [수정] 탭을 옮길 때마다 데이터를 다시 불러오지 않도록, 컴포넌트가 처음 로드될 때 한 번만 실행되게 변경
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
 
-  useEffect(() => {
-    const fetchAllStats = async () => {
-      setIsLoading(true);
-      try {
-        const [
-          userCount,
-          centerCount,
-          pendingApprovalsCount,
-          reviewReportsCount,
-          genderStats,
-          ageStats,
-        ] = await Promise.all([
-          adminApiService.getUserCount(),
-          adminApiService.getCenterCount(),
-          adminApiService.getPendingApprovalsCount(),
-          adminApiService.getReviewReportsCount(),
-          adminApiService.getGenderStats(),
-          adminApiService.getAgeStats(),
-        ]);
+  const fetchAdminData = async () => {
+    setIsLoading(true);
+    try {
+      const [
+        userCount,
+        centerCount,
+        pendingApprovalsCount,
+        reviewReportsCount,
+        genderStats,
+        ageStats,
+      ] = await Promise.all([
+        adminApiService.getUserCount(),
+        adminApiService.getCenterCount(),
+        adminApiService.getPendingApprovalsCount(),
+        adminApiService.getReviewReportsCount(),
+        adminApiService.getGenderStats(),
+        adminApiService.getAgeStats(),
+      ]);
 
-        setDashboardStats({
-          users: { total: userCount, new: 0, centers: centerCount },
-          pendingCenters: { total: pendingApprovalsCount, pending: pendingApprovalsCount, approved: 0 },
-          notices: { total: 0, active: 0 }, // 공지사항 카운트 API가 있다면 연결 필요
-          reports: { total: reviewReportsCount, pending: reviewReportsCount, resolved: 0 },
-          genderData: genderStats,
-          ageData: ageStats,
-        });
-      } catch (error) {
-        console.error("대시보드 통계 데이터를 불러오는 데 실패했습니다:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      setDashboardStats({
+        users: { total: userCount, new: 0, centers: centerCount },
+        pendingCenters: { total: pendingApprovalsCount, pending: pendingApprovalsCount, approved: 0 },
+        // notices: { total: 0, active: 0 }, // ✅ [수정] 공지사항 통계 제거
+        reports: { total: reviewReportsCount, pending: reviewReportsCount, resolved: 0 },
+        genderData: genderStats,
+        ageData: ageStats,
+      });
+    } catch (error) {
+      console.error("관리자 대시보드 데이터 조회 실패:", error);
+      setDashboardStats(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchAllStats();
-  }, []);
+  return (
+    <ProtectedRoute allowedUserTypes={["ADMIN"]} fallbackMessage="관리자만 접근할 수 있는 페이지입니다.">
+      <PageContainer>
+        <div className="container mx-auto px-4 py-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="dashboard" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                대시보드
+              </TabsTrigger>
+              <TabsTrigger value="centers" className="gap-2">
+                <Users className="h-4 w-4" />
+                카센터 승인
+              </TabsTrigger>
+              <TabsTrigger value="notices" className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                공지사항
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                리뷰 신고
+              </TabsTrigger>
+              <TabsTrigger value="cs" className="gap-2">
+                <HelpCircle className="h-4 w-4" />
+                1:1 문의
+              </TabsTrigger>
+            </TabsList>
 
-  return (
-    <PageContainer>
-      <div className="container mx-auto px-4 py-6">
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <Shield className="w-8 h-8 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold">{user?.name || "관리자"}</h2>
-                <p className="text-muted-foreground">시스템 관리자</p>
-                <Badge className="mt-2 bg-red-100 text-red-800">관리자</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <TabsContent value="dashboard">
+              {isLoading ? (
+                <div className="text-center py-20"><p>📊 대시보드 데이터를 불러오는 중입니다...</p></div>
+              ) : dashboardStats ? (
+                <AdminStats stats={dashboardStats} />
+              ) : (
+                <div className="text-center py-20 text-red-600"><p>❗️ 대시보드 데이터를 불러오는 데 실패했습니다.</p></div>
+              )}
+            </TabsContent>
 
-        {isLoading ? (
-          <div className="text-center py-10"><p>📊 통계 데이터를 불러오는 중입니다...</p></div>
-        ) : dashboardStats ? (
-          <AdminStats stats={dashboardStats} />
-        ) : (
-          <div className="text-center py-10 text-red-600"><p>❗️ 통계 데이터를 불러오는 데 실패했습니다.</p></div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
-          {menuItems.map((item) => (
-            <Link to={item.href} key={item.label}>
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <item.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-lg">{item.label}</h3>
-                      <p className="text-sm text-muted-foreground">관리하기</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </PageContainer>
-  );
+            <TabsContent value="centers">
+              <AdminCenterApproval />
+            </TabsContent>
+            <TabsContent value="notices">
+              <AdminNoticeManagement />
+            </TabsContent>
+            <TabsContent value="reports">
+              <ReviewReportManagementPage />
+            </TabsContent>
+            <TabsContent value="cs">
+              <CsInquiryManagementPage />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </PageContainer>
+    </ProtectedRoute>
+  );
 }

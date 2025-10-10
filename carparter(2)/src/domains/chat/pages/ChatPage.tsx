@@ -76,7 +76,7 @@ export default function ChatPage() {
 
     // WebSocket 연결
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:9000/ws-chat'),
+webSocketFactory: () => new SockJS('http://192.168.210.38:9000/ws-chat'),
       // ✅ 이 부분이 가장 중요합니다. 연결 시 JWT 토큰을 헤더에 담아 보냅니다.
       connectHeaders: {
         Authorization: `Bearer ${token}`

@@ -1,37 +1,38 @@
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building, FileText, AlertTriangle } from "lucide-react";
+import { Users, Building, AlertTriangle } from "lucide-react"; // FileText 아이콘 제거
 import { useMemo } from "react";
 
-// 부모로부터 전달받는 데이터의 타입을 명확하게 정의합니다.
+// ✅ 부모 컴포넌트의 타입 변경에 맞춰 props 타입을 수정합니다.
 interface AdminStatsProps {
   stats: {
     users: { total: number; new: number; centers: number; };
     pendingCenters: { total: number; pending: number; approved: number; };
-    notices: { total: number; active: number; };
+    // ✅ notices 속성 제거
     reports: { total: number; pending: number; resolved: number; };
-    genderData: { male?: number; female?: number; }; // '?'를 추가하여 optional로 만듭니다.
-    ageData: { [key: string]: number; };
+    // ✅ genderData 타입을 Record<string, number>로 변경하여 유연성과 일관성을 확보합니다.
+    genderData: Record<string, number>;
+    ageData: Record<string, number>;
   };
 }
 
 export default function AdminStats({ stats }: AdminStatsProps) {
 
-  // ✅ 1. 성별 데이터를 차트가 이해할 수 있는 형식으로 '안전하게' 가공합니다.
+  // ✅ 1. 성별 데이터를 Record<string, number> 타입에 맞춰 안전하게 가공합니다.
   const genderChartData = useMemo(() => {
-    // stats.genderData가 없을 경우를 대비하여 기본값을 사용합니다.
-    const maleCount = stats.genderData?.male || 0;
-    const femaleCount = stats.genderData?.female || 0;
+    // API 응답 키가 'male' 또는 'MALE' 등 대소문자가 달라도 동작하도록 처리합니다.
+    const safeGenderData = stats.genderData || {};
+    const maleCount = safeGenderData['male'] || safeGenderData['MALE'] || 0;
+    const femaleCount = safeGenderData['female'] || safeGenderData['FEMALE'] || 0;
     return [
       { name: '남성', value: maleCount, color: '#3b82f6' },
       { name: '여성', value: femaleCount, color: '#ec4899' }
     ];
   }, [stats.genderData]);
 
-  // ✅ 2. 연령대 데이터를 '안전하게' 가공합니다.
+  // ✅ 2. 연령대 데이터를 '안전하게' 가공합니다. (기존 로직 유지)
   const ageChartData = useMemo(() => {
     const ageOrder = ["10s", "20s", "30s", "40s", "50s", "60s+"];
-    // stats.ageData가 없을 경우를 대비합니다.
     const safeAgeData = stats.ageData || {};
     return ageOrder.map(ageKey => ({
       age: `${ageKey.replace('s', '')}대`,
@@ -42,7 +43,8 @@ export default function AdminStats({ stats }: AdminStatsProps) {
   return (
     <div className="space-y-6">
       {/* ==================== 메인 통계 카드 ==================== */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ✅ 카드 개수에 맞춰 그리드 레이아웃을 수정합니다 (lg:grid-cols-4 -> lg:grid-cols-3). */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -69,18 +71,7 @@ export default function AdminStats({ stats }: AdminStatsProps) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">공지사항</p>
-                <p className="text-2xl font-bold">{stats.notices.total.toLocaleString()}</p>
-                <p className="text-xs text-green-600">활성 {stats.notices.active}개</p>
-              </div>
-              <FileText className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* ✅ 공지사항 카드 제거 */}
 
         <Card>
           <CardContent className="p-6">
