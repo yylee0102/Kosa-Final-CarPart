@@ -32,7 +32,7 @@ export default function EstimateCreatePage() {
   const centerInfo = location.state as { centerId?: string; centerName?: string } | null;
 
   const [formData, setFormData] = useState<EstimateRequest>({
-    description: "",
+    description: location.state?.summary || "",
     location: "",
     images: [],
     centerId: centerInfo?.centerId
@@ -78,6 +78,16 @@ const [selectedCarDetails, setSelectedCarDetails] = useState<UserCarResDTO | nul
       setSelectedCarDetails(null);
     }
   }, [selectedCarId, userCars]);
+
+  // ✅ [추가] 페이지가 처음 렌더링될 때 AI 요약문 자동 입력 알림
+  useEffect(() => {
+    if (location.state?.summary) {
+      toast({
+        title: "AI 채팅 내용이 자동으로 입력되었습니다.",
+        description: "내용을 확인하고 필요시 수정해주세요.",
+      });
+    }
+  }, [location.state, toast]); // 의존성 배열에 location.state와 toast 추가
 
 
 
@@ -239,7 +249,7 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
                   placeholder="수리가 필요한 부분에 대해 자세히 설명해주세요..."
                   value={formData.description}
                   onChange={(e) => handleInputChange("description", e.target.value)}
-                  rows={4}
+                  rows={6}
                 />
               </div>
 
@@ -300,8 +310,6 @@ const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
               ) : (
                 <div className="mt-2 text-center border-2 border-dashed rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">등록된 차량이 없습니다.</p>
-                    // ✅ 수정 후
-                    // 마이페이지로 이동하면서 '자동차 모달을 열어줘' 라는 상태(state)를 함께 전달합니다.
                 <Button variant="link" onClick={() => navigate('/user/mypage', { state: { openCarModal: true } })}>
                 차량 등록하러 가기
               </Button>

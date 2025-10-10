@@ -109,8 +109,7 @@ public class CarCenterService {
             }
         } catch (Exception e) {
             log.error("-> 좌표 변환 중 오류 발생", e);
-            // 여기서 에러를 던지지 않고, 좌표 없이 가입을 계속 진행할 수 있습니다.
-            // 또는 throw new RuntimeException("좌표 변환 실패"); 와 같이 가입을 중단시킬 수도 있습니다.
+
         }
 
         log.info("5. 비밀번호 암호화 시작.");

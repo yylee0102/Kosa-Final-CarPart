@@ -22,6 +22,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin")
+@CrossOrigin(origins = {"http://localhost:8080", "http://192.168.210.38:8080"})
 public class AdminController {
 
     private final AdminService adminService;

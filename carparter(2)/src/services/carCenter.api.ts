@@ -14,7 +14,9 @@ export interface UserCarInfo {
     modelYear: number;
     carNumber: string; // 필요한 다른 정보도 추가
 }
-export interface QuoteRequestResDTO { requestId: number; requestDetails: string; address: string; createdAt: string; customerName: string; customerPhone: string; userCar: UserCarInfo;
+export interface QuoteRequestResDTO {
+  carModel: string;
+  carYear: number; requestId: number; requestDetails: string; address: string; createdAt: string; customerName: string; customerPhone: string; userCar: UserCarInfo;
  preferredDate: string; status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'; imageUrls: string[]; }
 export interface CarCenterRegisterRequest { centerId: string; password: string; centerName: string; address: string; phoneNumber: string; businessRegistrationNumber: string; openingHours: string; description?: string; }
 export interface CarCenterUpdateRequest { centerName?: string; address?: string; phoneNumber?: string; openingHours?: string; description?: string; }
@@ -176,6 +178,11 @@ class CarCenterApiService extends BaseApiService {
   searchParts(query: string): Promise<UsedPartResDTO[]> {
     if (!query.trim()) { return Promise.resolve([]); }
     return this.request('GET', `/parts/search?query=${encodeURIComponent(query)}`);
+  }
+  
+  getRecentParts(limit: number = 3): Promise<UsedPartResDTO[]> {
+    // Controller의 경로와 정확히 일치시킵니다.
+    return this.request('GET', `/car-centers/parts/recent?limit=${limit}`);
   }
 
   // =================================================================

@@ -14,6 +14,7 @@ import java.util.List;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
+@CrossOrigin(origins = {"http://localhost:8080", "http://192.168.210.38:8080"})
 public class CompletedRepairController {
 
     private final CompletedRepairService completedRepairService;

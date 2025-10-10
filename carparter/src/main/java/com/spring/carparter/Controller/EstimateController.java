@@ -18,7 +18,7 @@ import java.util.List;
 @RequestMapping("/api/estimates")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = {"http://localhost:8080", "http://192.168.210.38:8080"})
 public class EstimateController {
 
     private final EstimateService estimateService;

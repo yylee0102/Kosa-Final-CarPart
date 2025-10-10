@@ -17,10 +17,12 @@
 // AI 견적 채팅 상담 페이지 (임시)
 import { useState, useRef, useEffect } from "react";
 import { Send, Plus, X } from "lucide-react";
+
 import PageContainer from "@/shared/components/layout/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 // 상단에 새로 만든 챗봇 서비스를 import 합니다.
 import chatbotApiService from "@/services/chatbot.api.ts";
 
@@ -46,6 +48,10 @@ export default function EstimateAIPage() {
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+    // ✅ [추가] API 호출 중 로딩 상태를 관리할 state
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -117,9 +123,49 @@ export default function EstimateAIPage() {
     });
   };
 
+  // ✅ [추가] '견적요청' 버튼 클릭 시 실행될 새로운 함수
+  const handleRequestEstimate = async () => {
+    setIsSummarizing(true); // 로딩 시작
+    try {
+      // 1. FastAPI로 보낼 데이터 준비 (messages state 사용)
+      //    FastAPI의 ChatHistory 모델과 형식을 맞춰줍니다.
+      const chatHistory = { 
+        messages: messages.map(({ type, message }) => ({ type, message }))
+      };
+
+      // 2. FastAPI 요약 API('/chatbot/summarize')를 호출합니다.
+      //    (실제로는 chatbotApiService.summarize(chatHistory) 같은 함수를 만들어 호출)
+      const res = await fetch('http://127.0.0.1:8000/chatbot/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(chatHistory),
+      });
+
+      if (!res.ok) {
+        throw new Error('API request failed');
+      }
+
+      const responseData = await res.json();
+      const summaryText = responseData.summary;
+
+      // 3. 요약된 텍스트를 state에 담아 견적요청 페이지로 이동합니다.
+      navigate('/estimates/create', { 
+        state: { summary: summaryText } 
+      });
+
+    } catch (error) {
+      console.error("대화 요약 실패:", error);
+      alert("요약 정보를 가져오는 데 실패했습니다. 직접 내용을 입력해주세요.");
+      // 실패하더라도 내용은 직접 입력할 수 있도록 페이지는 이동시켜 줍니다.
+      navigate('/estimates/create');
+    } finally {
+      setIsSummarizing(false); // 로딩 끝
+    }
+  };
+
   const quickActions = [
     "견적요청",
-    "위도가기"
+    "뒤로가기"
   ];
 
   return (
@@ -203,13 +249,16 @@ export default function EstimateAIPage() {
                     size="sm"
                     onClick={() => {
                       if (action === "견적요청") {
-                        alert("견적요청 페이지로 이동합니다.");
-                      } else if (action === "위도가기") {
-                        alert("위치 찾기 기능을 실행합니다.");
+                        // ✅ [수정] 새로 만든 API 호출 함수를 연결합니다.
+                        handleRequestEstimate();
+                      } else if (action === "뒤로가기") {
+                        navigate(-1);
                       }
                     }}
+                    // ✅ [추가] 로딩 중일 때 버튼을 비활성화하고 텍스트를 변경합니다.
+                    disabled={action === "견적요청" && isSummarizing}
                   >
-                    {action}
+                    {action === "견적요청" && isSummarizing ? "요약 중..." : action}
                   </Button>
                 ))}
               </div>

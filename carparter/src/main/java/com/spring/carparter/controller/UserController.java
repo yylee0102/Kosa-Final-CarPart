@@ -23,6 +23,7 @@ import java.util.List;
 @RequestMapping("/api/users") // 사용자 관련 API 공통 경로
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = {"http://localhost:8080", "http://192.168.210.38:8080"})
 public class UserController {
 
     // ✅ 모든 Service 의존성에 final 키워드를 적용하여 생성자 주입이 되도록 보장

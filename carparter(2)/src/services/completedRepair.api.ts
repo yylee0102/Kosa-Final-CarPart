@@ -1,20 +1,21 @@
 // src/services/completedRepair.api.ts
 
-// DTO 타입 정의는 동일하게 유지합니다.
+// ✅ [수정] 백엔드 DTO와 100% 일치하도록 타입을 수정합니다.
 export interface CompletedRepairResDTO {
   repairId: number;
-  userId: string;
   userName: string;
-  carCenterId: string;
   carCenterName: string;
-  originalRequestId: number;
-  originalEstimateId: number;
+  carCenterId: string;
   finalCost: number;
   repairDetails: string;
-  status: 'IN_PROGRESS' | 'COMPLETED';
-  createdAt: string;
   completedAt: string | null;
+  status: 'IN_PROGRESS' | 'COMPLETED' | string; // status는 더 유연하게 string으로 받을 수도 있습니다.
+  carModel: string;          // ✅ [추가] 차량 모델
+  licensePlate: string;      // ✅ [추가] 차량 번호
+  createdAt: string;
+  reviewId: number | null;   // ✅ [추가] 리뷰 ID (리뷰가 없으면 null일 수 있음)
 }
+
 
 const API_BASE_URL = '/api';
 

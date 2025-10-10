@@ -35,7 +35,6 @@ public class UsedPartService {
 
         if (images != null && !images.isEmpty()) {
             for (MultipartFile imageFile : images) {
-                // [수정] 원본 파일 이름 대신 UUID와 확장자로 새로운 파일 키를 생성합니다.
                 String originalFilename = imageFile.getOriginalFilename();
                 String extension = "";
                 if (originalFilename != null && originalFilename.contains(".")) {

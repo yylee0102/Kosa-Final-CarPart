@@ -22,7 +22,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/car-centers")
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = {"http://localhost:8080", "http://192.168.210.38:8080"})
 public class CarCenterController {
     private final ReviewService reviewService;
     private final CarCenterService carCenterService;

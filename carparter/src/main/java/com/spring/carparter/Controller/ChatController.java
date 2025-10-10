@@ -23,6 +23,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 
 import java.security.Principal;
@@ -32,6 +33,7 @@ import java.time.LocalDateTime;
 @Controller
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = {"http://localhost:8080", "http://192.168.210.38:8080"})
 public class ChatController {
 
     private final ChatMessageRepository chatMessageRepository;
